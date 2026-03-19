@@ -146,32 +146,18 @@ const STOCKS=[
   {ticker:'035420',name:'NAVER'},
 ];
 
-async function fetchStock(ticker){
-  try{
-    const r=await fetch(`https://m.stock.naver.com/api/stock/${ticker}/basic`);
-    if(!r.ok) throw new Error('http '+r.status);
-    const d=await r.json();
-    if(!d.closePrice) return null;
-    return{
-      name: d.stockName,
-      price: d.closePrice,
-      change: d.compareToPreviousClosePrice,
-      changeRate: parseFloat(d.fluctuationsRatio)||0,
-      status: d.compareToPreviousPrice?.code,
-    };
-  }catch(e){
-    console.error('fetchStock error ['+ticker+']:', e.message);
-    return null;
-  }
-}
-
 async function loadStocks(){
   const el=document.getElementById('stock-list');
   el.innerHTML='<div class="msg">불러오는 중...</div>';
-  const results=await Promise.all(STOCKS.map(s=>fetchStock(s.ticker)));
-  const anySuccess=results.some(r=>r!==null);
-  if(!anySuccess){
-    el.innerHTML='<div class="msg">데이터를 불러올 수 없습니다.<br><small style="color:#555">F12 콘솔에서 오류를 확인해 주세요.</small></div>';
+  try{
+    const r=await fetch('./data.json?t='+Date.now());
+    if(!r.ok) throw new Error('data.json 로드 실패');
+    const json=await r.json();
+    const stocks=json.stocks;
+    if(!stocks||!Object.keys(stocks).length){
+      el.innerHTML='<div class="msg">데이터를 불러올 수 없습니다.</div>';
+      return;
+    }
     return;
   }
   el.innerHTML=STOCKS.map((s,i)=>{
