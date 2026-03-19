@@ -1,0 +1,42 @@
+name: Update Stocks
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Fetch stock data
+        run: |
+          fetch_stock() {
+            ticker=$1
+            curl -s "https://m.stock.naver.com/api/stock/${ticker}/basic"
+          }
+
+          S1=$(fetch_stock "005930")
+          S2=$(fetch_stock "009150")
+          S3=$(fetch_stock "034020")
+          S4=$(fetch_stock "035420")
+
+          echo "{
+            \"stocks\": {
+              \"005930\": $S1,
+              \"009150\": $S2,
+              \"034020\": $S3,
+              \"035420\": $S4
+            },
+            \"updated\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+          }" > data.json
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data.json
+          git diff --staged --quiet || git commit -m "Update stock data"
+          git push
