@@ -159,7 +159,10 @@ async function fetchStock(ticker){
       changeRate: parseFloat(d.fluctuationsRatio)||0,
       status: d.compareToPreviousPrice?.code,
     };
-  }catch(e){return null;}
+  }catch(e){
+    console.error('fetchStock error ['+ticker+']:', e.message);
+    return null;
+  }
 }
 
 async function loadStocks(){
@@ -168,7 +171,7 @@ async function loadStocks(){
   const results=await Promise.all(STOCKS.map(s=>fetchStock(s.ticker)));
   const anySuccess=results.some(r=>r!==null);
   if(!anySuccess){
-    el.innerHTML='<div class="msg">데이터를 불러올 수 없습니다.<br><small style="color:#555">잠시 후 새로고침을 눌러주세요.</small></div>';
+    el.innerHTML='<div class="msg">데이터를 불러올 수 없습니다.<br><small style="color:#555">F12 콘솔에서 오류를 확인해 주세요.</small></div>';
     return;
   }
   el.innerHTML=STOCKS.map((s,i)=>{
