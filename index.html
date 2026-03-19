@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>나의 시작 페이지</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans-serif;background:#0f1117;color:#e8e8e8;min-height:100vh}
+.wrap{padding:1.5rem 1rem;max-width:900px;margin:auto}
+.top{display:flex;flex-direction:column;align-items:center;gap:0.75rem;margin-bottom:1.5rem}
+.clock{font-size:13px;color:#888;letter-spacing:0.04em}
+.search-bar{display:flex;width:100%;max-width:560px;border:1px solid #2e2e3a;border-radius:12px;overflow:hidden;background:#1a1a27}
+.search-label{padding:0 0.9rem;font-size:13px;background:#22223a;color:#888;display:flex;align-items:center;border-right:1px solid #2e2e3a;white-space:nowrap}
+.search-inp{flex:1;border:none;padding:0.65rem 0.75rem;font-size:14px;background:transparent;color:#e8e8e8;outline:none}
+.search-inp::placeholder{color:#555}
+.search-btn{border:none;background:#22223a;padding:0 1.1rem;font-size:13px;color:#aaa;cursor:pointer;border-left:1px solid #2e2e3a}
+.search-btn:hover{background:#2a2a40}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+.card{background:#1a1a27;border:1px solid #2e2e3a;border-radius:12px;padding:1rem 1.25rem}
+.card-title{font-size:11px;font-weight:600;color:#666;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:0.75rem;display:flex;justify-content:space-between;align-items:center}
+.full{grid-column:1/-1}
+.weather-main{display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem}
+.weather-icon{font-size:38px;line-height:1}
+.weather-temp{font-size:40px;font-weight:500;line-height:1;color:#e8e8e8}
+.weather-sub{font-size:13px;color:#888;margin-top:2px}
+.weather-minmax{font-size:12px;color:#e05c4a;margin-top:4px}
+.weather-row{display:flex;gap:0.5rem;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid #2e2e3a}
+.wi{flex:1;text-align:center}
+.wi .lb{font-size:11px;color:#555}
+.wi .vl{font-size:13px;font-weight:500;margin-top:2px;color:#ccc}
+.stock-row{display:flex;align-items:center;justify-content:space-between;padding:0.45rem 0;border-bottom:1px solid #2a2a3a}
+.stock-row:last-child{border-bottom:none}
+.sname{font-size:13px;font-weight:500;color:#e8e8e8}
+.sticker{font-size:11px;color:#555;margin-top:1px}
+.sright{text-align:right}
+.sprice{font-size:14px;font-weight:500;color:#e8e8e8}
+.schange{font-size:12px;margin-top:1px}
+.up{color:#1D9E75}.dn{color:#e05c4a}.flat{color:#666}
+.news-item{padding:0.5rem 0;border-bottom:1px solid #2a2a3a}
+.news-item:last-child{border-bottom:none}
+.ntag{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;margin-bottom:4px}
+.tag-world{background:#0d3d2e;color:#4ecfa0}
+.tag-eco{background:#3d2a08;color:#f0a040}
+.tag-tech{background:#0d2a4a;color:#5aadff}
+.tag-local{background:#2a1a4a;color:#b080ff}
+.nhead{font-size:13px;line-height:1.5;color:#ddd}
+.nsum{font-size:12px;color:#777;margin-top:3px;line-height:1.5}
+.ntime{font-size:11px;color:#4a4a5a;margin-top:3px}
+.ai-badge{font-size:10px;background:#1e1e30;border:1px solid #3a3a50;border-radius:4px;padding:2px 6px;color:#777;margin-left:6px}
+.rbtn{font-size:11px;color:#555;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline}
+.rbtn:hover{color:#aaa}
+.msg{font-size:13px;color:#666;padding:0.75rem 0;text-align:center}
+.updated{font-size:11px;color:#444;text-align:right;margin-top:0.5rem}
+.limit-msg{font-size:11px;color:#555;text-align:center;margin-top:0.5rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="clock" id="clock"></div>
+    <div class="search-bar">
+      <span class="search-label">Google</span>
+      <input class="search-inp" id="q" type="text" placeholder="검색어를 입력하세요..." />
+      <button class="search-btn" onclick="doSearch()">검색</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-title"><span>날씨 · 서울</span><button class="rbtn" onclick="loadWeather()">새로고침</button></div>
+      <div class="weather-main">
+        <div class="weather-icon" id="wicon">⛅</div>
+        <div>
+          <div class="weather-temp" id="wtemp">–°C</div>
+          <div class="weather-sub" id="wdesc">불러오는 중...</div>
+          <div class="weather-minmax" id="wminmax"></div>
+        </div>
+      </div>
+      <div class="weather-row">
+        <div class="wi"><div class="lb">체감</div><div class="vl" id="wfeel">–</div></div>
+        <div class="wi"><div class="lb">습도</div><div class="vl" id="whumid">–</div></div>
+        <div class="wi"><div class="lb">바람</div><div class="vl" id="wwind">–</div></div>
+        <div class="wi"><div class="lb">자외선</div><div class="vl" id="wuv">–</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>관심 종목</span><button class="rbtn" onclick="loadStocks()">새로고침</button></div>
+      <div id="stock-list"><div class="msg">불러오는 중...</div></div>
+      <div class="updated" id="stock-time"></div>
+    </div>
+
+    <div class="card full">
+      <div class="card-title"><span>주요 뉴스 <span class="ai-badge">AI 요약</span></span><button class="rbtn" onclick="loadNews('general')">새로고침</button></div>
+      <div id="news-general"><div class="msg">불러오는 중...</div></div>
+    </div>
+
+    <div class="card full">
+      <div class="card-title"><span>기술·IT 뉴스 <span class="ai-badge">AI 요약</span></span><button class="rbtn" onclick="loadNews('tech')">새로고침</button></div>
+      <div id="news-tech"><div class="msg">불러오는 중...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function updateClock(){
+  const n=new Date(),days=['일','월','화','수','목','금','토'];
+  document.getElementById('clock').textContent=
+    n.getFullYear()+'년 '+(n.getMonth()+1)+'월 '+n.getDate()+'일 ('+days[n.getDay()]+') '+
+    String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');
+}
+updateClock();setInterval(updateClock,1000);
+
+document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
+function doSearch(){
+  const q=document.getElementById('q').value.trim();
+  if(q) window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank');
+}
+
+async function loadWeather(){
+  document.getElementById('wdesc').textContent='불러오는 중...';
+  try{
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,uv_index,weather_code&daily=temperature_2m_max,temperature_2m_min&wind_speed_unit=ms&timezone=Asia%2FSeoul');
+    const d=await r.json(),c=d.current;
+    const icons={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'🌨',80:'🌦',81:'🌧',82:'🌧',95:'⛈',96:'⛈',99:'⛈'};
+    const descs={0:'맑음',1:'대체로 맑음',2:'약간 흐림',3:'흐림',45:'안개',48:'안개',51:'가벼운 이슬비',53:'이슬비',55:'짙은 이슬비',61:'약한 비',63:'비',65:'강한 비',71:'약한 눈',73:'눈',75:'강한 눈',80:'소나기',81:'강한 소나기',82:'폭우',95:'뇌우',96:'뇌우(우박)',99:'강한 뇌우'};
+    document.getElementById('wicon').textContent=icons[c.weather_code]||'🌡';
+    document.getElementById('wtemp').textContent=Math.round(c.temperature_2m)+'°C';
+    document.getElementById('wdesc').textContent=descs[c.weather_code]||'날씨 정보';
+    document.getElementById('wfeel').textContent=Math.round(c.apparent_temperature)+'°C';
+    document.getElementById('whumid').textContent=c.relative_humidity_2m+'%';
+    document.getElementById('wwind').textContent=c.wind_speed_10m.toFixed(1)+'m/s';
+    document.getElementById('wuv').textContent=c.uv_index!=null?c.uv_index.toFixed(1):'–';
+    const max=d.daily.temperature_2m_max[0],min=d.daily.temperature_2m_min[0];
+    document.getElementById('wminmax').textContent='최고 '+Math.round(max)+'° / 최저 '+Math.round(min)+'°';
+  }catch(e){document.getElementById('wdesc').textContent='날씨 정보를 불러올 수 없습니다';}
+}
+loadWeather();
+
+const AV_KEY='5PCGIXZBINTSXEFW';
+const STOCKS=[
+  {ticker:'005930.KS',name:'삼성전자'},
+  {ticker:'009150.KS',name:'삼성전기'},
+  {ticker:'034020.KS',name:'두산에너빌리티'},
+  {ticker:'035420.KS',name:'NAVER'},
+];
+
+async function fetchStock(ticker){
+  const url=`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(ticker)}&apikey=${AV_KEY}`;
+  try{
+    const r=await fetch(url);
+    if(!r.ok) throw new Error('http '+r.status);
+    const data=await r.json();
+    const q=data['Global Quote'];
+    if(!q||!q['05. price']) return null;
+    return{
+      price: Math.round(parseFloat(q['05. price'])),
+      change: parseFloat(q['09. change'])||0,
+      changeRate: parseFloat(q['10. change percent'])||0,
+      date: q['07. latest trading day']||'',
+    };
+  }catch(e){return null;}
+}
+
+async function loadStocks(){
+  const el=document.getElementById('stock-list');
+  el.innerHTML='<div class="msg">불러오는 중...</div>';
+  const results=await Promise.all(STOCKS.map(s=>fetchStock(s.ticker)));
+  const anySuccess=results.some(r=>r!==null);
+  if(!anySuccess){
+    el.innerHTML='<div class="msg">데이터를 불러올 수 없습니다.<br><small style="color:#555">잠시 후 새로고침을 눌러주세요.</small></div>';
+    return;
+  }
+  el.innerHTML=STOCKS.map((s,i)=>{
+    const d=results[i];
+    if(!d) return`<div class="stock-row"><div><div class="sname">${s.name}</div><div class="sticker">${s.ticker}</div></div><div class="sright"><div class="schange flat">–</div></div></div>`;
+    const cls=d.changeRate>0?'up':d.changeRate<0?'dn':'flat';
+    const sign=d.changeRate>0?'+':'';
+    return`<div class="stock-row">
+      <div><div class="sname">${s.name}</div><div class="sticker">${s.ticker.replace('.KS','')}</div></div>
+      <div class="sright">
+        <div class="sprice">${d.price.toLocaleString()}원</div>
+        <div class="schange ${cls}">${sign}${d.changeRate.toFixed(2)}% (${sign}${Math.round(d.change).toLocaleString()})</div>
+      </div>
+    </div>`;
+  }).join('');
+  const baseDate=results.find(r=>r)?.date||'';
+  document.getElementById('stock-time').textContent=(baseDate?baseDate+' 기준':'')+' · Alpha Vantage';
+  document.getElementById('stock-time').insertAdjacentHTML('afterend','<div class="limit-msg">무료 플랜: 분당 5회 호출 제한</div>');
+}
+loadStocks();
+
+const NEWS={
+  general:[
+    {tag:'eco',head:'한국은행, 기준금리 동결 결정…물가 안정세 지속 판단',sum:'금융통화위원회는 현 경제 상황을 고려해 기준금리를 현 수준에서 유지하기로 했다.',time:'1시간 전'},
+    {tag:'world',head:'미·중 무역 협상 재개…반도체 수출 규제 완화 논의',sum:'양국 대표단이 제네바에서 만나 첨단 기술 분야 수출 규제 완화 방안을 논의했다.',time:'2시간 전'},
+    {tag:'local',head:'서울 아파트 거래량 3개월 연속 증가…봄 이사철 영향',sum:'국토부 자료에 따르면 서울 주요 지역 아파트 거래량이 3월 들어 뚜렷한 증가세를 보이고 있다.',time:'3시간 전'},
+    {tag:'world',head:'EU, 탄소국경조정세 본격 시행…국내 철강·화학업계 대응 주목',sum:'유럽연합이 탄소 배출 관련 국경세를 전면 시행함에 따라 국내 수출기업의 비용 부담이 커질 전망이다.',time:'4시간 전'},
+  ],
+  tech:[
+    {tag:'tech',head:'삼성전자, 3나노 2세대 칩 양산 시작…AI 가속기 시장 공략',sum:'삼성전자가 최신 공정 기술을 적용한 AI용 반도체 칩 양산을 개시하며 엔비디아·AMD와의 경쟁에 본격 나섰다.',time:'30분 전'},
+    {tag:'tech',head:'네이버 하이퍼클로바X 신버전 출시…멀티모달 기능 강화',sum:'네이버가 이미지·영상 이해 능력을 대폭 향상시킨 생성형 AI 모델 업데이트 버전을 선보였다.',time:'1시간 전'},
+    {tag:'tech',head:'애플, 한국서 AI 기능 탑재 아이폰 신모델 예약 판매 돌입',sum:'온디바이스 AI를 전면 적용한 애플 최신 스마트폰이 국내 이동통신사를 통해 예약 판매를 시작했다.',time:'2시간 전'},
+    {tag:'tech',head:'국내 스타트업, 양자암호통신 상용화 성공…세계 두 번째',sum:'국내 양자 기술 스타트업이 실제 통신망에서 양자암호 기술을 상용화하는 데 성공해 글로벌 주목을 받고 있다.',time:'3시간 전'},
+  ]
+};
+function loadNews(type){
+  const tagLabel={world:'세계',eco:'경제',tech:'기술',local:'국내'};
+  document.getElementById('news-'+type).innerHTML=NEWS[type].map(n=>`
+    <div class="news-item">
+      <span class="ntag tag-${n.tag}">${tagLabel[n.tag]}</span>
+      <div class="nhead">${n.head}</div>
+      <div class="nsum">${n.sum}</div>
+      <div class="ntime">${n.time}</div>
+    </div>`).join('');
+}
+loadNews('general');
+loadNews('tech');
+</script>
+</body>
+</html>
