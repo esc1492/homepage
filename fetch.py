@@ -17,13 +17,13 @@ def fetch_rss(url):
     items = re.findall(r'<item>(.*?)</item>', content, re.DOTALL)
     result = []
     for item in items[:5]:
-        title = re.search(r'<title><!\[CDATA\[(.*?)\]\]></title>|<title>(.*?)</title>', item, re.DOTALL)
-        link  = re.search(r'<link>(.*?)</link>', item, re.DOTALL)
-        desc  = re.search(r'<description><!\[CDATA\[(.*?)\]\]></description>|<description>(.*?)</description>', item, re.DOTALL)
+        title   = re.search(r'<title><!\[CDATA\[(.*?)\]\]></title>|<title>(.*?)</title>', item, re.DOTALL)
+        link    = re.search(r'<link><!\[CDATA\[(.*?)\]\]></link>|<link>(.*?)</link>', item, re.DOTALL)
+        desc    = re.search(r'<description><!\[CDATA\[(.*?)\]\]></description>|<description>(.*?)</description>', item, re.DOTALL)
         pubdate = re.search(r'<pubDate>(.*?)</pubDate>', item, re.DOTALL)
         if title:
             t = html.unescape(re.sub(r'<[^>]+>', '', title.group(1) or title.group(2) or '')).strip()
-            l = (link.group(1) or '').strip() if link else ''
+            l = html.unescape((link.group(1) or link.group(2) or '').strip()) if link else ''
             raw_d = desc.group(1) or desc.group(2) if desc else ''
             d = html.unescape(re.sub(r'<[^>]+>', '', raw_d)).strip()[:120]
             p = (pubdate.group(1) or '').strip() if pubdate else ''
