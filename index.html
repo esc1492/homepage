@@ -199,9 +199,9 @@ function loadNews(type){
   .then(function(r){return r.json();})
   .then(function(json){
     var news=json.news;
+    var tagLabel={world:'세계',eco:'경제',tech:'기술',local:'국내'};
+    var items=[];
     if(type==='general'){
-      var items=[];
-      var tagMap={eco:'eco',world:'world',local:'local'};
       ['eco','world','local'].forEach(function(cat){
         if(news[cat]&&news[cat].length){
           news[cat].slice(0,2).forEach(function(n){
@@ -209,33 +209,37 @@ function loadNews(type){
           });
         }
       });
-      renderNews('news-general', items.slice(0,5));
+      items=items.slice(0,5);
     } else {
-      var items=[];
       if(news.tech&&news.tech.length){
         news.tech.forEach(function(n){
           items.push({tag:'tech',head:n.title,sum:n.desc,time:n.pubDate,link:n.link});
         });
       }
-      renderNews('news-tech', items.slice(0,5));
+      items=items.slice(0,5);
     }
+    var elId=type==='general'?'news-general':'news-tech';
+    document.getElementById(elId).innerHTML=items.map(function(n){
+      var link=n.link?n.link.replace(/<!\[CDATA\[|\]\]>/g,'').trim():'';
+      return '<div class="news-item"'+(link?' onclick="window.open(\''+link+'\',\'_blank\')" style="cursor:pointer"':'')+'>'+
+        '<span class="ntag tag-'+n.tag+'">'+tagLabel[n.tag]+'</span>'+
+        '<div class="nhead">'+n.head+'</div>'+
+        (n.sum?'<div class="nsum">'+n.sum+'</div>':'')+
+        '<div class="ntime">'+n.time+'</div></div>';
+    }).join('');
   })
   .catch(function(){
     var fallback=type==='general'?NEWS_STATIC.general:NEWS_STATIC.tech;
-    renderNews(type==='general'?'news-general':'news-tech', fallback);
+    var tagLabel={world:'세계',eco:'경제',tech:'기술',local:'국내'};
+    var elId=type==='general'?'news-general':'news-tech';
+    document.getElementById(elId).innerHTML=fallback.map(function(n){
+      return '<div class="news-item">'+
+        '<span class="ntag tag-'+n.tag+'">'+tagLabel[n.tag]+'</span>'+
+        '<div class="nhead">'+n.head+'</div>'+
+        '<div class="nsum">'+n.sum+'</div>'+
+        '<div class="ntime">'+n.time+'</div></div>';
+    }).join('');
   });
-}
-
-function renderNews(elId, items){
-  var tagLabel={world:'세계',eco:'경제',tech:'기술',local:'국내'};
-  document.getElementById(elId).innerHTML=items.map(function(n){
-    var inner='<div class="news-item"'+(n.link?' onclick="window.open(\''+n.link+'\',\'_blank\')" style="cursor:pointer"':'')+'>'+
-      '<span class="ntag tag-'+n.tag+'">'+tagLabel[n.tag]+'</span>'+
-      '<div class="nhead">'+n.head+'</div>'+
-      (n.sum?'<div class="nsum">'+n.sum+'</div>':'')+
-      '<div class="ntime">'+n.time+'</div></div>';
-    return inner;
-  }).join('');
 }
 loadNews('general');
 loadNews('tech');
