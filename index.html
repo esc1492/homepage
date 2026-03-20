@@ -179,7 +179,7 @@ function loadStocks(){
 }
 loadStocks();
 
-var NEWS={
+var NEWS_STATIC={
   general:[
     {tag:'eco',head:'한국은행, 기준금리 동결 결정…물가 안정세 지속 판단',sum:'금융통화위원회는 현 경제 상황을 고려해 기준금리를 현 수준에서 유지하기로 했다.',time:'1시간 전'},
     {tag:'world',head:'미·중 무역 협상 재개…반도체 수출 규제 완화 논의',sum:'양국 대표단이 제네바에서 만나 첨단 기술 분야 수출 규제 완화 방안을 논의했다.',time:'2시간 전'},
@@ -193,13 +193,48 @@ var NEWS={
     {tag:'tech',head:'국내 스타트업, 양자암호통신 상용화 성공…세계 두 번째',sum:'국내 양자 기술 스타트업이 실제 통신망에서 양자암호 기술을 상용화하는 데 성공해 글로벌 주목을 받고 있다.',time:'3시간 전'},
   ]
 };
+
 function loadNews(type){
+  fetch('./data.json?t='+Date.now())
+  .then(function(r){return r.json();})
+  .then(function(json){
+    var news=json.news;
+    if(type==='general'){
+      var items=[];
+      var tagMap={eco:'eco',world:'world',local:'local'};
+      ['eco','world','local'].forEach(function(cat){
+        if(news[cat]&&news[cat].length){
+          news[cat].slice(0,2).forEach(function(n){
+            items.push({tag:cat,head:n.title,sum:n.desc,time:n.pubDate,link:n.link});
+          });
+        }
+      });
+      renderNews('news-general', items.slice(0,5));
+    } else {
+      var items=[];
+      if(news.tech&&news.tech.length){
+        news.tech.forEach(function(n){
+          items.push({tag:'tech',head:n.title,sum:n.desc,time:n.pubDate,link:n.link});
+        });
+      }
+      renderNews('news-tech', items.slice(0,5));
+    }
+  })
+  .catch(function(){
+    var fallback=type==='general'?NEWS_STATIC.general:NEWS_STATIC.tech;
+    renderNews(type==='general'?'news-general':'news-tech', fallback);
+  });
+}
+
+function renderNews(elId, items){
   var tagLabel={world:'세계',eco:'경제',tech:'기술',local:'국내'};
-  document.getElementById('news-'+type).innerHTML=NEWS[type].map(function(n){
-    return '<div class="news-item"><span class="ntag tag-'+n.tag+'">'+tagLabel[n.tag]+'</span>'
-      +'<div class="nhead">'+n.head+'</div>'
-      +'<div class="nsum">'+n.sum+'</div>'
-      +'<div class="ntime">'+n.time+'</div></div>';
+  document.getElementById(elId).innerHTML=items.map(function(n){
+    var inner='<div class="news-item"'+(n.link?' onclick="window.open(\''+n.link+'\',\'_blank\')" style="cursor:pointer"':'')+'>'+
+      '<span class="ntag tag-'+n.tag+'">'+tagLabel[n.tag]+'</span>'+
+      '<div class="nhead">'+n.head+'</div>'+
+      (n.sum?'<div class="nsum">'+n.sum+'</div>':'')+
+      '<div class="ntime">'+n.time+'</div></div>';
+    return inner;
   }).join('');
 }
 loadNews('general');
