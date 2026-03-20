@@ -30,8 +30,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans
 .wi{flex:1;text-align:center}
 .wi .lb{font-size:11px;color:#555}
 .wi .vl{font-size:13px;font-weight:500;margin-top:2px;color:#ccc}
-.stock-row{display:flex;align-items:center;justify-content:space-between;padding:0.45rem 0;border-bottom:1px solid #2a2a3a}
+.stock-row{display:flex;align-items:center;justify-content:space-between;padding:0.45rem 0;border-bottom:1px solid #2a2a3a;cursor:pointer}
 .stock-row:last-child{border-bottom:none}
+.stock-row:hover{opacity:0.8}
 .sname{font-size:13px;font-weight:500;color:#e8e8e8}
 .sticker{font-size:11px;color:#555;margin-top:1px}
 .sright{text-align:right}
@@ -53,7 +54,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans
 .rbtn:hover{color:#aaa}
 .msg{font-size:13px;color:#666;padding:0.75rem 0;text-align:center}
 .updated{font-size:11px;color:#444;text-align:right;margin-top:0.5rem}
-.limit-msg{font-size:11px;color:#555;text-align:center;margin-top:0.5rem}
 </style>
 </head>
 <body>
@@ -66,7 +66,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans
       <button class="search-btn" onclick="doSearch()">검색</button>
     </div>
   </div>
-
   <div class="grid">
     <div class="card">
       <div class="card-title"><span>날씨 · 서울</span><button class="rbtn" onclick="loadWeather()">새로고침</button></div>
@@ -85,25 +84,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans
         <div class="wi"><div class="lb">자외선</div><div class="vl" id="wuv">–</div></div>
       </div>
     </div>
-
     <div class="card">
       <div class="card-title"><span>관심 종목</span><button class="rbtn" onclick="loadStocks()">새로고침</button></div>
       <div id="stock-list"><div class="msg">불러오는 중...</div></div>
       <div class="updated" id="stock-time"></div>
     </div>
-
     <div class="card full">
       <div class="card-title"><span>주요 뉴스 <span class="ai-badge">AI 요약</span></span><button class="rbtn" onclick="loadNews('general')">새로고침</button></div>
       <div id="news-general"><div class="msg">불러오는 중...</div></div>
     </div>
-
     <div class="card full">
       <div class="card-title"><span>기술·IT 뉴스 <span class="ai-badge">AI 요약</span></span><button class="rbtn" onclick="loadNews('tech')">새로고침</button></div>
       <div id="news-tech"><div class="msg">불러오는 중...</div></div>
     </div>
   </div>
 </div>
-
 <script>
 function updateClock(){
   const n=new Date(),days=['일','월','화','수','목','금','토'];
@@ -113,19 +108,20 @@ function updateClock(){
 }
 updateClock();setInterval(updateClock,1000);
 
-document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
+document.getElementById('q').addEventListener('keydown',function(e){if(e.key==='Enter')doSearch();});
 function doSearch(){
-  const q=document.getElementById('q').value.trim();
+  var q=document.getElementById('q').value.trim();
   if(q) window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank');
 }
 
-async function loadWeather(){
+function loadWeather(){
   document.getElementById('wdesc').textContent='불러오는 중...';
-  try{
-    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,uv_index,weather_code&daily=temperature_2m_max,temperature_2m_min&wind_speed_unit=ms&timezone=Asia%2FSeoul');
-    const d=await r.json(),c=d.current;
-    const icons={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'🌨',80:'🌦',81:'🌧',82:'🌧',95:'⛈',96:'⛈',99:'⛈'};
-    const descs={0:'맑음',1:'대체로 맑음',2:'약간 흐림',3:'흐림',45:'안개',48:'안개',51:'가벼운 이슬비',53:'이슬비',55:'짙은 이슬비',61:'약한 비',63:'비',65:'강한 비',71:'약한 눈',73:'눈',75:'강한 눈',80:'소나기',81:'강한 소나기',82:'폭우',95:'뇌우',96:'뇌우(우박)',99:'강한 뇌우'};
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,uv_index,weather_code&daily=temperature_2m_max,temperature_2m_min&wind_speed_unit=ms&timezone=Asia%2FSeoul')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var c=d.current;
+    var icons={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'🌨',80:'🌦',81:'🌧',82:'🌧',95:'⛈',96:'⛈',99:'⛈'};
+    var descs={0:'맑음',1:'대체로 맑음',2:'약간 흐림',3:'흐림',45:'안개',48:'안개',51:'가벼운 이슬비',53:'이슬비',55:'짙은 이슬비',61:'약한 비',63:'비',65:'강한 비',71:'약한 눈',73:'눈',75:'강한 눈',80:'소나기',81:'강한 소나기',82:'폭우',95:'뇌우',96:'뇌우(우박)',99:'강한 뇌우'};
     document.getElementById('wicon').textContent=icons[c.weather_code]||'🌡';
     document.getElementById('wtemp').textContent=Math.round(c.temperature_2m)+'°C';
     document.getElementById('wdesc').textContent=descs[c.weather_code]||'날씨 정보';
@@ -133,54 +129,57 @@ async function loadWeather(){
     document.getElementById('whumid').textContent=c.relative_humidity_2m+'%';
     document.getElementById('wwind').textContent=c.wind_speed_10m.toFixed(1)+'m/s';
     document.getElementById('wuv').textContent=c.uv_index!=null?c.uv_index.toFixed(1):'–';
-    const max=d.daily.temperature_2m_max[0],min=d.daily.temperature_2m_min[0];
+    var max=d.daily.temperature_2m_max[0],min=d.daily.temperature_2m_min[0];
     document.getElementById('wminmax').textContent='최고 '+Math.round(max)+'° / 최저 '+Math.round(min)+'°';
-  }catch(e){document.getElementById('wdesc').textContent='날씨 정보를 불러올 수 없습니다';}
+  })
+  .catch(function(){document.getElementById('wdesc').textContent='날씨 정보를 불러올 수 없습니다';});
 }
 loadWeather();
 
-const STOCKS=[
+var STOCKS=[
   {ticker:'005930',name:'삼성전자'},
   {ticker:'009150',name:'삼성전기'},
   {ticker:'034020',name:'두산에너빌리티'},
   {ticker:'035420',name:'NAVER'},
 ];
 
-async function loadStocks(){
-  const el=document.getElementById('stock-list');
+function loadStocks(){
+  var el=document.getElementById('stock-list');
   el.innerHTML='<div class="msg">불러오는 중...</div>';
-  try{
-    const r=await fetch('./data.json?t='+Date.now());
-    if(!r.ok) throw new Error('data.json 로드 실패');
-    const json=await r.json();
-    const stocks=json.stocks;
+  fetch('./data.json?t='+Date.now())
+  .then(function(r){return r.json();})
+  .then(function(json){
+    var stocks=json.stocks;
     if(!stocks||!Object.keys(stocks).length){
       el.innerHTML='<div class="msg">데이터를 불러올 수 없습니다.</div>';
       return;
     }
-    return;
-  }
-  el.innerHTML=STOCKS.map((s,i)=>{
-    const d=results[i];
-    if(!d) return`<div class="stock-row"><div><div class="sname">${s.name}</div><div class="sticker">${s.ticker}</div></div><div class="sright"><div class="schange flat">–</div></div></div>`;
-    const up=d.status==='2'||d.status==='1';
-    const dn=d.status==='5'||d.status==='4';
-    const cls=up?'up':dn?'dn':'flat';
-    const sign=up?'+':dn?'':'' ;
-    return`<div class="stock-row" style="cursor:pointer" onclick="window.open('https://m.stock.naver.com/domestic/stock/${s.ticker}','_blank')">
-      <div><div class="sname">${d.name}</div><div class="sticker">${s.ticker}</div></div>
-      <div class="sright">
-        <div class="sprice">${d.price}원</div>
-        <div class="schange ${cls}">${sign}${d.changeRate.toFixed(2)}% (${d.change})</div>
-      </div>
-    </div>`;
-  }).join('');
-  const now=new Date();
-  document.getElementById('stock-time').textContent='업데이트 '+now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' · 네이버 증권';
+    el.innerHTML=STOCKS.map(function(s){
+      var d=stocks[s.ticker];
+      if(!d||!d.closePrice) return '<div class="stock-row"><div><div class="sname">'+s.name+'</div><div class="sticker">'+s.ticker+'</div></div><div class="sright"><div class="schange flat">–</div></div></div>';
+      var rate=parseFloat(d.fluctuationsRatio)||0;
+      var code=d.compareToPreviousPrice?d.compareToPreviousPrice.code:'';
+      var up=code==='2'||code==='1';
+      var dn=code==='5'||code==='4';
+      var cls=up?'up':dn?'dn':'flat';
+      var sign=up?'+':'';
+      return '<div class="stock-row" onclick="window.open(\'https://m.stock.naver.com/domestic/stock/'+s.ticker+'\',\'_blank\')">'
+        +'<div><div class="sname">'+d.stockName+'</div><div class="sticker">'+s.ticker+'</div></div>'
+        +'<div class="sright"><div class="sprice">'+d.closePrice+'원</div>'
+        +'<div class="schange '+cls+'">'+sign+rate.toFixed(2)+'% ('+d.compareToPreviousClosePrice+')</div></div></div>';
+    }).join('');
+    var updated=new Date(json.updated);
+    var t=updated.toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    document.getElementById('stock-time').textContent=t+' 기준 · 1시간 자동 업데이트';
+  })
+  .catch(function(e){
+    el.innerHTML='<div class="msg">데이터를 불러올 수 없습니다.</div>';
+    console.error(e);
+  });
 }
 loadStocks();
 
-const NEWS={
+var NEWS={
   general:[
     {tag:'eco',head:'한국은행, 기준금리 동결 결정…물가 안정세 지속 판단',sum:'금융통화위원회는 현 경제 상황을 고려해 기준금리를 현 수준에서 유지하기로 했다.',time:'1시간 전'},
     {tag:'world',head:'미·중 무역 협상 재개…반도체 수출 규제 완화 논의',sum:'양국 대표단이 제네바에서 만나 첨단 기술 분야 수출 규제 완화 방안을 논의했다.',time:'2시간 전'},
@@ -195,14 +194,13 @@ const NEWS={
   ]
 };
 function loadNews(type){
-  const tagLabel={world:'세계',eco:'경제',tech:'기술',local:'국내'};
-  document.getElementById('news-'+type).innerHTML=NEWS[type].map(n=>`
-    <div class="news-item">
-      <span class="ntag tag-${n.tag}">${tagLabel[n.tag]}</span>
-      <div class="nhead">${n.head}</div>
-      <div class="nsum">${n.sum}</div>
-      <div class="ntime">${n.time}</div>
-    </div>`).join('');
+  var tagLabel={world:'세계',eco:'경제',tech:'기술',local:'국내'};
+  document.getElementById('news-'+type).innerHTML=NEWS[type].map(function(n){
+    return '<div class="news-item"><span class="ntag tag-'+n.tag+'">'+tagLabel[n.tag]+'</span>'
+      +'<div class="nhead">'+n.head+'</div>'
+      +'<div class="nsum">'+n.sum+'</div>'
+      +'<div class="ntime">'+n.time+'</div></div>';
+  }).join('');
 }
 loadNews('general');
 loadNews('tech');
