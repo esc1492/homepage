@@ -6,25 +6,7 @@ def fetch_json(url):
     with urllib.request.urlopen(req) as r:
         return json.loads(r.read().decode('utf-8'))
 
-def fetch_rss(oid):
-    url = f"https://news.naver.com/main/rss/index.naver?oid={oid}"
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    with urllib.request.urlopen(req) as r:
-        content = r.read().decode('utf-8')
-    items = re.findall(r'<item>(.*?)</item>', content, re.DOTALL)
-    result = []
-    for item in items[:5]:
-        title = re.search(r'<title>(.*?)</title>', item)
-        link = re.search(r'<link>(.*?)</link>', item)
-        desc = re.search(r'<description>(.*?)</description>', item)
-        pubdate = re.search(r'<pubDate>(.*?)</pubDate>', item)
-        if title:
-            t = html.unescape(re.sub(r'<[^>]+>', '', title.group(1))).strip()
-            l = link.group(1).strip() if link else ''
-            d = html.unescape(re.sub(r'<[^>]+>', '', desc.group(1))).strip()[:120] if desc else ''
-            p = pubdate.group(1).strip() if pubdate else ''
-            result.append({'title': t, 'link': l, 'desc': d, 'pubDate': p})
-    return result
+
 
 tickers = ['005930', '009150', '034020', '035420']
 stocks = {}
@@ -34,12 +16,39 @@ for t in tickers:
     except Exception as e:
         stocks[t] = {}
 
+def fetch_rss_url(url):
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    with urllib.request.urlopen(req) as r:
+        content = r.read().decode('utf-8')
+    items = re.findall(r'<item>(.*?)</item>', content, re.DOTALL)
+    result = []
+    for item in items[:5]:
+        title = re.search(r'<title><!\[CDATA\[(.*?)\]\]></title>|<title>(.*?)</title>', item)
+        link = re.search(r'<link>(.*?)</link>', item)
+        desc = re.search(r'<description><!\[CDATA\[(.*?)\]\]></description>|<description>(.*?)</description>', item)
+        pubdate = re.search(r'<pubDate>(.*?)</pubDate>', item)
+        if title:
+            t = html.unescape(re.sub(r'<[^>]+>', '', title.group(1) or title.group(2) or '')).strip()
+            l = link.group(1).strip() if link else ''
+            raw_desc = desc.group(1) or desc.group(2) if desc else ''
+            d = html.unescape(re.sub(r'<[^>]+>', '', raw_desc)).strip()[:120]
+            p = pubdate.group(1).strip() if pubdate else ''
+            if t:
+                result.append({'title': t, 'link': l, 'desc': d, 'pubDate': p})
+    return result
+
 news = {}
-rss_map = {'eco': '101', 'world': '104', 'tech': '105', 'local': '102'}
-for key, oid in rss_map.items():
+rss_urls = {
+    'eco':   'https://feeds.feedburner.com/yonhap-news-economy',
+    'world': 'https://feeds.feedburner.com/yonhap-news-world',
+    'tech':  'https://feeds.feedburner.com/yonhap-news-it',
+    'local': 'https://feeds.feedburner.com/yonhap-news-society',
+}
+for key, url in rss_urls.items():
     try:
-        news[key] = fetch_rss(oid)
+        news[key] = fetch_rss_url(url)
     except Exception as e:
+        print(f"RSS error [{key}]: {e}")
         news[key] = []
 
 data = {
