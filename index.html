@@ -65,7 +65,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans
       <input class="search-inp" id="q" type="text" placeholder="검색어를 입력하세요..." />
       <button class="search-btn" onclick="doSearch()">검색</button>
     </div>
+
+  <div class="card" style="position:sticky;top:1rem">
+    <div class="card-title"><span>오늘의 할 일</span></div>
+    <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem">
+      <input id="todo-inp" type="text" placeholder="할 일 입력..." style="flex:1;border:1px solid #2e2e3a;border-radius:8px;padding:0.5rem 0.75rem;font-size:13px;background:#0f1117;color:#e8e8e8;outline:none" />
+      <button onclick="addTodo()" style="border:1px solid #2e2e3a;border-radius:8px;padding:0.5rem 0.75rem;font-size:13px;background:#22223a;color:#aaa;cursor:pointer">추가</button>
+    </div>
+    <div id="todo-list"></div>
+    <div style="display:flex;justify-content:space-between;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid #2e2e3a">
+      <span id="todo-count" style="font-size:11px;color:#555"></span>
+      <button onclick="clearDone()" style="font-size:11px;color:#555;background:none;border:none;cursor:pointer;text-decoration:underline">완료 항목 삭제</button>
+    </div>
   </div>
+  </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:1rem;align-items:start">
   <div class="grid">
     <div class="card">
       <div class="card-title"><span>날씨 · 서울</span><button class="rbtn" onclick="loadWeather()">새로고침</button></div>
@@ -107,11 +122,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans
       <div id="stock-list"><div class="msg">불러오는 중...</div></div>
       <div class="updated" id="stock-time"></div>
     </div>
-    <div class="card">
+    <div class="card full">
       <div class="card-title"><span>주요 뉴스 <span class="ai-badge">AI 요약</span></span><button class="rbtn" onclick="loadNews('general')">새로고침</button></div>
       <div id="news-general"><div class="msg">불러오는 중...</div></div>
     </div>
-    <div class="card">
+    <div class="card full">
       <div class="card-title"><span>기술·IT 뉴스 <span class="ai-badge">AI 요약</span></span><button class="rbtn" onclick="loadNews('tech')">새로고침</button></div>
       <div id="news-tech"><div class="msg">불러오는 중...</div></div>
     </div>
@@ -294,6 +309,59 @@ function loadNews(type){
     }).join('');
   });
 }
+var todos=JSON.parse(localStorage.getItem('todos')||'[]');
+
+function saveTodos(){localStorage.setItem('todos',JSON.stringify(todos));}
+
+function renderTodos(){
+  var el=document.getElementById('todo-list');
+  if(!todos.length){
+    el.innerHTML='<div class="msg">할 일을 추가해 주세요.</div>';
+    document.getElementById('todo-count').textContent='';
+    return;
+  }
+  el.innerHTML=todos.map(function(t,i){
+    return '<div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;border-bottom:1px solid #2a2a3a">'
+      +'<input type="checkbox" '+(t.done?'checked':'')+' onchange="toggleTodo('+i+')" style="width:15px;height:15px;cursor:pointer;accent-color:#1D9E75">'
+      +'<span style="flex:1;font-size:13px;'+(t.done?'text-decoration:line-through;color:#555':'color:#e8e8e8')+'">'+t.text+'</span>'
+      +'<button onclick="deleteTodo('+i+')" style="font-size:11px;color:#555;background:none;border:none;cursor:pointer;padding:0">✕</button>'
+      +'</div>';
+  }).join('');
+  var done=todos.filter(function(t){return t.done;}).length;
+  document.getElementById('todo-count').textContent=done+'/'+todos.length+' 완료';
+}
+
+function addTodo(){
+  var inp=document.getElementById('todo-inp');
+  var text=inp.value.trim();
+  if(!text) return;
+  todos.push({text:text,done:false});
+  saveTodos();
+  renderTodos();
+  inp.value='';
+}
+
+function toggleTodo(i){
+  todos[i].done=!todos[i].done;
+  saveTodos();
+  renderTodos();
+}
+
+function deleteTodo(i){
+  todos.splice(i,1);
+  saveTodos();
+  renderTodos();
+}
+
+function clearDone(){
+  todos=todos.filter(function(t){return !t.done;});
+  saveTodos();
+  renderTodos();
+}
+
+document.getElementById('todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addTodo();});
+renderTodos();
+
 loadNews('general');
 loadNews('tech');
 </script>
