@@ -68,7 +68,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans
   </div>
   <div class="grid">
     <div class="card">
-      <div class="card-title"><span>날씨 · 서울</span><button class="rbtn" onclick="loadWeather()">새로고침</button></div>
+      <div class="card-title"><span>오늘 날씨 · 서울</span><button class="rbtn" onclick="loadWeather()">새로고침</button></div>
       <div class="weather-main">
         <div class="weather-icon" id="wicon">⛅</div>
         <div>
@@ -83,15 +83,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans
       </div>
     </div>
     <div class="card">
+      <div class="card-title"><span>내일 날씨 · 서울</span></div>
+      <div class="weather-main">
+        <div class="weather-icon" id="wicon2">⛅</div>
+        <div>
+          <div class="weather-temp" id="wtemp2">–°C</div>
+          <div class="weather-sub" id="wdesc2">불러오는 중...</div>
+          <div class="weather-minmax" id="wminmax2"></div>
+        </div>
+      </div>
+      <div class="weather-row">
+        <div class="wi"><div class="lb">강수확률</div><div class="vl" id="wrain2">–</div></div>
+        <div class="wi"><div class="lb">습도</div><div class="vl" id="whumid2">–</div></div>
+      </div>
+    </div>
+    <div class="card">
       <div class="card-title"><span>관심 종목</span><button class="rbtn" onclick="loadStocks()">새로고침</button></div>
       <div id="stock-list"><div class="msg">불러오는 중...</div></div>
       <div class="updated" id="stock-time"></div>
     </div>
-    <div class="card">
+    <div class="card full">
       <div class="card-title"><span>주요 뉴스 <span class="ai-badge">AI 요약</span></span><button class="rbtn" onclick="loadNews('general')">새로고침</button></div>
       <div id="news-general"><div class="msg">불러오는 중...</div></div>
     </div>
-    <div class="card">
+    <div class="card full">
       <div class="card-title"><span>기술·IT 뉴스 <span class="ai-badge">AI 요약</span></span><button class="rbtn" onclick="loadNews('tech')">새로고침</button></div>
       <div id="news-tech"><div class="msg">불러오는 중...</div></div>
     </div>
@@ -128,19 +143,29 @@ function getAirGrade(val, type){
 
 function loadWeather(){
   document.getElementById('wdesc').textContent='불러오는 중...';
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&wind_speed_unit=ms&timezone=Asia%2FSeoul')
+  document.getElementById('wdesc2').textContent='불러오는 중...';
+  var icons={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'🌨',80:'🌦',81:'🌧',82:'🌧',95:'⛈',96:'⛈',99:'⛈'};
+  var descs={0:'맑음',1:'대체로 맑음',2:'약간 흐림',3:'흐림',45:'안개',48:'안개',51:'가벼운 이슬비',53:'이슬비',55:'짙은 이슬비',61:'약한 비',63:'비',65:'강한 비',71:'약한 눈',73:'눈',75:'강한 눈',80:'소나기',81:'강한 소나기',82:'폭우',95:'뇌우',96:'뇌우(우박)',99:'강한 뇌우'};
+
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,relative_humidity_2m_max&wind_speed_unit=ms&timezone=Asia%2FSeoul')
   .then(function(r){return r.json();})
   .then(function(d){
     var c=d.current;
-    var icons={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'🌨',80:'🌦',81:'🌧',82:'🌧',95:'⛈',96:'⛈',99:'⛈'};
-    var descs={0:'맑음',1:'대체로 맑음',2:'약간 흐림',3:'흐림',45:'안개',48:'안개',51:'가벼운 이슬비',53:'이슬비',55:'짙은 이슬비',61:'약한 비',63:'비',65:'강한 비',71:'약한 눈',73:'눈',75:'강한 눈',80:'소나기',81:'강한 소나기',82:'폭우',95:'뇌우',96:'뇌우(우박)',99:'강한 뇌우'};
     document.getElementById('wicon').textContent=icons[c.weather_code]||'🌡';
     document.getElementById('wtemp').textContent=Math.round(c.temperature_2m)+'°C';
     document.getElementById('wdesc').textContent=descs[c.weather_code]||'날씨 정보';
-    var max=d.daily.temperature_2m_max[0],min=d.daily.temperature_2m_min[0];
-    document.getElementById('wminmax').textContent='최고 '+Math.round(max)+'° / 최저 '+Math.round(min)+'°';
+    document.getElementById('wminmax').textContent='최고 '+Math.round(d.daily.temperature_2m_max[0])+'° / 최저 '+Math.round(d.daily.temperature_2m_min[0])+'°';
+    document.getElementById('wicon2').textContent=icons[d.daily.weather_code[1]]||'🌡';
+    document.getElementById('wtemp2').textContent=Math.round((d.daily.temperature_2m_max[1]+d.daily.temperature_2m_min[1])/2)+'°C';
+    document.getElementById('wdesc2').textContent=descs[d.daily.weather_code[1]]||'날씨 정보';
+    document.getElementById('wminmax2').textContent='최고 '+Math.round(d.daily.temperature_2m_max[1])+'° / 최저 '+Math.round(d.daily.temperature_2m_min[1])+'°';
+    document.getElementById('wrain2').textContent=(d.daily.precipitation_probability_max[1]||0)+'%';
+    document.getElementById('whumid2').textContent=(d.daily.relative_humidity_2m_max[1]||0)+'%';
   })
-  .catch(function(){document.getElementById('wdesc').textContent='날씨 정보를 불러올 수 없습니다';});
+  .catch(function(){
+    document.getElementById('wdesc').textContent='날씨 정보를 불러올 수 없습니다';
+    document.getElementById('wdesc2').textContent='날씨 정보를 불러올 수 없습니다';
+  });
 
   fetch('https://air-quality-api.open-meteo.com/v1/air-quality?latitude=37.5665&longitude=126.9780&current=pm10,pm2_5&timezone=Asia%2FSeoul')
   .then(function(r){return r.json();})
@@ -232,14 +257,14 @@ function loadNews(type){
           });
         }
       });
-      items=items.slice(0,4);
+      items=items.slice(0,5);
     } else {
       if(news.tech&&news.tech.length){
         news.tech.forEach(function(n){
           items.push({tag:'tech',head:n.title,sum:n.desc,time:n.pubDate,link:n.link});
         });
       }
-      items=items.slice(0,4);
+      items=items.slice(0,5);
     }
     var elId=type==='general'?'news-general':'news-tech';
     document.getElementById(elId).innerHTML=items.map(function(n){
