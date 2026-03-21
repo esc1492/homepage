@@ -7,7 +7,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans-serif;background:#0f1117;color:#e8e8e8;min-height:100vh}
-.wrap{padding:1.5rem 1rem;max-width:900px;margin:auto}
+.wrap{padding:1.5rem 1rem;max-width:1200px;margin:auto}
 .top{display:flex;flex-direction:column;align-items:center;gap:0.75rem;margin-bottom:1.5rem}
 .clock{font-size:13px;color:#888;letter-spacing:0.04em}
 .search-bar{display:flex;width:100%;max-width:560px;border:1px solid #2e2e3a;border-radius:12px;overflow:hidden;background:#1a1a27}
@@ -16,11 +16,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans
 .search-inp::placeholder{color:#555}
 .search-btn{border:none;background:#22223a;padding:0 1.1rem;font-size:13px;color:#aaa;cursor:pointer;border-left:1px solid #2e2e3a}
 .search-btn:hover{background:#2a2a40}
+.layout{display:grid;grid-template-columns:1fr 280px;gap:1rem;align-items:start}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-@media(max-width:600px){.grid{grid-template-columns:1fr}}
 .card{background:#1a1a27;border:1px solid #2e2e3a;border-radius:12px;padding:1rem 1.25rem}
 .card-title{font-size:11px;font-weight:600;color:#666;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:0.75rem;display:flex;justify-content:space-between;align-items:center}
-.full{grid-column:1/-1}
 .weather-main{display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem}
 .weather-icon{font-size:38px;line-height:1}
 .weather-temp{font-size:40px;font-weight:500;line-height:1;color:#e8e8e8}
@@ -54,6 +53,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans
 .rbtn:hover{color:#aaa}
 .msg{font-size:13px;color:#666;padding:0.75rem 0;text-align:center}
 .updated{font-size:11px;color:#444;text-align:right;margin-top:0.5rem}
+@media(max-width:768px){.layout{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -65,76 +65,87 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans
       <input class="search-inp" id="q" type="text" placeholder="검색어를 입력하세요..." />
       <button class="search-btn" onclick="doSearch()">검색</button>
     </div>
+  </div>
 
-  <div class="card" style="position:sticky;top:1rem">
-    <div class="card-title"><span>오늘의 할 일</span></div>
-    <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem">
-      <input id="todo-inp" type="text" placeholder="할 일 입력..." style="flex:1;border:1px solid #2e2e3a;border-radius:8px;padding:0.5rem 0.75rem;font-size:13px;background:#0f1117;color:#e8e8e8;outline:none" />
-      <button onclick="addTodo()" style="border:1px solid #2e2e3a;border-radius:8px;padding:0.5rem 0.75rem;font-size:13px;background:#22223a;color:#aaa;cursor:pointer">추가</button>
-    </div>
-    <div id="todo-list"></div>
-    <div style="display:flex;justify-content:space-between;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid #2e2e3a">
-      <span id="todo-count" style="font-size:11px;color:#555"></span>
-      <button onclick="clearDone()" style="font-size:11px;color:#555;background:none;border:none;cursor:pointer;text-decoration:underline">완료 항목 삭제</button>
-    </div>
-  </div>
-  </div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 300px;gap:1rem;align-items:start">
-  <div class="grid">
-    <div class="card">
-      <div class="card-title"><span>날씨 · 서울</span><button class="rbtn" onclick="loadWeather()">새로고침</button></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
-        <div>
-          <div style="font-size:11px;color:#555;margin-bottom:0.4rem">오늘</div>
-          <div class="weather-main">
-            <div class="weather-icon" id="wicon">⛅</div>
-            <div>
-              <div class="weather-temp" id="wtemp">–°C</div>
-              <div class="weather-sub" id="wdesc">불러오는 중...</div>
-              <div class="weather-minmax" id="wminmax"></div>
+  <div class="layout">
+    <!-- 왼쪽: 기존 4개 카드 -->
+    <div class="grid">
+      <!-- 날씨 카드 -->
+      <div class="card">
+        <div class="card-title"><span>날씨 · 서울</span><button class="rbtn" onclick="loadWeather()">새로고침</button></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+          <div>
+            <div style="font-size:11px;color:#555;margin-bottom:0.4rem">오늘</div>
+            <div class="weather-main">
+              <div class="weather-icon" id="wicon">⛅</div>
+              <div>
+                <div class="weather-temp" id="wtemp">–°C</div>
+                <div class="weather-sub" id="wdesc">불러오는 중...</div>
+                <div class="weather-minmax" id="wminmax"></div>
+              </div>
+            </div>
+            <div class="weather-row">
+              <div class="wi"><div class="lb">미세먼지</div><div class="vl" id="wpm10">–</div></div>
+              <div class="wi"><div class="lb">초미세먼지</div><div class="vl" id="wpm25">–</div></div>
             </div>
           </div>
-          <div class="weather-row">
-            <div class="wi"><div class="lb">미세먼지</div><div class="vl" id="wpm10">–</div></div>
-            <div class="wi"><div class="lb">초미세먼지</div><div class="vl" id="wpm25">–</div></div>
-          </div>
-        </div>
-        <div style="border-left:1px solid #2e2e3a;padding-left:0.75rem">
-          <div style="font-size:11px;color:#555;margin-bottom:0.4rem">내일</div>
-          <div class="weather-main">
-            <div class="weather-icon" id="wicon2">⛅</div>
-            <div>
-              <div class="weather-temp" id="wtemp2">–°C</div>
-              <div class="weather-sub" id="wdesc2">불러오는 중...</div>
-              <div class="weather-minmax" id="wminmax2"></div>
+          <div style="border-left:1px solid #2e2e3a;padding-left:0.75rem">
+            <div style="font-size:11px;color:#555;margin-bottom:0.4rem">내일</div>
+            <div class="weather-main">
+              <div class="weather-icon" id="wicon2">⛅</div>
+              <div>
+                <div class="weather-temp" id="wtemp2">–°C</div>
+                <div class="weather-sub" id="wdesc2">불러오는 중...</div>
+                <div class="weather-minmax" id="wminmax2"></div>
+              </div>
             </div>
-          </div>
-          <div class="weather-row">
-            <div class="wi"><div class="lb">강수확률</div><div class="vl" id="wrain2">–</div></div>
-            <div class="wi"><div class="lb">습도</div><div class="vl" id="whumid2">–</div></div>
+            <div class="weather-row">
+              <div class="wi"><div class="lb">강수확률</div><div class="vl" id="wrain2">–</div></div>
+              <div class="wi"><div class="lb">습도</div><div class="vl" id="whumid2">–</div></div>
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- 주식 카드 -->
+      <div class="card">
+        <div class="card-title"><span>관심 종목</span><button class="rbtn" onclick="loadStocks()">새로고침</button></div>
+        <div id="stock-list"><div class="msg">불러오는 중...</div></div>
+        <div class="updated" id="stock-time"></div>
+      </div>
+
+      <!-- 주요 뉴스 카드 -->
+      <div class="card">
+        <div class="card-title"><span>주요 뉴스 <span class="ai-badge">실시간</span></span><button class="rbtn" onclick="loadNews('general')">새로고침</button></div>
+        <div id="news-general"><div class="msg">불러오는 중...</div></div>
+      </div>
+
+      <!-- 기술 뉴스 카드 -->
+      <div class="card">
+        <div class="card-title"><span>기술·IT 뉴스 <span class="ai-badge">실시간</span></span><button class="rbtn" onclick="loadNews('tech')">새로고침</button></div>
+        <div id="news-tech"><div class="msg">불러오는 중...</div></div>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-title"><span>관심 종목</span><button class="rbtn" onclick="loadStocks()">새로고침</button></div>
-      <div id="stock-list"><div class="msg">불러오는 중...</div></div>
-      <div class="updated" id="stock-time"></div>
-    </div>
-    <div class="card full">
-      <div class="card-title"><span>주요 뉴스 <span class="ai-badge">AI 요약</span></span><button class="rbtn" onclick="loadNews('general')">새로고침</button></div>
-      <div id="news-general"><div class="msg">불러오는 중...</div></div>
-    </div>
-    <div class="card full">
-      <div class="card-title"><span>기술·IT 뉴스 <span class="ai-badge">AI 요약</span></span><button class="rbtn" onclick="loadNews('tech')">새로고침</button></div>
-      <div id="news-tech"><div class="msg">불러오는 중...</div></div>
+
+    <!-- 오른쪽: 할 일 목록 -->
+    <div class="card" style="position:sticky;top:1rem">
+      <div class="card-title"><span>오늘의 할 일</span></div>
+      <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem">
+        <input id="todo-inp" type="text" placeholder="할 일 입력..." style="flex:1;border:1px solid #2e2e3a;border-radius:8px;padding:0.5rem 0.75rem;font-size:13px;background:#0f1117;color:#e8e8e8;outline:none" />
+        <button onclick="addTodo()" style="border:1px solid #2e2e3a;border-radius:8px;padding:0.5rem 0.75rem;font-size:13px;background:#22223a;color:#aaa;cursor:pointer">추가</button>
+      </div>
+      <div id="todo-list"></div>
+      <div style="display:flex;justify-content:space-between;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid #2e2e3a">
+        <span id="todo-count" style="font-size:11px;color:#555"></span>
+        <button onclick="clearDone()" style="font-size:11px;color:#555;background:none;border:none;cursor:pointer;text-decoration:underline">완료 항목 삭제</button>
+      </div>
     </div>
   </div>
 </div>
+
 <script>
 function updateClock(){
-  const n=new Date(),days=['일','월','화','수','목','금','토'];
+  var n=new Date(),days=['일','월','화','수','목','금','토'];
   document.getElementById('clock').textContent=
     n.getFullYear()+'년 '+(n.getMonth()+1)+'월 '+n.getDate()+'일 ('+days[n.getDay()]+') '+
     String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');
@@ -147,7 +158,7 @@ function doSearch(){
   if(q) window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank');
 }
 
-function getAirGrade(val, type){
+function getAirGrade(val,type){
   if(type==='pm10'){
     if(val<=30) return {text:'좋음',color:'#1D9E75'};
     if(val<=80) return {text:'보통',color:'#5aadff'};
@@ -166,7 +177,6 @@ function loadWeather(){
   document.getElementById('wdesc2').textContent='불러오는 중...';
   var icons={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'🌨',80:'🌦',81:'🌧',82:'🌧',95:'⛈',96:'⛈',99:'⛈'};
   var descs={0:'맑음',1:'대체로 맑음',2:'약간 흐림',3:'흐림',45:'안개',48:'안개',51:'가벼운 이슬비',53:'이슬비',55:'짙은 이슬비',61:'약한 비',63:'비',65:'강한 비',71:'약한 눈',73:'눈',75:'강한 눈',80:'소나기',81:'강한 소나기',82:'폭우',95:'뇌우',96:'뇌우(우박)',99:'강한 뇌우'};
-
   fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,relative_humidity_2m_max&wind_speed_unit=ms&timezone=Asia%2FSeoul')
   .then(function(r){return r.json();})
   .then(function(d){
@@ -186,7 +196,6 @@ function loadWeather(){
     document.getElementById('wdesc').textContent='날씨 정보를 불러올 수 없습니다';
     document.getElementById('wdesc2').textContent='날씨 정보를 불러올 수 없습니다';
   });
-
   fetch('https://air-quality-api.open-meteo.com/v1/air-quality?latitude=37.5665&longitude=126.9780&current=pm10,pm2_5&timezone=Asia%2FSeoul')
   .then(function(r){return r.json();})
   .then(function(d){
@@ -210,7 +219,6 @@ var STOCKS=[
   {ticker:'034020',name:'두산에너빌리티'},
   {ticker:'035420',name:'NAVER'},
 ];
-
 function loadStocks(){
   var el=document.getElementById('stock-list');
   el.innerHTML='<div class="msg">불러오는 중...</div>';
@@ -261,7 +269,6 @@ var NEWS_STATIC={
     {tag:'tech',head:'국내 스타트업, 양자암호통신 상용화 성공…세계 두 번째',sum:'국내 양자 기술 스타트업이 실제 통신망에서 양자암호 기술을 상용화하는 데 성공해 글로벌 주목을 받고 있다.',time:'3시간 전'},
   ]
 };
-
 function loadNews(type){
   fetch('./data.json?t='+Date.now())
   .then(function(r){return r.json();})
@@ -277,14 +284,14 @@ function loadNews(type){
           });
         }
       });
-      items=items.slice(0,5);
+      items=items.slice(0,4);
     } else {
       if(news.tech&&news.tech.length){
         news.tech.forEach(function(n){
           items.push({tag:'tech',head:n.title,sum:n.desc,time:n.pubDate,link:n.link});
         });
       }
-      items=items.slice(0,5);
+      items=items.slice(0,4);
     }
     var elId=type==='general'?'news-general':'news-tech';
     document.getElementById(elId).innerHTML=items.map(function(n){
@@ -309,10 +316,11 @@ function loadNews(type){
     }).join('');
   });
 }
+loadNews('general');
+loadNews('tech');
+
 var todos=JSON.parse(localStorage.getItem('todos')||'[]');
-
 function saveTodos(){localStorage.setItem('todos',JSON.stringify(todos));}
-
 function renderTodos(){
   var el=document.getElementById('todo-list');
   if(!todos.length){
@@ -330,7 +338,6 @@ function renderTodos(){
   var done=todos.filter(function(t){return t.done;}).length;
   document.getElementById('todo-count').textContent=done+'/'+todos.length+' 완료';
 }
-
 function addTodo(){
   var inp=document.getElementById('todo-inp');
   var text=inp.value.trim();
@@ -340,30 +347,23 @@ function addTodo(){
   renderTodos();
   inp.value='';
 }
-
 function toggleTodo(i){
   todos[i].done=!todos[i].done;
   saveTodos();
   renderTodos();
 }
-
 function deleteTodo(i){
   todos.splice(i,1);
   saveTodos();
   renderTodos();
 }
-
 function clearDone(){
   todos=todos.filter(function(t){return !t.done;});
   saveTodos();
   renderTodos();
 }
-
 document.getElementById('todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addTodo();});
 renderTodos();
-
-loadNews('general');
-loadNews('tech');
 </script>
 </body>
 </html>
