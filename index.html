@@ -68,33 +68,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans
   </div>
   <div class="grid">
     <div class="card">
-      <div class="card-title"><span>오늘 날씨 · 서울</span><button class="rbtn" onclick="loadWeather()">새로고침</button></div>
-      <div class="weather-main">
-        <div class="weather-icon" id="wicon">⛅</div>
+      <div class="card-title"><span>날씨 · 서울</span><button class="rbtn" onclick="loadWeather()">새로고침</button></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
         <div>
-          <div class="weather-temp" id="wtemp">–°C</div>
-          <div class="weather-sub" id="wdesc">불러오는 중...</div>
-          <div class="weather-minmax" id="wminmax"></div>
+          <div style="font-size:11px;color:#555;margin-bottom:0.4rem">오늘</div>
+          <div class="weather-main">
+            <div class="weather-icon" id="wicon">⛅</div>
+            <div>
+              <div class="weather-temp" id="wtemp">–°C</div>
+              <div class="weather-sub" id="wdesc">불러오는 중...</div>
+              <div class="weather-minmax" id="wminmax"></div>
+            </div>
+          </div>
+          <div class="weather-row">
+            <div class="wi"><div class="lb">미세먼지</div><div class="vl" id="wpm10">–</div></div>
+            <div class="wi"><div class="lb">초미세먼지</div><div class="vl" id="wpm25">–</div></div>
+          </div>
         </div>
-      </div>
-      <div class="weather-row">
-        <div class="wi"><div class="lb">미세먼지</div><div class="vl" id="wpm10">–</div></div>
-        <div class="wi"><div class="lb">초미세먼지</div><div class="vl" id="wpm25">–</div></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title"><span>내일 날씨 · 서울</span></div>
-      <div class="weather-main">
-        <div class="weather-icon" id="wicon2">⛅</div>
-        <div>
-          <div class="weather-temp" id="wtemp2">–°C</div>
-          <div class="weather-sub" id="wdesc2">불러오는 중...</div>
-          <div class="weather-minmax" id="wminmax2"></div>
+        <div style="border-left:1px solid #2e2e3a;padding-left:0.75rem">
+          <div style="font-size:11px;color:#555;margin-bottom:0.4rem">내일</div>
+          <div class="weather-main">
+            <div class="weather-icon" id="wicon2">⛅</div>
+            <div>
+              <div class="weather-temp" id="wtemp2">–°C</div>
+              <div class="weather-sub" id="wdesc2">불러오는 중...</div>
+              <div class="weather-minmax" id="wminmax2"></div>
+            </div>
+          </div>
+          <div class="weather-row">
+            <div class="wi"><div class="lb">강수확률</div><div class="vl" id="wrain2">–</div></div>
+            <div class="wi"><div class="lb">습도</div><div class="vl" id="whumid2">–</div></div>
+          </div>
         </div>
-      </div>
-      <div class="weather-row">
-        <div class="wi"><div class="lb">강수확률</div><div class="vl" id="wrain2">–</div></div>
-        <div class="wi"><div class="lb">습도</div><div class="vl" id="whumid2">–</div></div>
       </div>
     </div>
     <div class="card">
