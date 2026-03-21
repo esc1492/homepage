@@ -319,8 +319,29 @@ function loadNews(type){
 loadNews('general');
 loadNews('tech');
 
-var todos=JSON.parse(localStorage.getItem('todos')||'[]');
-function saveTodos(){localStorage.setItem('todos',JSON.stringify(todos));}
+var SCRIPT_URL='https://script.google.com/macros/s/AKfycbw28uWC9UvnGqtdVzGoqyWWBMWSQvGPbEaUs3ETisKG0TF_B7BKwbXMLc0XrFXQZTGx/exec';
+var todos=[];
+
+function loadTodosFromGithub(){
+  fetch(SCRIPT_URL+'?action=getAll')
+  .then(function(r){return r.json();})
+  .then(function(data){
+    todos=data||[];
+    renderTodos();
+  })
+  .catch(function(){
+    todos=[];
+    renderTodos();
+  });
+}
+
+function saveTodosToGithub(action,payload){
+  var body=Object.assign({action:action},payload);
+  fetch(SCRIPT_URL,{
+    method:'POST',
+    body:JSON.stringify(body)
+  }).catch(function(e){console.error('Todo 저장 실패:',e);});
+}
 function renderTodos(){
   var el=document.getElementById('todo-list');
   if(!todos.length){
@@ -342,28 +363,30 @@ function addTodo(){
   var inp=document.getElementById('todo-inp');
   var text=inp.value.trim();
   if(!text) return;
-  todos.push({text:text,done:false});
-  saveTodos();
+  var newTodo={id:Date.now().toString(),text:text,done:false};
+  todos.push(newTodo);
   renderTodos();
   inp.value='';
+  saveTodosToGithub('add',{text:text});
 }
 function toggleTodo(i){
   todos[i].done=!todos[i].done;
-  saveTodos();
   renderTodos();
+  saveTodosToGithub('toggle',{id:todos[i].id});
 }
 function deleteTodo(i){
+  var id=todos[i].id;
   todos.splice(i,1);
-  saveTodos();
   renderTodos();
+  saveTodosToGithub('delete',{id:id});
 }
 function clearDone(){
   todos=todos.filter(function(t){return !t.done;});
-  saveTodos();
   renderTodos();
+  saveTodosToGithub('clearDone',{});
 }
 document.getElementById('todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addTodo();});
-renderTodos();
+loadTodosFromGithub();
 </script>
 </body>
 </html>
