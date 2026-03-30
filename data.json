@@ -8,16 +8,16 @@
       "itemLogoUrl": "https://ssl.pstatic.net/imgstock/fn/real/logo/stock/Stock005930.svg",
       "itemLogoPngUrl": "https://ssl.pstatic.net/imgstock/fn/real/logo/png/stock/Stock005930.png",
       "sosok": "0",
-      "closePrice": "172,600",
-      "compareToPreviousClosePrice": "-7,100",
+      "closePrice": "175,400",
+      "compareToPreviousClosePrice": "-4,300",
       "compareToPreviousPrice": {
         "code": "5",
         "text": "하락",
         "name": "FALLING"
       },
-      "fluctuationsRatio": "-3.95",
+      "fluctuationsRatio": "-2.39",
       "marketStatus": "OPEN",
-      "localTradedAt": "2026-03-30T10:20:22+09:00",
+      "localTradedAt": "2026-03-30T13:20:22+09:00",
       "tradeStopType": {
         "code": "1",
         "text": "운영.Trading",
@@ -40,36 +40,36 @@
       },
       "stockExchangeName": "KOSPI",
       "imageCharts": {
-        "areaYearThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/005930_end.png?1774833622000",
-        "candleWeek": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/005930_end.png?1774833622000",
-        "candleDay": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/005930_end.png?1774833622000",
-        "day_up_tablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/005930_end_up_tablet.png?1774833622000",
-        "areaYear": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/005930_end.png?1774833622000",
-        "areaYearTen": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/005930_end.png?1774833622000",
-        "day_up": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/005930_end_up.png?1774833622000",
-        "areaMonthThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/005930_end.png?1774833622000",
-        "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/005930_transparent.png?1774833622000",
-        "candleMonth": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/005930_end.png?1774833622000",
-        "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/005930_end.png?1774833622000"
+        "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/005930_transparent.png?1774844422000",
+        "candleDay": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/005930_end.png?1774844422000",
+        "areaYearThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/005930_end.png?1774844422000",
+        "candleMonth": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/005930_end.png?1774844422000",
+        "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/005930_end.png?1774844422000",
+        "day_up": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/005930_end_up.png?1774844422000",
+        "candleWeek": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/005930_end.png?1774844422000",
+        "areaYearTen": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/005930_end.png?1774844422000",
+        "areaMonthThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/005930_end.png?1774844422000",
+        "day_up_tablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/005930_end_up_tablet.png?1774844422000",
+        "areaYear": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/005930_end.png?1774844422000"
       },
       "imageChartUrlInfo": {
         "line": {
-          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/005930_end.png?177483360",
-          "month3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/005930_end.png?177483360",
-          "year": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/005930_end.png?177483360",
-          "year3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/005930_end.png?177483360",
-          "year5": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year5/005930_end.png?177483360",
-          "year10": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/005930_end.png?177483360"
+          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/005930_end.png?177484440",
+          "month3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/005930_end.png?177484440",
+          "year": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/005930_end.png?177484440",
+          "year3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/005930_end.png?177484440",
+          "year5": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year5/005930_end.png?177484440",
+          "year10": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/005930_end.png?177484440"
         },
         "candle": {
-          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/005930_end.png?177483360",
-          "week": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/005930_end.png?177483360",
-          "month": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/005930_end.png?177483360"
+          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/005930_end.png?177484440",
+          "week": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/005930_end.png?177484440",
+          "month": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/005930_end.png?177484440"
         },
         "mini": {
-          "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/005930_transparent.png?177483360",
-          "dayUp": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/005930_end_up.png?177483360",
-          "dayUpTablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/005930_end_up_tablet.png?177483360"
+          "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/005930_transparent.png?177484440",
+          "dayUp": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/005930_end_up.png?177484440",
+          "dayUpTablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/005930_end_up_tablet.png?177484440"
         }
       },
       "scriptChartTypes": [
@@ -93,15 +93,15 @@
       "overMarketPriceInfo": {
         "tradingSessionType": "REGULAR_MARKET",
         "overMarketStatus": "OPEN",
-        "overPrice": "172,600",
+        "overPrice": "175,400",
         "compareToPreviousPrice": {
           "code": "5",
           "text": "하락",
           "name": "FALLING"
         },
-        "compareToPreviousClosePrice": "-7,100",
-        "fluctuationsRatio": "-3.95",
-        "localTradedAt": "2026-03-30T10:20:25.3+09:00",
+        "compareToPreviousClosePrice": "-4,300",
+        "fluctuationsRatio": "-2.39",
+        "localTradedAt": "2026-03-30T13:21:27.517+09:00",
         "tradeStopType": {
           "code": "1",
           "text": "운영.Trading",
@@ -117,16 +117,16 @@
       "itemLogoUrl": "https://ssl.pstatic.net/imgstock/fn/real/logo/stock/Stock009150.svg",
       "itemLogoPngUrl": "https://ssl.pstatic.net/imgstock/fn/real/logo/png/stock/Stock009150.png",
       "sosok": "0",
-      "closePrice": "414,250",
-      "compareToPreviousClosePrice": "-19,750",
+      "closePrice": "424,500",
+      "compareToPreviousClosePrice": "-9,500",
       "compareToPreviousPrice": {
         "code": "5",
         "text": "하락",
         "name": "FALLING"
       },
-      "fluctuationsRatio": "-4.55",
+      "fluctuationsRatio": "-2.19",
       "marketStatus": "OPEN",
-      "localTradedAt": "2026-03-30T10:20:24+09:00",
+      "localTradedAt": "2026-03-30T13:21:23+09:00",
       "tradeStopType": {
         "code": "1",
         "text": "운영.Trading",
@@ -149,36 +149,36 @@
       },
       "stockExchangeName": "KOSPI",
       "imageCharts": {
-        "candleWeek": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/009150_end.png?1774833624000",
-        "day_up_tablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/009150_end_up_tablet.png?1774833624000",
-        "areaMonthThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/009150_end.png?1774833624000",
-        "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/009150_end.png?1774833624000",
-        "areaYear": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/009150_end.png?1774833624000",
-        "candleDay": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/009150_end.png?1774833624000",
-        "candleMonth": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/009150_end.png?1774833624000",
-        "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/009150_transparent.png?1774833624000",
-        "day_up": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/009150_end_up.png?1774833624000",
-        "areaYearTen": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/009150_end.png?1774833624000",
-        "areaYearThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/009150_end.png?1774833624000"
+        "candleDay": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/009150_end.png?1774844483000",
+        "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/009150_end.png?1774844483000",
+        "areaMonthThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/009150_end.png?1774844483000",
+        "candleMonth": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/009150_end.png?1774844483000",
+        "candleWeek": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/009150_end.png?1774844483000",
+        "day_up": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/009150_end_up.png?1774844483000",
+        "day_up_tablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/009150_end_up_tablet.png?1774844483000",
+        "areaYearThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/009150_end.png?1774844483000",
+        "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/009150_transparent.png?1774844483000",
+        "areaYearTen": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/009150_end.png?1774844483000",
+        "areaYear": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/009150_end.png?1774844483000"
       },
       "imageChartUrlInfo": {
         "line": {
-          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/009150_end.png?177483360",
-          "month3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/009150_end.png?177483360",
-          "year": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/009150_end.png?177483360",
-          "year3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/009150_end.png?177483360",
-          "year5": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year5/009150_end.png?177483360",
-          "year10": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/009150_end.png?177483360"
+          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/009150_end.png?177484446",
+          "month3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/009150_end.png?177484446",
+          "year": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/009150_end.png?177484446",
+          "year3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/009150_end.png?177484446",
+          "year5": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year5/009150_end.png?177484446",
+          "year10": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/009150_end.png?177484446"
         },
         "candle": {
-          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/009150_end.png?177483360",
-          "week": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/009150_end.png?177483360",
-          "month": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/009150_end.png?177483360"
+          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/009150_end.png?177484446",
+          "week": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/009150_end.png?177484446",
+          "month": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/009150_end.png?177484446"
         },
         "mini": {
-          "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/009150_transparent.png?177483360",
-          "dayUp": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/009150_end_up.png?177483360",
-          "dayUpTablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/009150_end_up_tablet.png?177483360"
+          "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/009150_transparent.png?177484446",
+          "dayUp": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/009150_end_up.png?177484446",
+          "dayUpTablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/009150_end_up_tablet.png?177484446"
         }
       },
       "scriptChartTypes": [
@@ -209,15 +209,15 @@
       "overMarketPriceInfo": {
         "tradingSessionType": "REGULAR_MARKET",
         "overMarketStatus": "OPEN",
-        "overPrice": "414,000",
+        "overPrice": "424,000",
         "compareToPreviousPrice": {
           "code": "5",
           "text": "하락",
           "name": "FALLING"
         },
-        "compareToPreviousClosePrice": "-20,000",
-        "fluctuationsRatio": "-4.61",
-        "localTradedAt": "2026-03-30T10:20:25.783+09:00",
+        "compareToPreviousClosePrice": "-10,000",
+        "fluctuationsRatio": "-2.30",
+        "localTradedAt": "2026-03-30T13:21:28.159+09:00",
         "tradeStopType": {
           "code": "1",
           "text": "운영.Trading",
@@ -233,16 +233,16 @@
       "itemLogoUrl": "https://ssl.pstatic.net/imgstock/fn/real/logo/stock/Stock034020.svg",
       "itemLogoPngUrl": "https://ssl.pstatic.net/imgstock/fn/real/logo/png/stock/Stock034020.png",
       "sosok": "0",
-      "closePrice": "92,800",
-      "compareToPreviousClosePrice": "-5,300",
+      "closePrice": "93,700",
+      "compareToPreviousClosePrice": "-4,400",
       "compareToPreviousPrice": {
         "code": "5",
         "text": "하락",
         "name": "FALLING"
       },
-      "fluctuationsRatio": "-5.40",
+      "fluctuationsRatio": "-4.49",
       "marketStatus": "OPEN",
-      "localTradedAt": "2026-03-30T10:19:20+09:00",
+      "localTradedAt": "2026-03-30T13:21:20+09:00",
       "tradeStopType": {
         "code": "1",
         "text": "운영.Trading",
@@ -265,36 +265,36 @@
       },
       "stockExchangeName": "KOSPI",
       "imageCharts": {
-        "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/034020_transparent.png?1774833560000",
-        "areaYearThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/034020_end.png?1774833560000",
-        "areaMonthThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/034020_end.png?1774833560000",
-        "candleDay": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/034020_end.png?1774833560000",
-        "candleWeek": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/034020_end.png?1774833560000",
-        "areaYear": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/034020_end.png?1774833560000",
-        "areaYearTen": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/034020_end.png?1774833560000",
-        "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/034020_end.png?1774833560000",
-        "day_up": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/034020_end_up.png?1774833560000",
-        "candleMonth": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/034020_end.png?1774833560000",
-        "day_up_tablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/034020_end_up_tablet.png?1774833560000"
+        "areaYearThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/034020_end.png?1774844480000",
+        "areaYear": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/034020_end.png?1774844480000",
+        "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/034020_transparent.png?1774844480000",
+        "candleMonth": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/034020_end.png?1774844480000",
+        "candleWeek": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/034020_end.png?1774844480000",
+        "areaMonthThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/034020_end.png?1774844480000",
+        "day_up": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/034020_end_up.png?1774844480000",
+        "day_up_tablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/034020_end_up_tablet.png?1774844480000",
+        "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/034020_end.png?1774844480000",
+        "areaYearTen": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/034020_end.png?1774844480000",
+        "candleDay": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/034020_end.png?1774844480000"
       },
       "imageChartUrlInfo": {
         "line": {
-          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/034020_end.png?177483354",
-          "month3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/034020_end.png?177483354",
-          "year": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/034020_end.png?177483354",
-          "year3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/034020_end.png?177483354",
-          "year5": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year5/034020_end.png?177483354",
-          "year10": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/034020_end.png?177483354"
+          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/034020_end.png?177484446",
+          "month3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/034020_end.png?177484446",
+          "year": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/034020_end.png?177484446",
+          "year3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/034020_end.png?177484446",
+          "year5": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year5/034020_end.png?177484446",
+          "year10": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/034020_end.png?177484446"
         },
         "candle": {
-          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/034020_end.png?177483354",
-          "week": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/034020_end.png?177483354",
-          "month": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/034020_end.png?177483354"
+          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/034020_end.png?177484446",
+          "week": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/034020_end.png?177484446",
+          "month": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/034020_end.png?177484446"
         },
         "mini": {
-          "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/034020_transparent.png?177483354",
-          "dayUp": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/034020_end_up.png?177483354",
-          "dayUpTablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/034020_end_up_tablet.png?177483354"
+          "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/034020_transparent.png?177484446",
+          "dayUp": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/034020_end_up.png?177484446",
+          "dayUpTablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/034020_end_up_tablet.png?177484446"
         }
       },
       "scriptChartTypes": [
@@ -318,15 +318,15 @@
       "overMarketPriceInfo": {
         "tradingSessionType": "REGULAR_MARKET",
         "overMarketStatus": "OPEN",
-        "overPrice": "92,800",
+        "overPrice": "93,650",
         "compareToPreviousPrice": {
           "code": "5",
           "text": "하락",
           "name": "FALLING"
         },
-        "compareToPreviousClosePrice": "-5,300",
-        "fluctuationsRatio": "-5.40",
-        "localTradedAt": "2026-03-30T10:20:26.436+09:00",
+        "compareToPreviousClosePrice": "-4,450",
+        "fluctuationsRatio": "-4.54",
+        "localTradedAt": "2026-03-30T13:21:28.917+09:00",
         "tradeStopType": {
           "code": "1",
           "text": "운영.Trading",
@@ -342,16 +342,16 @@
       "itemLogoUrl": "https://ssl.pstatic.net/imgstock/fn/real/logo/stock/Stock035420.svg",
       "itemLogoPngUrl": "https://ssl.pstatic.net/imgstock/fn/real/logo/png/stock/Stock035420.png",
       "sosok": "0",
-      "closePrice": "205,000",
-      "compareToPreviousClosePrice": "-7,500",
+      "closePrice": "207,000",
+      "compareToPreviousClosePrice": "-5,500",
       "compareToPreviousPrice": {
         "code": "5",
         "text": "하락",
         "name": "FALLING"
       },
-      "fluctuationsRatio": "-3.53",
+      "fluctuationsRatio": "-2.59",
       "marketStatus": "OPEN",
-      "localTradedAt": "2026-03-30T10:20:20+09:00",
+      "localTradedAt": "2026-03-30T13:21:20+09:00",
       "tradeStopType": {
         "code": "1",
         "text": "운영.Trading",
@@ -374,36 +374,36 @@
       },
       "stockExchangeName": "KOSPI",
       "imageCharts": {
-        "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/035420_transparent.png?1774833620000",
-        "candleWeek": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/035420_end.png?1774833620000",
-        "day_up": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/035420_end_up.png?1774833620000",
-        "areaYearThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/035420_end.png?1774833620000",
-        "areaYearTen": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/035420_end.png?1774833620000",
-        "day_up_tablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/035420_end_up_tablet.png?1774833620000",
-        "areaMonthThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/035420_end.png?1774833620000",
-        "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/035420_end.png?1774833620000",
-        "candleMonth": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/035420_end.png?1774833620000",
-        "areaYear": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/035420_end.png?1774833620000",
-        "candleDay": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/035420_end.png?1774833620000"
+        "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/035420_end.png?1774844480000",
+        "day_up_tablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/035420_end_up_tablet.png?1774844480000",
+        "candleDay": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/035420_end.png?1774844480000",
+        "areaYearTen": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/035420_end.png?1774844480000",
+        "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/035420_transparent.png?1774844480000",
+        "areaMonthThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/035420_end.png?1774844480000",
+        "candleMonth": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/035420_end.png?1774844480000",
+        "areaYear": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/035420_end.png?1774844480000",
+        "candleWeek": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/035420_end.png?1774844480000",
+        "areaYearThree": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/035420_end.png?1774844480000",
+        "day_up": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/035420_end_up.png?1774844480000"
       },
       "imageChartUrlInfo": {
         "line": {
-          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/035420_end.png?177483360",
-          "month3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/035420_end.png?177483360",
-          "year": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/035420_end.png?177483360",
-          "year3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/035420_end.png?177483360",
-          "year5": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year5/035420_end.png?177483360",
-          "year10": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/035420_end.png?177483360"
+          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/day/035420_end.png?177484446",
+          "month3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/month3/035420_end.png?177484446",
+          "year": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year/035420_end.png?177484446",
+          "year3": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year3/035420_end.png?177484446",
+          "year5": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year5/035420_end.png?177484446",
+          "year10": "https://ssl.pstatic.net/imgfinance/chart/mobile/area/year10/035420_end.png?177484446"
         },
         "candle": {
-          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/035420_end.png?177483360",
-          "week": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/035420_end.png?177483360",
-          "month": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/035420_end.png?177483360"
+          "day": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/day/035420_end.png?177484446",
+          "week": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/week/035420_end.png?177484446",
+          "month": "https://ssl.pstatic.net/imgfinance/chart/mobile/candle/month/035420_end.png?177484446"
         },
         "mini": {
-          "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/035420_transparent.png?177483360",
-          "dayUp": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/035420_end_up.png?177483360",
-          "dayUpTablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/035420_end_up_tablet.png?177483360"
+          "transparent": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/035420_transparent.png?177484446",
+          "dayUp": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/035420_end_up.png?177484446",
+          "dayUpTablet": "https://ssl.pstatic.net/imgfinance/chart/mobile/mini/035420_end_up_tablet.png?177484446"
         }
       },
       "scriptChartTypes": [
@@ -427,15 +427,15 @@
       "overMarketPriceInfo": {
         "tradingSessionType": "REGULAR_MARKET",
         "overMarketStatus": "OPEN",
-        "overPrice": "205,500",
+        "overPrice": "207,000",
         "compareToPreviousPrice": {
           "code": "5",
           "text": "하락",
           "name": "FALLING"
         },
-        "compareToPreviousClosePrice": "-7,000",
-        "fluctuationsRatio": "-3.29",
-        "localTradedAt": "2026-03-30T10:20:27.066+09:00",
+        "compareToPreviousClosePrice": "-5,500",
+        "fluctuationsRatio": "-2.59",
+        "localTradedAt": "2026-03-30T13:21:29.57+09:00",
         "tradeStopType": {
           "code": "1",
           "text": "운영.Trading",
@@ -447,132 +447,132 @@
   "news": {
     "eco": [
       {
-        "title": "농심, 짜파게티 모델로 후덕죽 셰프 발탁…레시피도 공동 개발",
-        "link": "https://www.hankyung.com/article/202603304715g",
+        "title": "[속보] \"이란 원유 통제\" 트럼프 발언에 브렌트 108달러 돌파",
+        "link": "https://www.hankyung.com/article/2026033054137",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:24:26 +0900"
+        "pubDate": "Mon, 30 Mar 2026 11:28:49 +0900"
       },
       {
-        "title": "쿠팡, 지난해 하반기 고효율 가전 환급 227억…단일 유통 채널 최대",
-        "link": "https://www.hankyung.com/article/202603304615g",
+        "title": "관광공사, 방한시장 1위 중국서 세일즈…N차여행 ·지역관광 활성화 나서",
+        "link": "https://www.hankyung.com/article/202603305212g",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:15:40 +0900"
+        "pubDate": "Mon, 30 Mar 2026 11:18:33 +0900"
       },
       {
-        "title": "\"발주 실수로 눈물의 할인\"…버거킹 '와퍼 3900원'",
-        "link": "https://www.hankyung.com/article/202603304618g",
+        "title": "전남 목포·충남 천안에 소상공인 디지털 거점 '소담스퀘어' 들어선다",
+        "link": "https://www.hankyung.com/article/202603305316i",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:03:53 +0900"
+        "pubDate": "Mon, 30 Mar 2026 11:11:42 +0900"
       },
       {
-        "title": "신현송 \"엄중한 시기에 한은 총재 지명, 막중한 책임 느껴\" [심성미의 BOK 워치]",
-        "link": "https://www.hankyung.com/article/202603304670i",
+        "title": "토스인슈어런스, 조병익 대표 3연임 확정",
+        "link": "https://www.hankyung.com/article/202603305205i",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:01:29 +0900"
+        "pubDate": "Mon, 30 Mar 2026 10:57:24 +0900"
       },
       {
-        "title": "[임현우 기자의 키워드 시사경제] 전쟁 터졌는데…금값이 왜 떨어지지?",
-        "link": "https://www.hankyung.com/article/2026032706031",
+        "title": "싼 주유소 대체 어디?…기름값 상한제에도 2500원 육박",
+        "link": "https://www.hankyung.com/article/2026033049987",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:00:42 +0900"
+        "pubDate": "Mon, 30 Mar 2026 10:57:14 +0900"
       }
     ],
     "world": [
+      {
+        "title": "[속보] 대만 야당 주석 \"中 초청 감사…양안 협력 촉진 기대\" [신화통신]",
+        "link": "https://www.hankyung.com/article/2026033053777",
+        "desc": "",
+        "pubDate": "Mon, 30 Mar 2026 11:19:43 +0900"
+      },
+      {
+        "title": "트럼프 \"이란과 협상 극도로 잘하고 있어…조기 합의될 것\" [종합]",
+        "link": "https://www.hankyung.com/article/2026033052567",
+        "desc": "",
+        "pubDate": "Mon, 30 Mar 2026 11:13:48 +0900"
+      },
+      {
+        "title": "美 지상군 7,000명 투입 임박?...전 세계 패닉 빠뜨릴 '지상전' 타깃은? [HK영상]",
+        "link": "https://www.hankyung.com/article/202603305260i",
+        "desc": "",
+        "pubDate": "Mon, 30 Mar 2026 11:08:42 +0900"
+      },
+      {
+        "title": "[속보] 中 \"시진핑, 대만 국민당 주석 4월 7∼12일 방중 초청\"",
+        "link": "https://www.hankyung.com/article/2026033053107",
+        "desc": "",
+        "pubDate": "Mon, 30 Mar 2026 11:05:06 +0900"
+      },
       {
         "title": "트럼프 \"이란과 협상 잘하고 있어…곧 합의할 것으로 생각\"",
         "link": "https://www.hankyung.com/article/2026033048527",
         "desc": "",
         "pubDate": "Mon, 30 Mar 2026 09:34:21 +0900"
-      },
-      {
-        "title": "[속보] 트럼프 \"이란과 직·간접적으로 협상 중\"",
-        "link": "https://www.hankyung.com/article/2026033048397",
-        "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:30:35 +0900"
-      },
-      {
-        "title": "[속보] 트럼프 \"미군, 이란 석유 수출 허브 하르그섬 점령 가능\"",
-        "link": "https://www.hankyung.com/article/2026033047507",
-        "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:11:09 +0900"
-      },
-      {
-        "title": "밴스 美부통령 \"이란 거세가 목적\"…유가 급등엔 선 그어",
-        "link": "https://www.hankyung.com/article/2026033046527",
-        "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:06:37 +0900"
-      },
-      {
-        "title": "\"이란 지상군 투입, 매우 위험\"…한국계 상원의원 '발끈'",
-        "link": "https://www.hankyung.com/article/2026033045477",
-        "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 08:47:32 +0900"
       }
     ],
     "tech": [
       {
-        "title": "로킷헬스케어, 美 신장재생 핵심특허 확보… 하버드大와 손잡고 '투석 없는 삶' 도전",
-        "link": "https://www.hankyung.com/article/202603304956i",
+        "title": "\"리니지 판박이인데 표절 아니라고?\"…논란의 판결 이유는 [정희원의 판례 A/S]",
+        "link": "https://www.hankyung.com/article/202603305427i",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 10:13:39 +0900"
+        "pubDate": "Mon, 30 Mar 2026 12:36:41 +0900"
       },
       {
-        "title": "AAD 2026 참가한 클래시스 \"미국 에스테틱 시장 입지 공격적으로 확장하겠다\"",
-        "link": "https://www.hankyung.com/article/202603304999i",
+        "title": "파마리서치, 리쥬란 주성분 'PN' 난치성 아토피 안면홍반 개선 효과 확인",
+        "link": "https://www.hankyung.com/article/202603305463i",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:59:53 +0900"
+        "pubDate": "Mon, 30 Mar 2026 11:58:13 +0900"
       },
       {
-        "title": "기술수출 알테오젠 7건 vs 삼천당제약 0건…엇갈린 주가, 왜 [분석+]",
-        "link": "https://www.hankyung.com/article/202603271303i",
+        "title": "DNC 에스테틱스 '디클래시 CaHA', 임수정과 첫 TVCF 공개…콜라겐 부스터 시장 공략 본격화",
+        "link": "https://www.hankyung.com/article/202603305170i",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:54:26 +0900"
+        "pubDate": "Mon, 30 Mar 2026 10:41:23 +0900"
       },
       {
-        "title": "제일파마홀딩스, 경영지원본부 신설…김현수 신임 본부장 임명",
-        "link": "https://www.hankyung.com/article/202603304952i",
+        "title": "네오이뮨텍, 김태경 사내이사 대표이사로 선임",
+        "link": "https://www.hankyung.com/article/202603305103i",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:53:07 +0900"
+        "pubDate": "Mon, 30 Mar 2026 10:18:07 +0900"
       },
       {
-        "title": "'충주맨 김선태' 대박 행진…BBQ 회장도 나서더니 '돌풍'",
-        "link": "https://www.hankyung.com/article/2026033047357",
+        "title": "대웅제약, 디지털 헬스케어 투자 성과 첫 공개…\"사업화까지 연결한 동반 성장 모델 제시\"",
+        "link": "https://www.hankyung.com/article/202603305083i",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:25:48 +0900"
+        "pubDate": "Mon, 30 Mar 2026 10:14:59 +0900"
       }
     ],
     "local": [
       {
-        "title": "[인사] DB증권",
-        "link": "https://www.hankyung.com/article/2026033049866",
+        "title": "'나는 신이다' PD \"JMS 정명석, 호텔 같은 독방에서\"",
+        "link": "https://www.hankyung.com/article/2026033051607",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:55:26 +0900"
+        "pubDate": "Mon, 30 Mar 2026 11:23:09 +0900"
       },
       {
-        "title": "'37위한테 0-4 완패' 참혹한 축구…\"월드컵 중계권 누가 사나\"",
-        "link": "https://www.hankyung.com/article/2026033046797",
+        "title": "'스타 번역가' 황석희, 과거 성범죄 의혹에…\"확인해보겠다\"",
+        "link": "https://www.hankyung.com/article/2026033052357",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:23:33 +0900"
+        "pubDate": "Mon, 30 Mar 2026 11:16:14 +0900"
       },
       {
-        "title": "세종시, 세종한우대왕 출시",
-        "link": "https://www.hankyung.com/article/202603304730i",
+        "title": "법무법인 YK, 서울대와 '산업기술법률연구센터' 개소 [로앤비즈 브리핑]",
+        "link": "https://www.hankyung.com/article/202603305224i",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 09:09:52 +0900"
+        "pubDate": "Mon, 30 Mar 2026 11:03:41 +0900"
       },
       {
-        "title": "방 청소 알바 10대에게 \"마사지 해달라\" 강제추행",
-        "link": "https://www.hankyung.com/article/2026033044047",
+        "title": "전장연, 출근길 버스 또 막아…서대문 버스정류장서 시위",
+        "link": "https://www.hankyung.com/article/2026033050977",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 07:54:26 +0900"
+        "pubDate": "Mon, 30 Mar 2026 10:34:57 +0900"
       },
       {
-        "title": "성동구 아파트 증여받은 부부…세금 1000만원 넘게 뛴 사연",
-        "link": "https://www.hankyung.com/article/202603293726i",
+        "title": "'파이크 증후군'이 던지는 법왜곡죄에 대한 경고 [하태헌의 법정 밖 이야기]",
+        "link": "https://www.hankyung.com/article/202603304811i",
         "desc": "",
-        "pubDate": "Mon, 30 Mar 2026 07:00:03 +0900"
+        "pubDate": "Mon, 30 Mar 2026 10:25:27 +0900"
       }
     ]
   },
-  "updated": "2026-03-30T01:20:28Z"
+  "updated": "2026-03-30T04:21:30Z"
 }
