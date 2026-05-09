@@ -60,15 +60,18 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  width: 100%;
 }
 
-/* === Layout === */
 .wrap {
   max-width: var(--page-max-width);
   margin: 0 auto;
   padding: var(--spacing-43) var(--spacing-20);
+  width: 100%;
 }
 
+/* === Layout === */
 .layout {
   display: grid;
   grid-template-columns: 1fr 280px;
@@ -94,6 +97,7 @@ body {
   border-radius: var(--radius-prominent);
   padding: var(--card-padding);
   box-shadow: var(--shadow-xl);
+  min-width: 0;
 }
 
 .card-title {
