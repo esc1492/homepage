@@ -3,196 +3,545 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>나의 시작 페이지</title>
+<title>시작 페이지</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans-serif;background:#0f1117;color:#e8e8e8;min-height:100vh}
-.wrap{padding:1.5rem 1rem;max-width:1200px;margin:auto}
-.top{display:flex;flex-direction:column;align-items:center;gap:0.75rem;margin-bottom:1.5rem}
-.clock{font-size:13px;color:#888;letter-spacing:0.04em}
-.search-bar{display:flex;width:100%;max-width:560px;border:1px solid #2e2e3a;border-radius:12px;overflow:hidden;background:#1a1a27}
-.search-label{padding:0 0.9rem;font-size:13px;background:#22223a;color:#888;display:flex;align-items:center;border-right:1px solid #2e2e3a;white-space:nowrap}
-.search-inp{flex:1;border:none;padding:0.65rem 0.75rem;font-size:14px;background:transparent;color:#e8e8e8;outline:none}
-.search-inp::placeholder{color:#555}
-.search-btn{border:none;background:#22223a;padding:0 1.1rem;font-size:13px;color:#aaa;cursor:pointer;border-left:1px solid #2e2e3a}
-.search-btn:hover{background:#2a2a40}
-.layout{display:grid;grid-template-columns:1fr 280px;gap:1rem;align-items:start}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-.card{background:#1a1a27;border:1px solid #2e2e3a;border-radius:12px;padding:1rem 1.25rem}
-.card-title{font-size:11px;font-weight:600;color:#666;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:0.75rem;display:flex;justify-content:space-between;align-items:center}
-.weather-main{display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem}
-.weather-icon{font-size:38px;line-height:1}
-.weather-temp{font-size:40px;font-weight:500;line-height:1;color:#e8e8e8}
-.weather-sub{font-size:13px;color:#888;margin-top:2px}
-.weather-minmax{font-size:12px;color:#e05c4a;margin-top:4px}
-.weather-row{display:flex;gap:0.5rem;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid #2e2e3a}
-.wi{flex:1;text-align:center}
-.wi .lb{font-size:11px;color:#555}
-.wi .vl{font-size:13px;font-weight:500;margin-top:2px;color:#ccc}
-.stock-row{display:flex;align-items:center;justify-content:space-between;padding:0.45rem 0;border-bottom:1px solid #2a2a3a;cursor:pointer}
-.stock-row:last-child{border-bottom:none}
-.stock-row:hover{opacity:0.8}
-.sname{font-size:13px;font-weight:500;color:#e8e8e8}
-.sticker{font-size:11px;color:#555;margin-top:1px}
-.sright{text-align:right}
-.sprice{font-size:14px;font-weight:500;color:#e8e8e8}
-.schange{font-size:12px;margin-top:1px}
-.up{color:#1D9E75}.dn{color:#e05c4a}.flat{color:#666}
-.news-item{padding:0.5rem 0;border-bottom:1px solid #2a2a3a}
-.news-item:last-child{border-bottom:none}
-.ntag{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;margin-bottom:4px}
-.tag-world{background:#0d3d2e;color:#4ecfa0}
-.tag-eco{background:#3d2a08;color:#f0a040}
-.tag-tech{background:#0d2a4a;color:#5aadff}
-.tag-local{background:#2a1a4a;color:#b080ff}
-.nhead{font-size:13px;line-height:1.5;color:#ddd}
-.nsum{font-size:12px;color:#777;margin-top:3px;line-height:1.5}
-.ntime{font-size:11px;color:#4a4a5a;margin-top:3px}
-.ai-badge{font-size:10px;background:#1e1e30;border:1px solid #3a3a50;border-radius:4px;padding:2px 6px;color:#777;margin-left:6px}
-.rbtn{font-size:11px;color:#555;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline}
-.rbtn:hover{color:#aaa}
-.msg{font-size:13px;color:#666;padding:0.75rem 0;text-align:center}
-.updated{font-size:11px;color:#444;text-align:right;margin-top:0.5rem}
-@media(max-width:768px){.layout{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
+/* === Design Tokens === */
+:root {
+  --color-canvas-parchment: #f7f7f4;
+  --color-inkwell: #262510;
+  --color-muted-stone: #7a7974;
+  --color-deep-shadow: #141414;
+  --color-pebble-gray: #e6e5e0;
+  --color-onyx-outline: #f54e00;
+  --color-chartreuse-alert: #4ade80;
+  --color-goldenrod-accent: #c08532;
+  --color-forest-green-action: #34785c;
+  --color-highlight-beige: #cdcdc9;
+
+  --font-primary: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --spacing-4: 4px;
+  --spacing-6: 6px;
+  --spacing-8: 8px;
+  --spacing-10: 10px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-22: 22px;
+  --spacing-28: 28px;
+  --spacing-43: 43px;
+  --spacing-67: 67px;
+
+  --page-max-width: 1300px;
+  --section-gap: 43px;
+  --card-padding: 12px;
+  --element-gap: 8px;
+
+  --radius-sm: 1.5px;
+  --radius-cards: 4px;
+  --radius-buttons: 4px;
+  --radius-prominent: 8px;
+
+  --shadow-xl: rgba(0, 0, 0, 0.14) 0px 28px 70px 0px, rgba(0, 0, 0, 0.1) 0px 14px 32px 0px, oklab(0.263084 -0.00230259 0.0124794 / 0.1) 0px 0px 0px 1px;
+  --shadow-subtle: oklab(0.263084 -0.00230259 0.0124794 / 0.1) 0px 0px 0px 1px, rgba(0, 0, 0, 0.28) 0px 18px 36px -18px;
+
+  --surface-0: #f7f7f4;
+  --surface-1: #e6e5e0;
+  --surface-2: #cdcdc9;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-primary);
+  background: var(--color-canvas-parchment);
+  color: var(--color-inkwell);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Layout === */
+.wrap {
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: var(--spacing-43) var(--spacing-20);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: var(--spacing-20);
+  align-items: start;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-20);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-20);
+}
+
+/* === Card === */
+.card {
+  background: var(--color-pebble-gray);
+  border-radius: var(--radius-prominent);
+  padding: var(--card-padding);
+  box-shadow: var(--shadow-xl);
+}
+
+.card-title {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted-stone);
+  margin-bottom: var(--spacing-12);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* === Buttons === */
+.btn-ghost {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--color-muted-stone);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: var(--radius-buttons);
+  transition: color 150ms;
+}
+.btn-ghost:hover { color: var(--color-inkwell); }
+
+.btn-outline {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-onyx-outline);
+  background: transparent;
+  border: 1px solid var(--color-onyx-outline);
+  border-radius: var(--radius-buttons);
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+  white-space: nowrap;
+}
+.btn-outline:hover {
+  background: var(--color-onyx-outline);
+  color: var(--color-canvas-parchment);
+}
+
+/* === Weather === */
+.weather-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-12);
+}
+
+.weather-col-label {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted-stone);
+  margin-bottom: var(--spacing-8);
+}
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  margin-bottom: var(--spacing-8);
+}
+
+.weather-icon { font-size: 36px; line-height: 1; }
+
+.weather-temp {
+  font-size: 36px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--color-inkwell);
+}
+
+.weather-sub {
+  font-size: 12px;
+  color: var(--color-muted-stone);
+  margin-top: 2px;
+}
+
+.weather-minmax {
+  font-size: 11px;
+  color: var(--color-forest-green-action);
+  margin-top: var(--spacing-4);
+}
+
+.weather-detail {
+  display: flex;
+  gap: var(--spacing-8);
+  margin-top: var(--spacing-10);
+  padding-top: var(--spacing-10);
+  border-top: 1px solid var(--color-highlight-beige);
+}
+
+.wi { flex: 1; text-align: center; }
+.wi-label { font-size: 10px; letter-spacing: 0.04em; color: var(--color-muted-stone); display: block; }
+.wi-value { font-size: 12px; font-weight: 500; color: var(--color-inkwell); margin-top: 2px; display: block; }
+
+.weather-tomorrow-col {
+  border-left: 1px solid var(--color-highlight-beige);
+  padding-left: var(--spacing-12);
+}
+
+.weather-weekly-section {
+  margin-top: var(--spacing-16);
+  padding-top: var(--spacing-16);
+  border-top: 1px solid var(--color-highlight-beige);
+}
+
+#weekly-weather {
+  display: flex;
+  gap: var(--spacing-10);
+  overflow-x: auto;
+  padding-bottom: var(--spacing-8);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-highlight-beige) transparent;
+}
+
+.ww-item {
+  flex: 0 0 auto;
+  width: 58px;
+  text-align: center;
+  padding: var(--spacing-8) var(--spacing-6);
+  background: var(--color-canvas-parchment);
+  border-radius: var(--radius-cards);
+}
+
+.ww-day {
+  font-size: 11px;
+  color: var(--color-muted-stone);
+  margin-bottom: var(--spacing-4);
+  font-weight: 500;
+}
+
+.ww-icon { font-size: 22px; line-height: 1; margin-bottom: var(--spacing-4); display: block; }
+
+.ww-desc {
+  font-size: 10px;
+  color: var(--color-muted-stone);
+  line-height: 1.2;
+}
+
+/* === Stocks === */
+.stock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-8) 0;
+  border-bottom: 1px solid var(--color-highlight-beige);
+  cursor: pointer;
+  transition: opacity 150ms;
+}
+.stock-row:last-child { border-bottom: none; }
+.stock-row:hover { opacity: 0.7; }
+
+.sname { font-size: 13px; font-weight: 500; color: var(--color-inkwell); }
+.sticker { font-size: 10px; color: var(--color-muted-stone); margin-top: 1px; letter-spacing: 0.04em; }
+.sright { text-align: right; }
+.sprice { font-size: 14px; font-weight: 500; color: var(--color-inkwell); font-variant-numeric: tabular-nums; }
+.schange { font-size: 11px; margin-top: 1px; font-variant-numeric: tabular-nums; }
+.up { color: var(--color-forest-green-action); }
+.dn { color: #c94a3a; }
+.flat { color: var(--color-muted-stone); }
+
+.updated {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--color-muted-stone);
+  text-align: right;
+  margin-top: var(--spacing-8);
+}
+
+/* === News === */
+.news-item {
+  padding: var(--spacing-8) 0;
+  border-bottom: 1px solid var(--color-highlight-beige);
+}
+.news-item:last-child { border-bottom: none; }
+
+.ntag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-4);
+  text-transform: uppercase;
+}
+
+.tag-world { background: #e0ece5; color: #2d6a4f; }
+.tag-eco { background: #f5ede0; color: #9c6b2e; }
+.tag-tech { background: #eaedf2; color: #3a5a8c; }
+.tag-local { background: #eee8f0; color: #6b4c80; }
+
+.nhead {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-inkwell);
+  font-weight: 500;
+}
+
+.nsum {
+  font-size: 12px;
+  color: var(--color-muted-stone);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+
+.ntime {
+  font-size: 10px;
+  color: var(--color-muted-stone);
+  margin-top: var(--spacing-4);
+  letter-spacing: 0.04em;
+}
+
+.ai-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-onyx-outline);
+  border: 1px solid var(--color-onyx-outline);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.msg {
+  font-size: 12px;
+  color: var(--color-muted-stone);
+  padding: var(--spacing-10) 0;
+  text-align: center;
+}
+
+/* === Todo === */
+.todo-input-wrap {
+  display: flex;
+  gap: var(--spacing-8);
+  margin-bottom: var(--spacing-12);
+}
+
+.todo-input {
+  flex: 1;
+  font-family: var(--font-primary);
+  font-size: 12px;
+  color: var(--color-inkwell);
+  background: transparent;
+  border: 1px solid var(--color-muted-stone);
+  border-radius: 0;
+  padding: 6px var(--spacing-8);
+  outline: none;
+  transition: border-color 150ms;
+}
+.todo-input::placeholder { color: var(--color-muted-stone); opacity: 0.6; }
+.todo-input:focus { border-color: var(--color-inkwell); }
+
+.todo-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding: var(--spacing-6) 0;
+  border-bottom: 1px solid var(--color-highlight-beige);
+}
+.todo-row:last-child { border-bottom: none; }
+
+.todo-row input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--color-forest-green-action);
+  flex-shrink: 0;
+}
+
+.todo-text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--color-inkwell);
+}
+.todo-text.done {
+  text-decoration: line-through;
+  color: var(--color-muted-stone);
+}
+
+.todo-del {
+  font-size: 11px;
+  color: var(--color-muted-stone);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.5;
+  transition: opacity 150ms;
+  line-height: 1;
+}
+.todo-del:hover { opacity: 1; }
+
+.todo-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--spacing-12);
+  padding-top: var(--spacing-12);
+  border-top: 1px solid var(--color-highlight-beige);
+}
+
+.todo-count {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--color-muted-stone);
+}
+
+.todo-clear {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--color-muted-stone);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  transition: color 150ms;
+}
+.todo-clear:hover { color: var(--color-inkwell); }
+
+/* === Responsive === */
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+  .grid { grid-template-columns: 1fr; }
+  .weather-split { grid-template-columns: 1fr; }
+  .weather-tomorrow-col { border-left: none; padding-left: 0; padding-top: var(--spacing-12); }
+  .wrap { padding: var(--spacing-20) var(--spacing-12); }
+}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top">
-    <div class="clock" id="clock"></div>
-    <div class="search-bar">
-      <span class="search-label">Google</span>
-      <input class="search-inp" id="q" type="text" placeholder="검색어를 입력하세요..." />
-      <button class="search-btn" onclick="doSearch()">검색</button>
-    </div>
-  </div>
 
   <div class="layout">
-    <!-- 왼쪽: 기존 4개 카드 -->
     <div class="grid">
-      <!-- 날씨 카드 -->
-      <div class="card">
-        <div class="card-title"><span>날씨 · 서울</span><button class="rbtn" onclick="loadWeather()">새로고침</button></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+      <!-- Weather -->
+      <article class="card">
+        <div class="card-title"><span>날씨 · 서울</span><button class="btn-ghost" onclick="loadWeather()">새로고침</button></div>
+        <div class="weather-split">
           <div>
-            <div style="font-size:11px;color:#555;margin-bottom:0.4rem">오늘</div>
+            <div class="weather-col-label">오늘</div>
             <div class="weather-main">
-              <div class="weather-icon" id="wicon">⛅</div>
+              <span class="weather-icon" id="wicon">⛅</span>
               <div>
                 <div class="weather-temp" id="wtemp">–°C</div>
                 <div class="weather-sub" id="wdesc">불러오는 중...</div>
                 <div class="weather-minmax" id="wminmax"></div>
               </div>
             </div>
-            <div class="weather-row">
-              <div class="wi"><div class="lb">미세먼지</div><div class="vl" id="wpm10">–</div></div>
-              <div class="wi"><div class="lb">초미세먼지</div><div class="vl" id="wpm25">–</div></div>
+            <div class="weather-detail">
+              <div class="wi"><span class="wi-label">미세먼지</span><span class="wi-value" id="wpm10">–</span></div>
+              <div class="wi"><span class="wi-label">초미세먼지</span><span class="wi-value" id="wpm25">–</span></div>
             </div>
           </div>
-          <div style="border-left:1px solid #2e2e3a;padding-left:0.75rem">
-            <div style="font-size:11px;color:#555;margin-bottom:0.4rem">내일</div>
+          <div class="weather-tomorrow-col">
+            <div class="weather-col-label">내일</div>
             <div class="weather-main">
-              <div class="weather-icon" id="wicon2">⛅</div>
+              <span class="weather-icon" id="wicon2">⛅</span>
               <div>
                 <div class="weather-temp" id="wtemp2">–°C</div>
                 <div class="weather-sub" id="wdesc2">불러오는 중...</div>
                 <div class="weather-minmax" id="wminmax2"></div>
               </div>
             </div>
-            <div class="weather-row">
-              <div class="wi"><div class="lb">강수확률</div><div class="vl" id="wrain2">–</div></div>
-              <div class="wi"><div class="lb">습도</div><div class="vl" id="whumid2">–</div></div>
+            <div class="weather-detail">
+              <div class="wi"><span class="wi-label">강수확률</span><span class="wi-value" id="wrain2">–</span></div>
+              <div class="wi"><span class="wi-label">습도</span><span class="wi-value" id="whumid2">–</span></div>
             </div>
           </div>
         </div>
-        <!-- 일주일간 날씨 -->
-        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #2e2e3a">
-          <div style="font-size:11px;color:#555;margin-bottom:0.5rem">일주일간 날씨</div>
-          <div id="weekly-weather" style="display:flex;gap:0.75rem;overflow-x:auto;padding-bottom:0.5rem">
-            <!-- JavaScript로 채워질 항목들 -->
-          </div>
+        <div class="weather-weekly-section">
+          <div class="weather-col-label">일주일간 날씨</div>
+          <div id="weekly-weather"></div>
         </div>
-      </div>
+      </article>
 
-      <!-- 주식 카드 -->
-      <div class="card">
-        <div class="card-title"><span>관심 종목</span><button class="rbtn" onclick="loadStocks()">새로고침</button></div>
+      <!-- Stocks -->
+      <article class="card">
+        <div class="card-title"><span>관심 종목</span><button class="btn-ghost" onclick="loadStocks()">새로고침</button></div>
         <div id="stock-list"><div class="msg">불러오는 중...</div></div>
         <div class="updated" id="stock-time"></div>
-      </div>
+      </article>
 
-      <!-- 주요 뉴스 카드 -->
-      <div class="card">
-        <div class="card-title"><span>주요 뉴스 <span class="ai-badge">실시간</span></span><button class="rbtn" onclick="loadNews('general')">새로고침</button></div>
+      <!-- General News -->
+      <article class="card">
+        <div class="card-title"><span>주요 뉴스 <span class="ai-badge">실시간</span></span><button class="btn-ghost" onclick="loadNews('general')">새로고침</button></div>
         <div id="news-general"><div class="msg">불러오는 중...</div></div>
-      </div>
+      </article>
 
-      <!-- 기술 뉴스 카드 -->
-      <div class="card">
-        <div class="card-title"><span>기술·IT 뉴스 <span class="ai-badge">실시간</span></span><button class="rbtn" onclick="loadNews('tech')">새로고침</button></div>
+      <!-- Tech News -->
+      <article class="card">
+        <div class="card-title"><span>기술·IT 뉴스 <span class="ai-badge">실시간</span></span><button class="btn-ghost" onclick="loadNews('tech')">새로고침</button></div>
         <div id="news-tech"><div class="msg">불러오는 중...</div></div>
-      </div>
+      </article>
     </div>
 
-    <!-- 오른쪽: 할 일 목록들 -->
-    <div style="display:flex;flex-direction:column;gap:1rem">
-      <!-- 나의 할 일 (localStorage) -->
-      <div class="card">
+    <div class="sidebar">
+      <!-- Personal Todos -->
+      <article class="card">
         <div class="card-title"><span>나의 오늘의 할 일</span></div>
-        <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem">
-          <input id="my-todo-inp" type="text" placeholder="할 일 입력..." style="flex:1;border:1px solid #2e2e3a;border-radius:8px;padding:0.5rem 0.75rem;font-size:13px;background:#0f1117;color:#e8e8e8;outline:none" />
-          <button onclick="addMyTodo()" style="border:1px solid #2e2e3a;border-radius:8px;padding:0.5rem 0.75rem;font-size:13px;background:#22223a;color:#aaa;cursor:pointer">추가</button>
+        <div class="todo-input-wrap">
+          <input id="my-todo-inp" type="text" placeholder="할 일 입력..." class="todo-input" />
+          <button onclick="addMyTodo()" class="btn-outline">추가</button>
         </div>
         <div id="my-todo-list"></div>
-        <div style="display:flex;justify-content:space-between;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid #2e2e3a">
-          <span id="my-todo-count" style="font-size:11px;color:#555"></span>
-          <button onclick="clearMyDone()" style="font-size:11px;color:#555;background:none;border:none;cursor:pointer;text-decoration:underline">완료 항목 삭제</button>
+        <div class="todo-footer">
+          <span class="todo-count" id="my-todo-count"></span>
+          <button onclick="clearMyDone()" class="todo-clear">완료 항목 삭제</button>
         </div>
-      </div>
+      </article>
 
-      <!-- 가족 할 일 (Google Sheets) -->
-      <div class="card">
+      <!-- Family Todos -->
+      <article class="card">
         <div class="card-title"><span>우리 가족의 할 일</span></div>
-        <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem">
-          <input id="todo-inp" type="text" placeholder="할 일 입력..." style="flex:1;border:1px solid #2e2e3a;border-radius:8px;padding:0.5rem 0.75rem;font-size:13px;background:#0f1117;color:#e8e8e8;outline:none" />
-          <button onclick="addTodo()" style="border:1px solid #2e2e3a;border-radius:8px;padding:0.5rem 0.75rem;font-size:13px;background:#22223a;color:#aaa;cursor:pointer">추가</button>
+        <div class="todo-input-wrap">
+          <input id="todo-inp" type="text" placeholder="할 일 입력..." class="todo-input" />
+          <button onclick="addTodo()" class="btn-outline">추가</button>
         </div>
         <div id="todo-list"></div>
-        <div style="display:flex;justify-content:space-between;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid #2e2e3a">
-          <span id="todo-count" style="font-size:11px;color:#555"></span>
-          <button onclick="clearDone()" style="font-size:11px;color:#555;background:none;border:none;cursor:pointer;text-decoration:underline">완료 항목 삭제</button>
+        <div class="todo-footer">
+          <span class="todo-count" id="todo-count"></span>
+          <button onclick="clearDone()" class="todo-clear">완료 항목 삭제</button>
         </div>
-      </div>
+      </article>
     </div>
   </div>
 </div>
 
 <script>
-function updateClock(){
-  var n=new Date(),days=['일','월','화','수','목','금','토'];
-  document.getElementById('clock').textContent=
-    n.getFullYear()+'년 '+(n.getMonth()+1)+'월 '+n.getDate()+'일 ('+days[n.getDay()]+') '+
-    String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');
-}
-updateClock();setInterval(updateClock,1000);
-
-document.getElementById('q').addEventListener('keydown',function(e){if(e.key==='Enter')doSearch();});
-function doSearch(){
-  var q=document.getElementById('q').value.trim();
-  if(q) window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank');
-}
-
 function getAirGrade(val,type){
   if(type==='pm10'){
-    if(val<=30) return {text:'좋음',color:'#1D9E75'};
-    if(val<=80) return {text:'보통',color:'#5aadff'};
-    if(val<=150) return {text:'나쁨',color:'#f0a040'};
-    return {text:'매우나쁨',color:'#e05c4a'};
+    if(val<=30) return {text:'좋음',color:'#34785c'};
+    if(val<=80) return {text:'보통',color:'#3a7abd'};
+    if(val<=150) return {text:'나쁨',color:'#c08532'};
+    return {text:'매우나쁨',color:'#c94a3a'};
   } else {
-    if(val<=15) return {text:'좋음',color:'#1D9E75'};
-    if(val<=35) return {text:'보통',color:'#5aadff'};
-    if(val<=75) return {text:'나쁨',color:'#f0a040'};
-    return {text:'매우나쁨',color:'#e05c4a'};
+    if(val<=15) return {text:'좋음',color:'#34785c'};
+    if(val<=35) return {text:'보통',color:'#3a7abd'};
+    if(val<=75) return {text:'나쁨',color:'#c08532'};
+    return {text:'매우나쁨',color:'#c94a3a'};
   }
 }
 
@@ -215,12 +564,10 @@ function loadWeather(){
     document.getElementById('wminmax2').textContent='최고 '+Math.round(d.daily.temperature_2m_max[1])+'° / 최저 '+Math.round(d.daily.temperature_2m_min[1])+'°';
     document.getElementById('wrain2').textContent=(d.daily.precipitation_probability_max[1]||0)+'%';
     document.getElementById('whumid2').textContent=(d.daily.relative_humidity_2m_max[1]||0)+'%';
-    // 일주일간 날씨 채우기
     var weeklyEl = document.getElementById('weekly-weather');
     if (weeklyEl) {
       weeklyEl.innerHTML = '';
       var days = ['일', '월', '화', '수', '목', '금', '토'];
-      // 오늘부터 6일 후까지 (총 7일)
       for (var i = 0; i < 7; i++) {
         var date = new Date();
         date.setDate(date.getDate() + i);
@@ -229,10 +576,10 @@ function loadWeather(){
         var icon = icons[weatherCode] || '🌡';
         var desc = descs[weatherCode] || '날씨 정보';
         var item = document.createElement('div');
-        item.style.cssText = 'flex:0 0 auto;width:60px;text-align:center;padding:0.5rem;background:#22223a;border-radius:8px;border:1px solid #2e2e3a';
-        item.innerHTML = '<div style="font-size:12px;color:#aaa;margin-bottom:4px">' + dayName + '</div>' +
-                         '<div style="font-size:24px;line-height:1;margin-bottom:4px">' + icon + '</div>' +
-                         '<div style="font-size:11px;color:#888">' + desc + '</div>';
+        item.className = 'ww-item';
+        item.innerHTML = '<div class="ww-day">' + dayName + '</div>' +
+                         '<span class="ww-icon">' + icon + '</span>' +
+                         '<div class="ww-desc">' + desc + '</div>';
         weeklyEl.appendChild(item);
       }
     }
@@ -241,7 +588,7 @@ function loadWeather(){
     document.getElementById('wdesc').textContent='날씨 정보를 불러올 수 없습니다';
     document.getElementById('wdesc2').textContent='날씨 정보를 불러올 수 없습니다';
     var weeklyEl = document.getElementById('weekly-weather');
-    if (weeklyEl) weeklyEl.innerHTML = '<div style="font-size:12px;color:#666;padding:0.5rem">일주일간 날씨를 불러올 수 없습니다</div>';
+    if (weeklyEl) weeklyEl.innerHTML = '<div class="msg">일주일간 날씨를 불러올 수 없습니다</div>';
   });
   fetch('https://air-quality-api.open-meteo.com/v1/air-quality?latitude=37.5665&longitude=126.9780&current=pm10,pm2_5&timezone=Asia%2FSeoul')
   .then(function(r){return r.json();})
@@ -266,6 +613,7 @@ var STOCKS=[
   {ticker:'035420',name:'NAVER'},
   {ticker:'018260',name:'삼성에스디에스'},
   {ticker:'064400',name:'LG씨엔에스'},
+  {ticker:'064350',name:'현대로템'},
 ];
 function loadStocks(){
   var el=document.getElementById('stock-list');
@@ -378,10 +726,10 @@ function renderMyTodos(){
     return;
   }
   el.innerHTML=myTodos.map(function(t,i){
-    return '<div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;border-bottom:1px solid #2a2a3a">'
-      +'<input type="checkbox" '+(t.done?'checked':'')+' onchange="toggleMyTodo('+i+')" style="width:15px;height:15px;cursor:pointer;accent-color:#1D9E75">'
-      +'<span style="flex:1;font-size:13px;'+(t.done?'text-decoration:line-through;color:#555':'color:#e8e8e8')+'">'+t.text+'</span>'
-      +'<button onclick="deleteMyTodo('+i+')" style="font-size:11px;color:#555;background:none;border:none;cursor:pointer;padding:0">✕</button>'
+    return '<div class="todo-row">'
+      +'<input type="checkbox" '+(t.done?'checked':'')+' onchange="toggleMyTodo('+i+')">'
+      +'<span class="todo-text'+(t.done?' done':'')+'">'+t.text+'</span>'
+      +'<button class="todo-del" onclick="deleteMyTodo('+i+')">✕</button>'
       +'</div>';
   }).join('');
   var done=myTodos.filter(function(t){return t.done;}).length;
@@ -414,8 +762,6 @@ function clearMyDone(){
 document.getElementById('my-todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addMyTodo();});
 renderMyTodos();
 
-
-
 function loadTodosFromGithub(){
   fetch(SCRIPT_URL+'?action=getAll')
   .then(function(r){return r.json();})
@@ -444,10 +790,10 @@ function renderTodos(){
     return;
   }
   el.innerHTML=todos.map(function(t,i){
-    return '<div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;border-bottom:1px solid #2a2a3a">'
-      +'<input type="checkbox" '+(t.done?'checked':'')+' onchange="toggleTodo('+i+')" style="width:15px;height:15px;cursor:pointer;accent-color:#1D9E75">'
-      +'<span style="flex:1;font-size:13px;'+(t.done?'text-decoration:line-through;color:#555':'color:#e8e8e8')+'">'+t.text+'</span>'
-      +'<button onclick="deleteTodo('+i+')" style="font-size:11px;color:#555;background:none;border:none;cursor:pointer;padding:0">✕</button>'
+    return '<div class="todo-row">'
+      +'<input type="checkbox" '+(t.done?'checked':'')+' onchange="toggleTodo('+i+')">'
+      +'<span class="todo-text'+(t.done?' done':'')+'">'+t.text+'</span>'
+      +'<button class="todo-del" onclick="deleteTodo('+i+')">✕</button>'
       +'</div>';
   }).join('');
   var done=todos.filter(function(t){return t.done;}).length;
