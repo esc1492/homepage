@@ -64,6 +64,52 @@ body {
   width: 100%;
 }
 
+.deco-image { display: none; }
+
+.frame-card {
+  flex-shrink: 0;
+  background: var(--color-pebble-gray);
+  border-radius: var(--radius-prominent);
+  padding: var(--spacing-20);
+  box-shadow: var(--shadow-xl);
+  width: fit-content;
+}
+
+.frame-card .deco-image {
+  width: min(37.5vw, 487px);
+  height: auto;
+  display: block;
+}
+
+.top-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-20);
+  margin-bottom: var(--section-gap);
+}
+
+.quote {
+  margin-top: var(--spacing-43);
+  max-width: 780px;
+}
+
+.quote-text {
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--color-inkwell);
+  font-style: normal;
+}
+
+.quote-attrib {
+  font-size: 15px;
+  color: var(--color-muted-stone);
+  margin-top: var(--spacing-8);
+  letter-spacing: 0.04em;
+}
+
 .wrap {
   max-width: var(--page-max-width);
   margin: 0 auto;
@@ -209,9 +255,14 @@ body {
   border-top: 1px solid var(--color-highlight-beige);
 }
 
+.weather-weekly-section .weather-col-label {
+  margin-bottom: 32px;
+}
+
 #weekly-weather {
   display: flex;
-  gap: var(--spacing-10);
+  justify-content: center;
+  gap: var(--spacing-8);
   overflow-x: auto;
   padding-bottom: var(--spacing-8);
   scrollbar-width: thin;
@@ -220,11 +271,12 @@ body {
 
 .ww-item {
   flex: 0 0 auto;
-  width: 58px;
+  width: 50px;
   text-align: center;
-  padding: var(--spacing-8) var(--spacing-6);
+  padding: var(--spacing-6) var(--spacing-4);
   background: var(--color-canvas-parchment);
   border-radius: var(--radius-cards);
+  box-shadow: var(--shadow-subtle);
 }
 
 .ww-day {
@@ -428,6 +480,11 @@ body {
 
 /* === Responsive === */
 @media (max-width: 768px) {
+  .frame-card { right: var(--spacing-12); padding: var(--spacing-12); }
+  .frame-card .deco-image { width: min(60vw, 300px); }
+  .quote { margin-top: 0; }
+  .quote-text { font-size: 20px; }
+  .quote-attrib { font-size: 12px; }
   .layout { grid-template-columns: 1fr; }
   .grid { grid-template-columns: 1fr; }
   .weather-tomorrow-col { border-left: none; padding-left: 0; }
@@ -437,6 +494,15 @@ body {
 </head>
 <body>
 <div class="wrap">
+<div class="top-row">
+  <figure class="quote">
+    <blockquote class="quote-text">"Put your heart, mind, and soul into even your smallest acts.<br>This is the secret of success."</blockquote>
+    <figcaption class="quote-attrib">&mdash; Swami Sivananda</figcaption>
+  </figure>
+  <div class="frame-card">
+    <img class="deco-image" src="images/KakaoTalk_Photo_2026-05-10-19-15-47.jpeg" alt="" aria-hidden="true">
+  </div>
+</div>
 
   <div class="layout">
     <div class="grid">

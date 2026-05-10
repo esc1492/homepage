@@ -32,7 +32,7 @@ def fetch_rss(url):
     return result
 
 # 주식 데이터
-tickers = ['005930', '009150', '034020', '035420']
+tickers = ['005930', '034020', '035420', '018260', '064400', '064350']
 stocks = {}
 for t in tickers:
     try:
