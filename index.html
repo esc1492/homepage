@@ -64,8 +64,6 @@ body {
   width: 100%;
 }
 
-.deco-image { display: none; }
-
 .frame-card {
   flex-shrink: 0;
   background: var(--color-pebble-gray);
@@ -75,10 +73,21 @@ body {
   width: fit-content;
 }
 
-.frame-card .deco-image {
+.frame-card .deco-wrap {
+  position: relative;
   width: min(37.5vw, 487px);
-  height: auto;
-  display: block;
+  aspect-ratio: 3093 / 2222;
+  overflow: hidden;
+  border-radius: calc(var(--radius-prominent) - var(--spacing-20));
+}
+
+.frame-card .deco-wrap .deco-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 3s ease;
 }
 
 .top-row {
@@ -481,7 +490,7 @@ body {
 /* === Responsive === */
 @media (max-width: 768px) {
   .frame-card { right: var(--spacing-12); padding: var(--spacing-12); }
-  .frame-card .deco-image { width: min(60vw, 300px); }
+  .frame-card .deco-wrap { width: min(60vw, 300px); }
   .quote { margin-top: 0; }
   .quote-text { font-size: 20px; }
   .quote-attrib { font-size: 12px; }
@@ -500,7 +509,10 @@ body {
     <figcaption class="quote-attrib">&mdash; Swami Sivananda</figcaption>
   </figure>
   <div class="frame-card">
-    <img class="deco-image" src="images/KakaoTalk_Photo_2026-05-10-19-15-47.jpeg" alt="" aria-hidden="true">
+    <div class="deco-wrap">
+      <img class="deco-image" src="images/1.jpeg" style="opacity:1" alt="" aria-hidden="true">
+      <img class="deco-image" src="images/2.jpeg" style="opacity:0" alt="" aria-hidden="true">
+    </div>
   </div>
 </div>
 
@@ -896,6 +908,15 @@ function clearDone(){
 }
 document.getElementById('todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addTodo();});
 loadTodosFromGithub();
+(function(){
+  var imgs=document.querySelectorAll('.deco-wrap .deco-image');
+  var i=0;
+  setInterval(function(){
+    imgs[i].style.opacity='0';
+    i=1-i;
+    imgs[i].style.opacity='1';
+  },3000);
+})();
 </script>
 </body>
 </html>
