@@ -64,6 +64,41 @@ body {
   width: 100%;
 }
 
+.banner-wrap {
+  position: relative;
+  line-height: 0;
+}
+
+.top-banner {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.banner-quote {
+  position: absolute;
+  top: 33.33%;
+  right: 0;
+  text-align: right;
+  color: #fff;
+  padding: 0 24px;
+  pointer-events: none;
+  line-height: 1.4;
+}
+
+.bq-text {
+  display: block;
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.bq-attrib {
+  display: block;
+  font-size: 10px;
+  margin-top: 4px;
+  opacity: 0.85;
+}
+
 .frame-card {
   flex-shrink: 0;
   background: var(--color-pebble-gray);
@@ -92,31 +127,12 @@ body {
 
 .top-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: flex-start;
   gap: var(--spacing-20);
   margin-bottom: var(--section-gap);
 }
 
-.quote {
-  margin-top: var(--spacing-43);
-  max-width: 780px;
-}
-
-.quote-text {
-  font-size: 28px;
-  font-weight: 400;
-  line-height: 1.5;
-  color: var(--color-inkwell);
-  font-style: normal;
-}
-
-.quote-attrib {
-  font-size: 15px;
-  color: var(--color-muted-stone);
-  margin-top: var(--spacing-8);
-  letter-spacing: 0.04em;
-}
 
 .wrap {
   max-width: var(--page-max-width);
@@ -269,7 +285,7 @@ body {
 
 #weekly-weather {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 6px;
   overflow-x: auto;
   padding-bottom: var(--spacing-8);
@@ -434,9 +450,6 @@ body {
   .top-row { flex-wrap: wrap; }
   .frame-card { right: var(--spacing-12); padding: var(--spacing-12); }
   .frame-card .deco-wrap { width: min(60vw, 300px); }
-  .quote { margin-top: 0; }
-  .quote-text { font-size: 20px; }
-  .quote-attrib { font-size: 12px; }
   .layout { grid-template-columns: 1fr; }
   .grid { grid-template-columns: 1fr; }
   .weather-tomorrow-col { border-left: none; padding-left: 0; }
@@ -445,12 +458,15 @@ body {
 </style>
 </head>
 <body>
+<div class="banner-wrap">
+<img class="top-banner" src="images/3.jpeg" alt="" aria-hidden="true">
+<div class="banner-quote">
+  <span class="bq-text">"Put your heart, mind, and soul into even your smallest acts.<br>This is the secret of success."</span>
+  <span class="bq-attrib">&mdash; Swami Sivananda</span>
+</div>
+</div>
 <div class="wrap">
 <div class="top-row">
-  <figure class="quote">
-    <blockquote class="quote-text">"Put your heart, mind, and soul into even your smallest acts.<br>This is the secret of success."</blockquote>
-    <figcaption class="quote-attrib">&mdash; Swami Sivananda</figcaption>
-  </figure>
   <div class="frame-card">
     <div class="deco-wrap">
       <img class="deco-image" src="images/1.jpeg" style="opacity:1" alt="" aria-hidden="true">
