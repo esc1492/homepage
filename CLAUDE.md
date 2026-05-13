@@ -67,6 +67,22 @@ Sync the same ticker list in `fetch.py` line ~35 (`tickers` array).
 - **Personal**: Stored in `localStorage` key `myTodos` — works offline
 - **Family**: Uses Google Apps Script endpoint (`SCRIPT_URL`) — CRUD via `GET ?action=getAll` and `POST {action, text/id}`
 
+## Compaction
+
+When compacting, always preserve:
+
+- Current task goal
+- List of modified files
+- Test results and exact errors
+- Architecture decisions made
+- Next action items
+
+Drop:
+
+- Old exploration paths
+- Repeated logs
+- Irrelevant debug output
+
 ## No Tests / No Lint / No CI Tests
 
 This is a personal start page. No test framework, no linter config, no build system. Edit and open in browser directly.
