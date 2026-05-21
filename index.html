@@ -64,6 +64,158 @@ body {
   width: 100%;
 }
 
+/* === Nav === */
+.nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  height: 56px;
+  background: rgba(247, 247, 244, 0.75);
+  backdrop-filter: blur(14px) saturate(1.3);
+  border-bottom: 1px solid rgba(38, 37, 16, 0.06);
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  height: 20px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.triple-line {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 22px;
+  height: 18px;
+  transition: transform 0.3s ease;
+}
+
+.triple-line .line {
+  width: 100%;
+  height: 2.5px;
+  background: var(--color-inkwell);
+  border-radius: 1px;
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.nav-brand.open .triple-line {
+  transform: rotate(0deg);
+}
+.nav-brand.open .line:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.nav-brand.open .line:nth-child(2) {
+  opacity: 0;
+}
+.nav-brand.open .line:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.nav-title {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--color-muted-stone);
+}
+
+.nav-door {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  color: var(--color-muted-stone);
+  transition: opacity 0.25s;
+}
+.nav-door .door-closed { opacity: 0.25; }
+.nav-door .door-open { display: none; opacity: 1; }
+.nav-door:hover .door-closed { opacity: 0.5; }
+.nav-door.active .door-closed { display: none; }
+.nav-door.active .door-open { display: block; }
+.nav-door.active:hover .door-open { opacity: 1; }
+
+/* === Dropdown Panel === */
+.dropdown-panel {
+  position: fixed;
+  top: 56px; left: 0; right: 0;
+  z-index: 99;
+  display: none;
+  background: rgba(247, 247, 244, 0.92);
+  backdrop-filter: blur(30px) saturate(1.5);
+  border-bottom: 1px solid rgba(38, 37, 16, 0.06);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.06);
+}
+.dropdown-panel.open { display: block; }
+
+.dropdown-inner {
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: 28px 22px 36px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+}
+
+.dropdown-section h3 {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted-stone);
+  margin-bottom: 16px;
+}
+
+.dropdown-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--color-inkwell);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.dropdown-item:hover { background: var(--color-highlight-beige); }
+
+.dropdown-item .icon {
+  width: 36px; height: 36px;
+  border-radius: 6px;
+  background: var(--color-pebble-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.dropdown-item .info { display: flex; flex-direction: column; }
+.dropdown-item .info .title { font-size: 14px; font-weight: 500; }
+.dropdown-item .info .desc { font-size: 11px; color: var(--color-muted-stone); margin-top: 2px; }
+
+@media (max-width: 768px) {
+  .nav { padding: 0 14px; }
+  .triple-line { width: 18px; height: 15px; }
+  .triple-line .line { height: 2px; }
+  .nav-brand.open .line:nth-child(1) { transform: translateY(5px) rotate(45deg); }
+  .nav-brand.open .line:nth-child(3) { transform: translateY(-5px) rotate(-45deg); }
+  .dropdown-inner { grid-template-columns: 1fr; gap: 28px; padding: 24px 14px 32px; }
+}
+
 .banner-wrap {
   position: relative;
   line-height: 0;
@@ -88,7 +240,7 @@ body {
 
 .bq-text {
   display: block;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 400;
 }
 
@@ -180,6 +332,23 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+/* === Content (hidden by default, shown via menu) === */
+.layout { display: none; }
+.wrap.focus-mode .layout { display: grid; }
+
+/* === Focus Mode === */
+.wrap.focus-mode .top-row { display: none; }
+.wrap.focus-mode .card:not(.focus-target) { display: none; }
+.wrap.focus-mode .layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.wrap.focus-mode .grid {
+  display: flex;
+  justify-content: center;
 }
 
 /* === Buttons === */
@@ -458,6 +627,38 @@ body {
 </style>
 </head>
 <body>
+<nav class="nav">
+  <span class="nav-brand" id="brandBtn">
+    <span class="triple-line"><span class="line"></span><span class="line"></span><span class="line"></span></span>
+  </span>
+  <span class="nav-door" id="doorBtn">
+    <svg class="door-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28">
+      <rect x="3" y="3" width="18" height="18" rx="1"/>
+      <circle cx="16" cy="12" r="1.5" fill="currentColor"/>
+    </svg>
+    <svg class="door-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28">
+      <rect x="3" y="3" width="18" height="18" rx="1"/>
+      <path d="M4 4 L16 9 L16 19 L4 20" stroke-width="1.8"/>
+      <circle cx="14" cy="16" r="1.3" fill="currentColor"/>
+    </svg>
+  </span>
+</nav>
+<div class="dropdown-panel" id="dropdownPanel">
+  <div class="dropdown-inner">
+    <div class="dropdown-section"><h3>바로가기</h3>
+      <div class="dropdown-items">
+        <div class="dropdown-item" data-scroll="weather-card"><div class="icon">🌤</div><div class="info"><span class="title">날씨</span><span class="desc">서울 날씨 · 미세먼지 · 주간 예보</span></div></div>
+        <div class="dropdown-item" data-scroll="stock-card"><div class="icon">📈</div><div class="info"><span class="title">관심 종목</span><span class="desc">국내 주식 현재가 · 등락률</span></div></div>
+        <div class="dropdown-item" data-scroll="todo-card"><div class="icon">✅</div><div class="info"><span class="title">할 일</span><span class="desc">나의 할 일 · 가족 할 일</span></div></div>
+      </div>
+    </div>
+    <div class="dropdown-section"><h3>링크</h3>
+      <div class="dropdown-items">
+        <div class="dropdown-item" data-link="https://www.naver.com"><div class="icon">🔍</div><div class="info"><span class="title">네이버</span><span class="desc">검색 · 뉴스 · 웹툰</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="banner-wrap">
 <img class="top-banner" src="images/3.jpeg" alt="" aria-hidden="true">
 <div class="banner-quote">
@@ -475,10 +676,10 @@ body {
   </div>
 </div>
 
+
   <div class="layout">
     <div class="grid">
-      <!-- Weather -->
-      <article class="card">
+      <article id="weather-card" class="card">
         <div class="card-title"><span>날씨 · 서울</span><button class="btn-ghost" onclick="loadWeather()">새로고침</button></div>
         <div class="weather-split">
           <div>
@@ -518,18 +719,15 @@ body {
         </div>
       </article>
 
-      <!-- Stocks -->
-      <article class="card">
+      <article id="stock-card" class="card">
         <div class="card-title"><span>관심 종목</span><button class="btn-ghost" onclick="loadStocks()">새로고침</button></div>
         <div id="stock-list"><div class="msg">불러오는 중...</div></div>
         <div class="updated" id="stock-time"></div>
       </article>
-
     </div>
 
     <div class="sidebar">
-      <!-- Personal Todos -->
-      <article class="card">
+      <article id="todo-card" class="card">
         <div class="card-title"><span>나의 오늘의 할 일</span></div>
         <div class="todo-input-wrap">
           <input id="my-todo-inp" type="text" placeholder="할 일 입력..." class="todo-input" />
@@ -542,7 +740,6 @@ body {
         </div>
       </article>
 
-      <!-- Family Todos -->
       <article class="card">
         <div class="card-title"><span>우리 가족의 할 일</span></div>
         <div class="todo-input-wrap">
@@ -560,6 +757,65 @@ body {
 </div>
 
 <script>
+/* === Nav Toggle === */
+(function(){
+  var brand=document.getElementById('brandBtn');
+  var panel=document.getElementById('dropdownPanel');
+  var open=false;
+  function closePanel(){
+    open=false;
+    panel.classList.remove('open');
+    brand.classList.remove('open');
+  }
+  function restoreView(){
+    document.querySelectorAll('.focus-target').forEach(function(el){ el.classList.remove('focus-target'); });
+    document.querySelector('.wrap').classList.remove('focus-mode');
+    document.getElementById('doorBtn').classList.remove('active');
+  }
+  function togglePanel(){
+    open=!open;
+    if(open){
+      restoreView();
+      var banner=document.querySelector('.banner-wrap');
+      if(banner) panel.style.height=(banner.offsetTop+banner.offsetHeight-56)+'px';
+      panel.classList.add('open'); brand.classList.add('open');
+    }
+    else closePanel();
+  }
+  brand.addEventListener('click',function(e){ e.stopPropagation(); togglePanel(); });
+  document.getElementById('doorBtn').addEventListener('click',function(){
+    restoreView();
+    closePanel();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  document.addEventListener('click',function(e){
+    if(open && !panel.contains(e.target) && !brand.contains(e.target)) closePanel();
+  });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') closePanel(); });
+  document.querySelectorAll('.dropdown-item[data-scroll]').forEach(function(el){
+    el.addEventListener('click',function(e){
+      var id=this.getAttribute('data-scroll');
+      closePanel();
+      document.querySelectorAll('.focus-target').forEach(function(el){ el.classList.remove('focus-target'); });
+      if(id==='todo-card'){
+        document.querySelectorAll('.sidebar .card').forEach(function(el){ el.classList.add('focus-target'); });
+      } else {
+        document.getElementById(id).classList.add('focus-target');
+      }
+      document.querySelector('.wrap').classList.add('focus-mode');
+      document.getElementById('doorBtn').classList.add('active');
+      var target=document.getElementById(id);
+      if(target) setTimeout(function(){ target.scrollIntoView({behavior:'smooth',block:'center'}); },50);
+    });
+  });
+  document.querySelectorAll('.dropdown-item[data-link]').forEach(function(el){
+    el.addEventListener('click',function(e){
+      window.open(this.getAttribute('data-link'),'_blank');
+      closePanel();
+    });
+  });
+})();
+
 function getAirGrade(val,type){
   if(type==='pm10'){
     if(val<=30) return {text:'좋음',color:'#34785c'};
@@ -634,14 +890,13 @@ function loadWeather(){
     document.getElementById('wpm25').textContent='–';
   });
 }
-loadWeather();
 
 var STOCKS=[
   {ticker:'005930',name:'삼성전자'},
   {ticker:'034020',name:'두산에너빌리티'},
   {ticker:'035420',name:'NAVER'},
   {ticker:'018260',name:'삼성에스디에스'},
-  {ticker:'064400',name:'LG씨엔에스'},
+  {ticker:'000660',name:'SK하이닉스'},
   {ticker:'064350',name:'현대로템'},
 ];
 function loadStocks(){
@@ -678,7 +933,6 @@ function loadStocks(){
     console.error(e);
   });
 }
-loadStocks();
 
 
 var SCRIPT_URL='https://script.google.com/macros/s/AKfycbwT5m4gBvs7_WpM9UmE1A7BfI6sLrfuI1yKxDHY0no3s-MHsA6nW8bFiarS1EEv5sNiRA/exec';
@@ -725,9 +979,6 @@ function clearMyDone(){
   saveMyTodos();
   renderMyTodos();
 }
-document.getElementById('my-todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addMyTodo();});
-renderMyTodos();
-
 function loadTodosFromGithub(){
   fetch(SCRIPT_URL+'?action=getAll')
   .then(function(r){return r.json();})
@@ -791,6 +1042,10 @@ function clearDone(){
   renderTodos();
   saveTodosToGithub('clearDone',{});
 }
+loadWeather();
+loadStocks();
+document.getElementById('my-todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addMyTodo();});
+renderMyTodos();
 document.getElementById('todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addTodo();});
 loadTodosFromGithub();
 (function(){
