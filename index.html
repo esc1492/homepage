@@ -164,6 +164,10 @@ body {
   gap: 48px;
 }
 
+@media (max-width: 768px) {
+  .dropdown-panel.open { height: calc(100vh - 56px) !important; overflow-y: auto; }
+}
+
 .dropdown-section h3 {
   font-size: 10px;
   font-weight: 600;
@@ -776,8 +780,10 @@ body {
     open=!open;
     if(open){
       restoreView();
-      var banner=document.querySelector('.banner-wrap');
-      if(banner) panel.style.height=(banner.offsetTop+banner.offsetHeight-56)+'px';
+      if(window.innerWidth>768){
+        var banner=document.querySelector('.banner-wrap');
+        if(banner) panel.style.height=(banner.offsetTop+banner.offsetHeight-56)+'px';
+      }
       panel.classList.add('open'); brand.classList.add('open');
     }
     else closePanel();
