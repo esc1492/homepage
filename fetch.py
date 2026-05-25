@@ -1,4 +1,4 @@
-import json, re, html, datetime
+import json, re, html, datetime, time
 import urllib.request
 
 def fetch_json(url):
@@ -31,6 +31,44 @@ def fetch_rss(url):
                 result.append({'title': t, 'link': l, 'desc': d, 'pubDate': p})
     return result
 
+def fetch_stock_name_map(sosok, max_pages=15):
+    """Scrape Naver finance market summary to build name→ticker mapping."""
+    name_map = {}
+    for page in range(1, max_pages + 1):
+        try:
+            url = f'https://finance.naver.com/sise/sise_market_sum.naver?sosok={sosok}&page={page}'
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=8) as r:
+                raw = r.read()
+            html_content = raw.decode('euc-kr', errors='replace')
+            codes = re.findall(r'/item/main\.naver\?code=([0-9]+)', html_content)
+            titles = re.findall(r'class="tltle">([^<]+)', html_content)
+            for c, t in zip(codes, titles):
+                name_map[t] = c
+        except Exception as e:
+            print(f"  Name map error page {page}: {e}")
+            break
+        time.sleep(0.3)
+    return name_map
+
+def build_stock_name_map():
+    """Build a comprehensive stock name→ticker mapping for KOSPI + KOSDAQ."""
+    print("Fetching stock name map (KOSPI)...")
+    name_map = fetch_stock_name_map(0, 30)
+    print(f"  {len(name_map)} KOSPI stocks")
+    print("Fetching stock name map (KOSDAQ)...")
+    name_map2 = fetch_stock_name_map(1, 30)
+    name_map.update(name_map2)
+    print(f"  {len(name_map2)} KOSDAQ stocks")
+    print(f"Total: {len(name_map)} stocks in name map")
+    return name_map
+
+stock_name_map = {}
+try:
+    stock_name_map = build_stock_name_map()
+except Exception as e:
+    print(f"Stock name map error: {e}")
+
 # 주식 데이터
 tickers = ['005930', '034020', '035420', '018260', '000660', '064350']
 stocks = {}
@@ -60,6 +98,7 @@ for key, url in rss_urls.items():
 
 data = {
     'stocks': stocks,
+    'stockNameMap': stock_name_map,
     'news': news,
     'updated': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 }
