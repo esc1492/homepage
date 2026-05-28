@@ -804,7 +804,7 @@ body {
       restoreView();
       var maxPH=Infinity;
       var banner=document.querySelector('.banner-wrap');
-      if(banner){
+      if(banner && window.innerWidth > 768){
         var bBot=banner.getBoundingClientRect().bottom;
         maxPH=Math.min(maxPH, bBot-56);
       }
