@@ -153,6 +153,7 @@ body {
   backdrop-filter: blur(30px) saturate(1.5);
   border-bottom: 1px solid rgba(38, 37, 16, 0.06);
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.06);
+  overflow-y: auto;
 }
 .dropdown-panel.open { display: block; }
 
@@ -163,10 +164,6 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 48px;
-}
-
-@media (max-width: 768px) {
-  .dropdown-panel.open { height: calc(100vh - 56px) !important; overflow-y: auto; }
 }
 
 .dropdown-section h3 {
@@ -229,7 +226,7 @@ body {
 .top-banner {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
 }
 
 .banner-quote {
@@ -679,11 +676,7 @@ body {
         <div class="dropdown-item" data-scroll="weather-card"><div class="icon">🌤</div><div class="info"><span class="title">날씨</span><span class="desc">서울 날씨 · 미세먼지 · 주간 예보</span></div></div>
         <div class="dropdown-item" data-scroll="stock-card"><div class="icon">📈</div><div class="info"><span class="title">관심 종목</span><span class="desc">국내 주식 현재가 · 등락률</span></div></div>
         <div class="dropdown-item" data-scroll="todo-card"><div class="icon">✅</div><div class="info"><span class="title">할 일</span><span class="desc">나의 할 일 · 가족 할 일</span></div></div>
-      </div>
-    </div>
-    <div class="dropdown-section"><h3>링크</h3>
-      <div class="dropdown-items">
-        <div class="dropdown-item" data-link="https://www.naver.com"><div class="icon">🔍</div><div class="info"><span class="title">네이버</span><span class="desc">검색 · 뉴스 · 웹툰</span></div></div>
+        <div class="dropdown-item" data-link="http://localhost:8501"><div class="icon">🐭</div><div class="info"><span class="title">챗봇</span><span class="desc">미키</span></div></div>
       </div>
     </div>
   </div>
@@ -789,7 +782,6 @@ body {
     </div>
   </div>
 </div>
-
 <script>
 /* === Nav Toggle === */
 (function(){
@@ -810,10 +802,13 @@ body {
     open=!open;
     if(open){
       restoreView();
-      if(window.innerWidth>768){
-        var banner=document.querySelector('.banner-wrap');
-        if(banner) panel.style.height=(banner.offsetTop+banner.offsetHeight-56)+'px';
+      var maxPH=Infinity;
+      var banner=document.querySelector('.banner-wrap');
+      if(banner){
+        var bBot=banner.getBoundingClientRect().bottom;
+        maxPH=Math.min(maxPH, bBot-56);
       }
+      if(isFinite(maxPH)){ panel.style.maxHeight=Math.max(160,Math.round(maxPH))+'px'; panel.style.minHeight=Math.max(160,Math.round(maxPH))+'px'; }
       panel.classList.add('open'); brand.classList.add('open');
     }
     else closePanel();
