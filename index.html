@@ -960,7 +960,13 @@ body {
   });
   document.querySelectorAll('.dropdown-item[data-link]').forEach(function(el){
     el.addEventListener('click',function(e){
-      window.open(this.getAttribute('data-link'),'_blank');
+      var url=this.getAttribute('data-link');
+      if(url==='https://homepage-gjxpbxm4hvrb5ztmpnrkbi.streamlit.app/'&&!localStorage.getItem('loggedIn')){
+        closePanel();
+        openLoginModal();
+        return;
+      }
+      window.open(url,'_blank');
       closePanel();
     });
   });
