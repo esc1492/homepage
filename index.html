@@ -1288,13 +1288,15 @@ function handleLogin(){
     return;
   }
   document.getElementById('loginMsg').textContent='확인 중...';
+  var win=window.open('','_blank');
   sha256(pass).then(function(hash){
     if(hash===passwordHash){
       localStorage.setItem('loggedIn','1');
       document.getElementById('loginMsg').textContent='';
       closeLoginModal();
-      window.open('https://homepage-gjxpbxm4hvrb5ztmpnrkbi.streamlit.app/','_blank');
+      win.location='https://homepage-gjxpbxm4hvrb5ztmpnrkbi.streamlit.app/';
     } else {
+      win.close();
       document.getElementById('loginMsg').textContent='비밀번호가 일치하지 않습니다.';
     }
   });
