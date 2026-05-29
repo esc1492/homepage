@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(page_title="테트리스", page_icon="🎮", layout="centered")
-st.title("🎮 테트리스")
+st.markdown('<h1 style="font-size:1.1rem; margin:0; padding:0;">🎮 테트리스</h1>', unsafe_allow_html=True)
 
 GAME_HTML = """
 <!DOCTYPE html>
