@@ -1,6 +1,15 @@
 import streamlit as st
 from anthropic import Anthropic
 import os
+import hmac
+
+# --- Password check endpoint (called from start page login modal) ---
+if st.query_params and "check_pw" in st.query_params:
+    pw = st.query_params["check_pw"]
+    expected = os.environ.get("LOGIN_PASSWORD", "")
+    ok = hmac.compare_digest(pw, expected)
+    st.markdown(f"<!-- PW_CHECK:{'OK' if ok else 'FAIL'} -->")
+    st.stop()
 
 st.set_page_config(
     page_title="미키 챗봇",

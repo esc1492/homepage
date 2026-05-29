@@ -143,6 +143,25 @@ body {
 .nav-door.active .door-open { display: block; }
 .nav-door.active:hover .door-open { opacity: 1; }
 
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 42px;
+  cursor: pointer;
+  color: var(--color-muted-stone);
+  opacity: 0.25;
+  transition: opacity 0.25s;
+}
+.nav-icon:hover { opacity: 0.5; }
+
 /* === Dropdown Panel === */
 .dropdown-panel {
   position: fixed;
@@ -640,6 +659,98 @@ body {
 }
 .todo-clear:hover { color: var(--color-inkwell); }
 
+/* === Login Modal === */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-card {
+  background: var(--color-canvas-parchment);
+  border-radius: var(--radius-prominent);
+  padding: 28px 24px 24px;
+  width: 300px;
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-card h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-inkwell);
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.modal-card label {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted-stone);
+  margin-bottom: 2px;
+}
+
+.modal-card .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-card input[type="text"],
+.modal-card input[type="password"] {
+  font-family: var(--font-primary);
+  font-size: 13px;
+  color: var(--color-inkwell);
+  background: transparent;
+  border: 1px solid var(--color-highlight-beige);
+  border-radius: var(--radius-cards);
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color 150ms;
+}
+.modal-card input:focus { border-color: var(--color-muted-stone); }
+
+.fixed-user {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-inkwell);
+  padding: 8px 10px;
+  border: 1px solid var(--color-highlight-beige);
+  border-radius: var(--radius-cards);
+  background: var(--color-pebble-gray);
+}
+
+.modal-card .btn-login {
+  width: 100%;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-canvas-parchment);
+  background: var(--color-forest-green-action);
+  border: none;
+  border-radius: var(--radius-buttons);
+  padding: 8px;
+  cursor: pointer;
+  transition: opacity 150ms;
+}
+.modal-card .btn-login:hover { opacity: 0.85; }
+
+.modal-msg {
+  font-size: 11px;
+  color: #c94a3a;
+  text-align: center;
+  min-height: 0;
+}
+
 /* === Responsive === */
 @media (max-width: 768px) {
   .top-row { flex-wrap: wrap; }
@@ -657,6 +768,7 @@ body {
   <span class="nav-brand" id="brandBtn">
     <span class="triple-line"><span class="line"></span><span class="line"></span><span class="line"></span></span>
   </span>
+  <span class="nav-right">
   <span class="nav-door" id="doorBtn">
     <svg class="door-closed" viewBox="0 0 24 24" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="42">
       <rect x="3" y="3" width="18" height="18" rx="1"/>
@@ -667,6 +779,13 @@ body {
       <path d="M4 4 L16 9 L16 19 L4 20" stroke-width="1"/>
       <circle cx="14" cy="16" r="1.3" fill="currentColor"/>
     </svg>
+  </span>
+  <span class="nav-icon" id="loginBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="42">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>
+    </svg>
+  </span>
   </span>
 </nav>
 <div class="dropdown-panel" id="dropdownPanel">
@@ -1117,6 +1236,66 @@ loadTodosFromGithub();
     imgs[i].style.opacity='1';
   },3000);
 })();
+</script>
+
+<div class="modal-overlay" id="loginModal">
+  <div class="modal-card">
+    <h2>로그인</h2>
+    <div class="field">
+      <label for="loginUser">사용자 이름</label>
+      <div class="fixed-user">수찬진</div>
+    </div>
+    <div class="field">
+      <label for="loginPass">비밀번호</label>
+      <input type="password" id="loginPass">
+    </div>
+    <div class="modal-msg" id="loginMsg"></div>
+    <button class="btn-login" onclick="handleLogin()">로그인</button>
+  </div>
+</div>
+<script>
+function openLoginModal(){
+  document.getElementById('loginModal').classList.add('open');
+  document.getElementById('loginPass').focus();
+  document.getElementById('loginMsg').textContent='';
+}
+function closeLoginModal(){
+  document.getElementById('loginModal').classList.remove('open');
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginMsg').textContent='';
+}
+function handleLogin(){
+  var pass=document.getElementById('loginPass').value.trim();
+  if(!pass){
+    document.getElementById('loginMsg').textContent='비밀번호를 입력해 주세요.';
+    return;
+  }
+  document.getElementById('loginMsg').textContent='확인 중...';
+  fetch('https://homepage-gjxpbxm4hvrb5ztmpnrkbi.streamlit.app/?check_pw='+encodeURIComponent(pass))
+    .then(function(r){return r.text();})
+    .then(function(text){
+      if(text.includes('PW_CHECK:OK')){
+        document.getElementById('loginMsg').textContent='';
+        alert('수찬진님, 로그인되었습니다.');
+        closeLoginModal();
+      } else {
+        document.getElementById('loginMsg').textContent='비밀번호가 일치하지 않습니다.';
+      }
+    })
+    .catch(function(){
+      document.getElementById('loginMsg').textContent='서버에 연결할 수 없습니다.';
+    });
+}
+document.getElementById('loginBtn').addEventListener('click',openLoginModal);
+document.getElementById('loginModal').addEventListener('click',function(e){
+  if(e.target===this) closeLoginModal();
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&document.getElementById('loginModal').classList.contains('open')) closeLoginModal();
+});
+document.getElementById('loginPass').addEventListener('keydown',function(e){
+  if(e.key==='Enter') handleLogin();
+});
 </script>
 </body>
 </html>
