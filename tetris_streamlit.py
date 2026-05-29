@@ -4,7 +4,7 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="테트리스", page_icon="🎮", layout="centered")
 st.markdown("""
 <style>
-#stDecoration, .stAppDeployButton, footer { display: none !important; }
+#stDecoration, .stAppDeployButton, [data-testid="stAppDeployButton"], footer { display: none !important; }
 .stMainBlockContainer { padding-top: 0 !important; }
 </style>
 """, unsafe_allow_html=True)
