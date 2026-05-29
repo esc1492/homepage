@@ -1,4 +1,4 @@
-import json, re, html, datetime, time
+import json, re, html, datetime, time, os, hashlib
 import urllib.request
 
 def fetch_json(url):
@@ -69,6 +69,19 @@ try:
 except Exception as e:
     print(f"Stock name map error: {e}")
 
+def load_password():
+    pw = os.environ.get("LOGIN_PASSWORD", "")
+    if not pw:
+        env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+        if os.path.isfile(env_path):
+            with open(env_path) as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("LOGIN_PASSWORD="):
+                        pw = line.split("=", 1)[1].strip("\"'")
+                        break
+    return pw
+
 # 주식 데이터
 tickers = ['005930', '034020', '035420', '018260', '000660', '064350']
 stocks = {}
@@ -96,10 +109,12 @@ for key, url in rss_urls.items():
         print(f"RSS error [{key}]: {e}")
         news[key] = []
 
+password = load_password()
 data = {
     'stocks': stocks,
     'stockNameMap': stock_name_map,
     'news': news,
+    'passwordHash': hashlib.sha256(password.encode()).hexdigest() if password else None,
     'updated': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 }
 

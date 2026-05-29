@@ -12,6 +12,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run fetch script
+        env:
+          LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
         run: python3 fetch.py
 
       - name: Commit and push
