@@ -4,9 +4,19 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="테트리스", page_icon="🎮", layout="centered")
 st.markdown("""
 <style>
-#MainMenu, #stDecoration, .stAppDeployButton, [data-testid="stAppDeployButton"], footer, header, .stAppToolbar, [data-testid="stToolbar"] { display: none !important; }
 .stMainBlockContainer { padding-top: 0 !important; }
 </style>
+<script>
+(function(){
+  function hide(){
+    document.querySelectorAll('#MainMenu,#stDecoration,.stAppDeployButton,[data-testid="stAppDeployButton"],footer,header,.stAppToolbar,[data-testid="stToolbar"]').forEach(function(el){
+      el.style.setProperty('display','none','important');
+    });
+  }
+  hide();
+  new MutationObserver(hide).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
 """, unsafe_allow_html=True)
 
 GAME_HTML = """
