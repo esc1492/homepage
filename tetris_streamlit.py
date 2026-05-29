@@ -6,11 +6,11 @@ st.markdown("""
 <style>
 .stApp header, .stApp footer, .stAppDeployButton,
 [data-testid="stAppDeployButton"], #MainMenu, #stDecoration,
-[data-testid="stToolbar"], .stToolbar {
+[data-testid="stToolbar"], .stToolbar,
+[data-testid="manage-app-button"] {
   display: none !important;
 }
-.stMainBlockContainer { padding-top: 40px !important; }
-.block-container { padding-top: 40px !important; }
+.stMainBlockContainer { padding-top: 30px !important; }
 </style>
 """, unsafe_allow_html=True)
 
