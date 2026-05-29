@@ -2,7 +2,12 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(page_title="테트리스", page_icon="🎮", layout="centered")
-st.markdown('<h1 style="font-size:1.1rem; margin:0; padding:0;">🎮 테트리스</h1>', unsafe_allow_html=True)
+st.markdown("""
+<style>
+#stDecoration, .stAppDeployButton, .stMainBlockContainer > div:first-child { display: none !important; }
+.stMainBlockContainer { padding-top: 0 !important; }
+</style>
+""", unsafe_allow_html=True)
 
 GAME_HTML = """
 <!DOCTYPE html>
@@ -11,7 +16,7 @@ GAME_HTML = """
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #111; color: #eee; font-family: monospace; display: flex; justify-content: center; padding: 10px; }
+body { background: #111; color: #eee; font-family: monospace; display: flex; justify-content: center; padding: 0; }
 #app { display: flex; gap: 14px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
 
 /* board */
