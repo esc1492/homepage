@@ -16,7 +16,7 @@ GAME_HTML = """
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #111; color: #eee; font-family: monospace; display: flex; justify-content: center; padding: 6px 0 0; }
+body { background: #111; color: #eee; font-family: monospace; display: flex; justify-content: center; padding: 20px 0 0; }
 #app { display: flex; gap: 14px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
 
 /* board */
