@@ -1309,11 +1309,8 @@ function handleLogin(){
   });
 }
 document.getElementById('loginBtn').addEventListener('click',function(){
-  if(localStorage.getItem('loggedIn')){
-    window.open('https://homepage-gjxpbxm4hvrb5ztmpnrkbi.streamlit.app/','_blank');
-  } else {
-    openLoginModal();
-  }
+  if(localStorage.getItem('loggedIn')) return;
+  openLoginModal();
 });
 document.getElementById('loginModal').addEventListener('click',function(e){
   if(e.target===this) closeLoginModal();
