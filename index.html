@@ -158,9 +158,14 @@ body {
   cursor: pointer;
   color: var(--color-muted-stone);
   opacity: 0.25;
-  transition: opacity 0.25s;
+  transition: opacity 0.25s, color 0.25s;
 }
 .nav-icon:hover { opacity: 0.5; }
+.nav-icon.logged-in {
+  opacity: 1;
+  color: #1a3a8a;
+  filter: drop-shadow(0 0 0 1.2px #000);
+}
 
 /* === Dropdown Panel === */
 .dropdown-panel {
@@ -1228,6 +1233,7 @@ function clearDone(){
 }
 var passwordHash=null;
 fetch('./data.json?t='+Date.now()).then(function(r){return r.json();}).then(function(d){passwordHash=d.passwordHash||null;}).catch(function(){});
+if(localStorage.getItem('loggedIn')) document.getElementById('loginBtn').classList.add('logged-in');
 loadWeather();
 loadStocks();
 document.getElementById('my-todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addMyTodo();});
@@ -1292,6 +1298,7 @@ function handleLogin(){
   sha256(pass).then(function(hash){
     if(hash===passwordHash){
       localStorage.setItem('loggedIn','1');
+      document.getElementById('loginBtn').classList.add('logged-in');
       document.getElementById('loginMsg').textContent='';
       closeLoginModal();
       win.location='https://homepage-gjxpbxm4hvrb5ztmpnrkbi.streamlit.app/';
