@@ -1,5 +1,10 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import base64
+
+def sound_b64(name):
+    with open(f'sound/{name}.mp3', 'rb') as f:
+        return base64.b64encode(f.read()).decode()
 
 st.set_page_config(page_title="테트리스", page_icon="🎮", layout="centered")
 st.markdown("""
@@ -14,7 +19,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-GAME_HTML = """
+sound_drop_uri = 'data:audio/mp3;base64,' + sound_b64('drop')
+sound_swipe_uri = 'data:audio/mp3;base64,' + sound_b64('swipe')
+sound_change_uri = 'data:audio/mp3;base64,' + sound_b64('change')
+sound_break_uri = 'data:audio/mp3;base64,' + sound_b64('break')
+sound_theme_uri = 'data:audio/mp3;base64,' + sound_b64('Tetris-Troika-tetis(mp3hamster.net)')
+
+GAME_HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -107,11 +118,36 @@ canvas#next { display: block; background: #0d0d0d; border-radius: 4px; }
       <div class="panel-label">다음</div>
       <canvas id="next" width="80" height="80"></canvas>
     </div>
+    <button id="btn-sound" style="width:100%;padding:5px;font-size:12px;cursor:pointer;border-radius:6px;border:1px solid #555;background:#1e1e1e;color:#aaa;margin-bottom:4px;">♫</button>
     <button id="btn-start">▶ 시작</button>
   </div>
 </div>
 
 <script>
+// Audio
+const SOUNDS={
+  drop:'%%DROP_URI%%',
+  swipe:'%%SWIPE_URI%%',
+  change:'%%CHANGE_URI%%',
+  break:'%%BREAK_URI%%'
+};
+const audios={};
+['drop','swipe','change','break'].forEach(n=>{audios[n]=new Audio(SOUNDS[n]);});
+let soundEnabled=true;
+function toggleSound(){
+  soundEnabled=!soundEnabled;
+  const btn=document.getElementById('btn-sound');
+  btn.textContent=soundEnabled?'\u266B':'\u266B MUTE';
+  btn.style.color=soundEnabled?'#aaa':'#555';
+  if(!soundEnabled){themeAudio.pause();}
+  else if(running){themeAudio.play().catch(()=>{});}
+}
+function playSound(n){if(soundEnabled){const a=audios[n];if(a){a.currentTime=0;a.play().catch(()=>{});}}}
+
+// Theme music
+const themeAudio=new Audio('%%THEME_URI%%');
+themeAudio.loop=true;
+
 const COLS=10,ROWS=20,SZ=20;
 const bc=document.getElementById('board'),bx=bc.getContext('2d');
 const nc=document.getElementById('next'),nx=nc.getContext('2d');
@@ -151,6 +187,7 @@ function valid(p,dx=0,dy=0,m=p.m){
 function rotate(m){return m[0].map((_,c)=>m.map(r=>r[c]).reverse());}
 
 function place(){
+  playSound('drop');
   piece.m.forEach((r,ri)=>r.forEach((v,ci)=>{if(v&&piece.y+ri>=0)board[piece.y+ri][piece.x+ci]=v;}));
   let cleared=0;
   for(let r=ROWS-1;r>=0;r--){
@@ -161,6 +198,7 @@ function place(){
     score+=(pts[cleared]||0)*level;
     lines+=cleared;
     level=Math.floor(lines/10)+1;
+    playSound('break');
   }
   document.getElementById('score').textContent=score;
   document.getElementById('level').textContent=level;
@@ -214,6 +252,7 @@ function drawOver(){
   bx.font='12px monospace';bx.fillStyle='#aaa';
   bx.fillText('점수: '+score,COLS*SZ/2,ROWS*SZ/2+16);
   document.getElementById('btn-start').textContent='▶ 다시 시작';
+  themeAudio.pause();
 }
 
 function loop(ts){
@@ -234,9 +273,11 @@ function start(){
   cancelAnimationFrame(raf);
   raf=requestAnimationFrame(loop);
   document.getElementById('btn-start').textContent='▶ 재시작';
+  if(soundEnabled){themeAudio.currentTime=0;themeAudio.play().catch(()=>{});}
 }
 
 document.getElementById('btn-start').addEventListener('click',start);
+document.getElementById('btn-sound').addEventListener('click',toggleSound);
 
 // keyboard
 document.addEventListener('keydown',e=>{
@@ -245,7 +286,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='ArrowLeft'){if(valid(piece,-1,0))piece.x--;}
   else if(e.key==='ArrowRight'){if(valid(piece,1,0))piece.x++;}
   else if(e.key==='ArrowDown'){drop();lastT=performance.now();}
-  else if(e.key==='ArrowUp'){doRotate();}
+  else if(e.key==='ArrowUp'){doRotate();playSound('change');}
   else if(e.key===' '){hardDrop();}
   drawBoard();
 });
@@ -258,7 +299,7 @@ function addCtrl(id,fn){
 }
 addCtrl('c-left',()=>{if(valid(piece,-1,0))piece.x--;});
 addCtrl('c-right',()=>{if(valid(piece,1,0))piece.x++;});
-addCtrl('c-up',()=>doRotate());
+addCtrl('c-up',()=>{doRotate();playSound('change');});
 addCtrl('c-down',()=>{drop();lastT=performance.now();});
 addCtrl('c-drop',()=>hardDrop());
 
@@ -268,7 +309,7 @@ bc.addEventListener('touchstart',e=>{tx0=e.touches[0].clientX;ty0=e.touches[0].c
 bc.addEventListener('touchend',e=>{
   if(!running)return;
   const dx=e.changedTouches[0].clientX-tx0,dy=e.changedTouches[0].clientY-ty0;
-  if(Math.abs(dx)<12&&Math.abs(dy)<12){doRotate();}
+  if(Math.abs(dx)<12&&Math.abs(dy)<12){doRotate();playSound('change');}
   else if(Math.abs(dx)>Math.abs(dy)){
     if(dx>0&&valid(piece,1,0))piece.x++;
     else if(dx<0&&valid(piece,-1,0))piece.x--;
@@ -285,5 +326,11 @@ nx.fillStyle='#0d0d0d';nx.fillRect(0,0,80,80);
 </body>
 </html>
 """
+GAME_HTML = (GAME_HTML_TEMPLATE
+    .replace('%%DROP_URI%%', sound_drop_uri)
+    .replace('%%SWIPE_URI%%', sound_swipe_uri)
+    .replace('%%CHANGE_URI%%', sound_change_uri)
+    .replace('%%BREAK_URI%%', sound_break_uri)
+    .replace('%%THEME_URI%%', sound_theme_uri))
 
 components.html(GAME_HTML, height=700, scrolling=False)
