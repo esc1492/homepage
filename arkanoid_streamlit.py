@@ -42,24 +42,27 @@ canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; 
 .panel-value { font-size: 22px; font-weight: 500; color: #fff; }
 
 @media (max-width: 540px) {
-  body { padding: 8px 6px 0; overflow-x: hidden; }
-  #app { flex-direction: column; align-items: center; gap: 8px; }
+  body { padding: 6px 4px 0; overflow-x: hidden; }
+  #app { flex-direction: column; align-items: center; gap: 4px; }
+  #app > div:first-child { order: 2; }
   #side {
+    order: 1;
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
     min-width: unset;
     width: 100%;
   }
-  #side .panel { flex: 1; min-width: 0; text-align: center; padding: 6px 6px; }
-  #side .panel-value { font-size: 16px; }
-  #side #btn-start { flex: 0 0 auto; padding: 8px 14px; font-size: 13px; }
+  #side .panel { flex: 1; min-width: 0; text-align: center; padding: 4px 4px; }
+  #side .panel-label { font-size: 9px; }
+  #side .panel-value { font-size: 14px; }
+  #side #btn-start { flex: 0 0 auto; padding: 6px 12px; font-size: 12px; }
   #side #btn-sound { display: none; }
-  #controls .ctrl-btn { width: 48px; height: 42px; font-size: 15px; }
-  #controls .ctrl-btn.wide { width: 90px; font-size: 11px; }
-  #controls { gap: 4px; margin-top: 0; }
-  .ctrl-row { gap: 6px; }
+  #controls .ctrl-btn { width: 48px; height: 40px; font-size: 14px; }
+  #controls .ctrl-btn.wide { width: 80px; font-size: 11px; }
+  #controls { gap: 2px; margin-top: 0; }
+  .ctrl-row { gap: 4px; }
   #key-hint { display: none; }
   canvas#board { max-width: 100%; height: auto; }
 }
