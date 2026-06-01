@@ -37,6 +37,7 @@ body { background: #111; color: #eee; font-family: monospace; display: flex; jus
 canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; display: block; touch-action: none; max-width: 100%; height: auto; }
 
 #side { display: flex; flex-direction: column; gap: 10px; min-width: 110px; }
+#game-area { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .panel { background: #1e1e1e; border: 1px solid #333; border-radius: 6px; padding: 8px 10px; }
 .panel-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
 .panel-value { font-size: 22px; font-weight: 500; color: #fff; }
@@ -44,7 +45,7 @@ canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; 
 @media (max-width: 540px) {
   body { padding: 6px 4px 0; overflow-x: hidden; }
   #app { flex-direction: column; align-items: center; gap: 4px; }
-  #app > div:first-child { order: 2; }
+  #game-area { order: 2; gap: 4px; }
   #side {
     order: 1;
     flex-direction: row;
@@ -57,13 +58,12 @@ canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; 
   #side .panel { flex: 1; min-width: 0; text-align: center; padding: 4px 4px; }
   #side .panel-label { font-size: 9px; }
   #side .panel-value { font-size: 14px; }
-  #side #btn-start { flex: 0 0 auto; padding: 6px 12px; font-size: 12px; }
-  #side #btn-sound { display: none; }
   #controls .ctrl-btn { width: 48px; height: 40px; font-size: 14px; }
   #controls .ctrl-btn.wide { width: 80px; font-size: 11px; }
   #controls { gap: 2px; margin-top: 0; }
   .ctrl-row { gap: 4px; }
   #key-hint { display: none; }
+  #btn-start { font-size: 12px; padding: 6px; }
   canvas#board { max-width: 100%; height: auto; }
 }
 
@@ -103,7 +103,7 @@ canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; 
 </head>
 <body>
 <div id="app">
-  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+  <div id="game-area">
     <canvas id="board" width="400" height="580"></canvas>
     <div id="controls">
       <div class="ctrl-row">
@@ -113,6 +113,7 @@ canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; 
       </div>
       <div id="key-hint">⌨ ← → &nbsp;&nbsp;|&nbsp;&nbsp; 🖱 이동 &nbsp;&nbsp;|&nbsp;&nbsp; Space: 발사</div>
     </div>
+      <button id="btn-start">▶ 시작</button>
   </div>
 
   <div id="side">
@@ -128,8 +129,6 @@ canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; 
       <div class="panel-label">\ubaa9\uc228</div>
       <div class="panel-value" id="lives">\u2764\u2764\u2764</div>
     </div>
-    <button id="btn-sound" style="width:100%;padding:5px;font-size:12px;cursor:pointer;border-radius:6px;border:1px solid #555;background:#1e1e1e;color:#aaa;margin-bottom:4px;">\u266B</button>
-    <button id="btn-start">\u25b6 \uc2dc\uc791</button>
   </div>
 </div>
 
@@ -144,12 +143,6 @@ const SOUNDS={
 const audios={};
 ['paddle','launch','brick','wall'].forEach(function(n){audios[n]=new Audio(SOUNDS[n]);});
 let soundEnabled=true;
-function toggleSound(){
-  soundEnabled=!soundEnabled;
-  var btn=document.getElementById('btn-sound');
-  btn.textContent=soundEnabled?'\u266B':'\u266B MUTE';
-  btn.style.color=soundEnabled?'#aaa':'#555';
-}
 function playSound(n){if(soundEnabled&&audios[n]){var a=audios[n];a.currentTime=0;a.play().catch(function(){});}}
 
 // Canvas
@@ -549,7 +542,6 @@ addCtrl('c-right',1);
 document.getElementById('c-launch').addEventListener('click',function(){if(gameState==='ready')launchBall();});
 document.getElementById('c-launch').addEventListener('touchstart',function(e){e.preventDefault();if(gameState==='ready')launchBall();},{passive:false});
 document.getElementById('btn-start').addEventListener('click',start);
-document.getElementById('btn-sound').addEventListener('click',toggleSound);
 
 // Initial
 bx.fillStyle='#0a0a12';bx.fillRect(0,0,W,H);
