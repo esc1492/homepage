@@ -305,10 +305,10 @@ function drawBrick(b){
 function drawPaddle(){
   var x=paddle.x,y=paddle.y,w=paddle.w,h=paddle.h,r=h/2;
 
+  // Red body between the blue dots
   var grad=bx.createLinearGradient(x,y,x,y+h);
-  grad.addColorStop(0,'#c8d0dc');grad.addColorStop(0.25,'#e8ecf2');
-  grad.addColorStop(0.5,'#b0b8c8');grad.addColorStop(0.8,'#8890a0');
-  grad.addColorStop(1,'#586070');
+  grad.addColorStop(0,'#FF4444');grad.addColorStop(0.3,'#E03030');
+  grad.addColorStop(0.6,'#CC2222');grad.addColorStop(1,'#AA1111');
   bx.fillStyle=grad;
 
   bx.beginPath();
@@ -322,18 +322,17 @@ function drawPaddle(){
   bx.quadraticCurveTo(x,y,x+r,y);
   bx.closePath();bx.fill();
 
-  bx.strokeStyle='#4a5260';bx.lineWidth=1;bx.stroke();
+  bx.strokeStyle='#881111';bx.lineWidth=1;bx.stroke();
 
-  bx.fillStyle='rgba(255,255,255,0.45)';bx.fillRect(x+12,y+2,w-24,1.5);
-  bx.fillStyle='rgba(255,255,255,0.2)';bx.fillRect(x+10,y+h-4,w-20,1);
-
+  // Blue dots at both ends
   bx.fillStyle='#2979FF';
-  bx.shadowColor='#2979FF';bx.shadowBlur=4;
-  bx.beginPath();bx.arc(x+8,y+h/2,2,0,Math.PI*2);bx.fill();
-  bx.beginPath();bx.arc(x+w-8,y+h/2,2,0,Math.PI*2);bx.fill();
+  bx.shadowColor='#2979FF';bx.shadowBlur=6;
+  bx.beginPath();bx.arc(x+8,y+h/2,3,0,Math.PI*2);bx.fill();
+  bx.beginPath();bx.arc(x+w-8,y+h/2,3,0,Math.PI*2);bx.fill();
   bx.shadowBlur=0;
 
-  bx.fillStyle='rgba(41,121,255,0.12)';bx.fillRect(x+w/2-7,y+3,14,h-6);
+  // Thin highlight on top edge
+  bx.fillStyle='rgba(255,255,255,0.15)';bx.fillRect(x+12,y+2,w-24,1.5);
 }
 
 function drawBall(){
