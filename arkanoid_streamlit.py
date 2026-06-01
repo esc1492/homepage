@@ -353,9 +353,14 @@ function drawPaddle(){
   // Outline
   bx.strokeStyle='#222';bx.lineWidth=1;bx.stroke();
 
-  // Sky-blue 3D beads at both ends
+  // Black dividing line between red tip and gray body
+  bx.strokeStyle='#111';bx.lineWidth=1.5;
+  bx.beginPath();bx.moveTo(x+tipW,y);bx.lineTo(x+tipW,y+h);bx.stroke();
+  bx.beginPath();bx.moveTo(x+w-tipW,y);bx.lineTo(x+w-tipW,y+h);bx.stroke();
+
+  // Sky-blue 3D beads at both extreme ends
   var beadR=3,beadY=y+h/2;
-  [x+tipW/2,x+w-tipW/2].forEach(function(bxPos){
+  [x+beadR,x+w-beadR].forEach(function(bxPos){
     // Bead shadow
     bx.fillStyle='rgba(0,0,0,0.3)';
     bx.beginPath();bx.arc(bxPos+1,beadY+1,beadR,0,Math.PI*2);bx.fill();
