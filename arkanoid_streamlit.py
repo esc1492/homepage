@@ -41,6 +41,25 @@ canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; 
 .panel-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
 .panel-value { font-size: 22px; font-weight: 500; color: #fff; }
 
+@media (max-width: 540px) {
+  body { padding: 10px 8px 0; overflow-x: hidden; }
+  #app { flex-direction: column; align-items: center; }
+  #side {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    min-width: unset;
+    width: 100%;
+  }
+  #side .panel { flex: 1; min-width: 70px; text-align: center; }
+  #side .panel-value { font-size: 18px; }
+  #side #btn-start { width: auto; flex: 0 0 auto; padding: 9px 16px; }
+  #side #btn-sound { width: auto; flex: 0 0 auto; padding: 5px 12px; }
+  #controls .ctrl-btn { width: 52px; height: 48px; font-size: 16px; }
+  #controls .ctrl-btn.wide { width: 100px; font-size: 12px; }
+  canvas#board { max-width: 100%; height: auto; }
+}
+
 #btn-start {
   width: 100%; padding: 9px; font-size: 14px; cursor: pointer;
   border-radius: 6px; border: 1px solid #555;
