@@ -46,16 +46,8 @@ canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; 
   #controls { gap: 2px; margin-top: 0; }
   .ctrl-row { gap: 4px; }
   #key-hint { display: none; }
-  #btn-start { font-size: 12px; padding: 5px; }
   canvas#board { max-width: 100%; height: auto; }
 }
-
-#btn-start {
-  width: 100%; padding: 9px; font-size: 14px; cursor: pointer;
-  border-radius: 6px; border: 1px solid #555;
-  background: #2a2a2a; color: #fff;
-}
-#btn-start:hover { background: #3a3a3a; }
 
 #controls {
   width: 100%;
@@ -94,9 +86,8 @@ canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; 
         <button class="ctrl-btn wide" id="c-launch" title="발사">🚀 LAUNCH</button>
         <button class="ctrl-btn" id="c-right" title="오른쪽">\u2192</button>
       </div>
-      <div id="key-hint">⌨ ← → &nbsp;&nbsp;|&nbsp;&nbsp; 🖱 이동 &nbsp;&nbsp;|&nbsp;&nbsp; Space: 발사</div>
+      <div id="key-hint">⌨ ← → &nbsp;&nbsp;|&nbsp;&nbsp; 🖱 이동 &nbsp;&nbsp;|&nbsp;&nbsp; Enter/Space: 발사</div>
     </div>
-      <button id="btn-start">▶ 시작</button>
   </div>
 
 </div>
@@ -112,6 +103,7 @@ const SOUNDS={
 const audios={};
 ['paddle','launch','brick','wall'].forEach(function(n){audios[n]=new Audio(SOUNDS[n]);});
 let soundEnabled=true;
+let isMobile=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 function playSound(n){if(soundEnabled&&audios[n]){var a=audios[n];a.currentTime=0;a.play().catch(function(){});}}
 
 // Canvas
@@ -228,10 +220,8 @@ function resetBall(){
 
 function loseLife(){
   lives--;playSound('wall');
-  document.getElementById('lives').textContent='\u2764'.repeat(Math.max(0,lives));
   if(lives<=0){
     gameState='gameOver';
-    document.getElementById('btn-start').textContent='\u25b6 \uac8c\uc784\uc624\ubc84';
   }else{
     gameState='lost';
     setTimeout(resetBall,800);
@@ -243,18 +233,14 @@ function checkLevelComplete(){
   round++;
   if(round>5){
     gameState='win';
-    document.getElementById('btn-start').textContent='\u25b6 \uc2b9\ub9ac! \ub2e4\uc2dc \uc2dc\uc791';
   }else{
     gameState='levelComplete';
-    document.getElementById('round').textContent=round;
     setTimeout(function(){
       bricks=genLevel(round-1);
       resetBall();
     },1200);
   }
 }
-
-function updateScore(){document.getElementById('score').textContent=score;}
 
 // Drawing
 function drawBackground(){
@@ -422,7 +408,7 @@ function updateBall(){
       if(b.destructible){
         b.hp--;
         if(b.hp<=0){
-          b.visible=false;score+=10*round;updateScore();playSound('brick');
+          b.visible=false;score+=10*round;playSound('brick');
         }else playSound('wall');
       }else playSound('wall');
       checkLevelComplete();
@@ -444,7 +430,7 @@ function loop(){
   for(var i=0;i<bricks.length;i++)drawBrick(bricks[i]);
   drawPaddle();drawBall();drawHUD();
 
-  if(gameState==='ready')drawOverlay('READY','Space / \ud074\ub9ad\uc73c\ub85c \ubc1c\uc0ac');
+  if(gameState==='ready')drawOverlay('READY',isMobile?'\ud654\uba74\uc744 \ud130\uce58\ud574\uc8fc\uc138\uc694':'\uc5d4\ud130\ub97c \ub20c\ub7ec\uc8fc\uc138\uc694');
   if(gameState==='levelComplete')drawOverlay('ROUND COMPLETE!','');
   if(gameState==='lost')drawOverlay('READY','');
   if(gameState==='gameOver')drawOverlay('GAME OVER','\ucd5c\uc885 \uc810\uc218: '+score);
@@ -457,10 +443,6 @@ function start(){
   score=0;lives=3;round=1;
   bricks=genLevel(0);
   paddle.x=W/2-paddle.w/2;resetBall();
-  document.getElementById('score').textContent='0';
-  document.getElementById('round').textContent='1';
-  document.getElementById('lives').textContent='\u2764\u2764\u2764';
-  document.getElementById('btn-start').textContent='\u25b6 \uc7ac\uc2dc\uc791';
   if(raf)cancelAnimationFrame(raf);
   raf=requestAnimationFrame(loop);
 }
@@ -468,8 +450,9 @@ function start(){
 // Controls
 document.addEventListener('keydown',function(e){
   keysHeld[e.key]=true;
-  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].indexOf(e.key)!==-1)e.preventDefault();
-  if(e.key===' '&&gameState==='ready')launchBall();
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' ','Enter'].indexOf(e.key)!==-1)e.preventDefault();
+  if((e.key===' '||e.key==='Enter')&&gameState==='ready')launchBall();
+  if((e.key===' '||e.key==='Enter')&&(gameState==='gameOver'||gameState==='win'))start();
 });
 document.addEventListener('keyup',function(e){keysHeld[e.key]=false;});
 
@@ -480,7 +463,10 @@ bc.addEventListener('mousemove',function(e){
   paddle.x=(e.clientX-rect.left)*sx-paddle.w/2;
   clampPaddle();
 });
-bc.addEventListener('click',function(){if(gameState==='ready')launchBall();});
+bc.addEventListener('click',function(){
+  if(gameState==='ready')launchBall();
+  if(gameState==='gameOver'||gameState==='win')start();
+});
 
 // Touch
 bc.addEventListener('touchmove',function(e){
@@ -493,6 +479,7 @@ bc.addEventListener('touchmove',function(e){
 bc.addEventListener('touchstart',function(e){
   e.preventDefault();
   if(gameState==='ready')launchBall();
+  if(gameState==='gameOver'||gameState==='win')start();
 },{passive:false});
 
 // Mobile buttons
@@ -508,20 +495,18 @@ function addCtrl(id,dir){
 addCtrl('c-left',-1);
 addCtrl('c-right',1);
 
-document.getElementById('c-launch').addEventListener('click',function(){if(gameState==='ready')launchBall();});
-document.getElementById('c-launch').addEventListener('touchstart',function(e){e.preventDefault();if(gameState==='ready')launchBall();},{passive:false});
-document.getElementById('btn-start').addEventListener('click',start);
+document.getElementById('c-launch').addEventListener('click',function(){
+  if(gameState==='ready')launchBall();
+  if(gameState==='gameOver'||gameState==='win')start();
+});
+document.getElementById('c-launch').addEventListener('touchstart',function(e){
+  e.preventDefault();
+  if(gameState==='ready')launchBall();
+  if(gameState==='gameOver'||gameState==='win')start();
+},{passive:false});
 
-// Initial
-bx.fillStyle='#0a0a12';bx.fillRect(0,0,W,H);
-for(var i=0;i<stars.length;i++){
-  bx.fillStyle='rgba(255,255,255,'+stars[i].a+')';
-  bx.beginPath();bx.arc(stars[i].x,stars[i].y,stars[i].r,0,Math.PI*2);bx.fill();
-}
-bx.fillStyle='rgba(255,255,255,0.2)';bx.font='14px monospace';bx.textAlign='center';
-bx.fillText('\u25b6 \uc2dc\uc791\uc744 \ub20c\ub7ec\uc8fc\uc138\uc694',W/2,H/2-10);
-bx.font='11px monospace';bx.fillStyle='rgba(255,255,255,0.12)';
-bx.fillText('Arkanoid',W/2,H/2+14);
+// Start game immediately
+start();
 </script>
 </body>
 </html>
