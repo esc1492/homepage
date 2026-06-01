@@ -121,23 +121,22 @@ var bc=document.getElementById('board'),bx=bc.getContext('2d');
 // PCB background pattern
 var pcbTraces=[],pcbPads=[];
 (function(){
-  for(var i=0;i<30;i++){
+  for(var i=0;i<40;i++){
     var x1=Math.random()*W,y1=Math.random()*H;
     var dir=Math.floor(Math.random()*4);
-    var len=10+Math.random()*40;
+    var len=15+Math.random()*50;
     var x2=x1,y2=y1;
     switch(dir){
-      case 0:x2=Math.min(W,x1+len);break; // horizontal
-      case 1:x2=Math.max(0,x1-len);break; // horizontal reverse
-      case 2:y2=Math.min(H,y1+len);break; // vertical
-      case 3:y2=Math.max(0,y1-len);break; // vertical reverse
+      case 0:x2=Math.min(W,x1+len);break;
+      case 1:x2=Math.max(0,x1-len);break;
+      case 2:y2=Math.min(H,y1+len);break;
+      case 3:y2=Math.max(0,y1-len);break;
     }
-    // 45-degree bend in the middle
     var mx=(x1+x2)/2,my=(y1+y2)/2;
-    pcbTraces.push({x1:x1,y1:y1,mx:mx,my:my,x2:x2,y2:y2,w:0.5+Math.random()*1});
+    pcbTraces.push({x1:x1,y1:y1,mx:mx,my:my,x2:x2,y2:y2,w:0.8+Math.random()*1.2});
   }
-  for(var i=0;i<15;i++){
-    pcbPads.push({x:Math.random()*W,y:Math.random()*H,r:1.5+Math.random()*2});
+  for(var i=0;i<20;i++){
+    pcbPads.push({x:Math.random()*W,y:Math.random()*H,r:2+Math.random()*2.5});
   }
 })();
 
@@ -267,7 +266,8 @@ function drawBackground(){
   bx.fillStyle='#0a140e';bx.fillRect(0,0,W,H);
 
   // PCB traces (copper/gold lines with L-bend)
-  bx.strokeStyle='rgba(180,140,70,0.1)';
+  bx.strokeStyle='rgba(220,180,60,0.2)';
+  bx.shadowColor='rgba(220,180,60,0.06)';bx.shadowBlur=3;
   for(var i=0;i<pcbTraces.length;i++){
     var t=pcbTraces[i];
     bx.lineWidth=t.w;
@@ -275,16 +275,19 @@ function drawBackground(){
     bx.moveTo(t.x1,t.y1);bx.lineTo(t.mx,t.my);bx.lineTo(t.x2,t.y2);
     bx.stroke();
   }
+  bx.shadowBlur=0;
 
   // PCB pads (solder points)
-  bx.fillStyle='rgba(200,160,80,0.13)';
+  bx.fillStyle='rgba(240,200,70,0.18)';
+  bx.shadowColor='rgba(240,200,70,0.08)';bx.shadowBlur=4;
   for(var i=0;i<pcbPads.length;i++){
     var p=pcbPads[i];
     bx.beginPath();bx.arc(p.x,p.y,p.r,0,Math.PI*2);bx.fill();
-    bx.fillStyle='rgba(20,30,20,0.3)';
-    bx.beginPath();bx.arc(p.x,p.y,p.r*0.5,0,Math.PI*2);bx.fill();
-    bx.fillStyle='rgba(200,160,80,0.13)';
+    bx.fillStyle='rgba(10,25,15,0.4)';
+    bx.beginPath();bx.arc(p.x,p.y,p.r*0.4,0,Math.PI*2);bx.fill();
+    bx.fillStyle='rgba(240,200,70,0.18)';
   }
+  bx.shadowBlur=0;
 }
 
 function drawHUD(){
@@ -396,7 +399,7 @@ function drawPaddle(){
 
   // Sky-blue 3D beads at both extreme ends
   var beadR=4,beadY=y+h/2;
-  [x+beadR,x+w-beadR].forEach(function(bxPos){
+  [x,x+w].forEach(function(bxPos){
     // Bead shadow
     bx.fillStyle='rgba(0,0,0,0.3)';
     bx.beginPath();bx.arc(bxPos+1,beadY+1,beadR,0,Math.PI*2);bx.fill();
