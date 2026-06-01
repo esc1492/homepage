@@ -99,7 +99,7 @@ canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; 
       <div class="panel-value" id="round">1</div>
     </div>
     <div class="panel">
-      <div class="panel-label">\ubaa9\uc22b</div>
+      <div class="panel-label">\ubaa9\uc22a</div>
       <div class="panel-value" id="lives">\u2764\u2764\u2764</div>
     </div>
     <button id="btn-sound" style="width:100%;padding:5px;font-size:12px;cursor:pointer;border-radius:6px;border:1px solid #555;background:#1e1e1e;color:#aaa;margin-bottom:4px;">\u266B</button>
