@@ -118,40 +118,47 @@ var BRICK_COLORS=['#FFD700','#4CAF50','#FF9800','#F44336','#2196F3','#9C27B0'];
 var bc=document.getElementById('board'),bx=bc.getContext('2d');
 
 // Stars
-// PCB background pattern
-var pcbTraces=[],pcbPads=[],pcbChips=[];
+// Circuit background pattern
+var cktTraces=[],cktDots=[],cktBars=[];
 (function(){
-  var blues=['#0040b0','#0060d0','#003090','#0070e0','#0050c0','#002880'];
-  // Parallel horizontal bus traces (thicker, solid colors)
-  for(var row=0;row<14;row++){
-    var yBase=28+row*38;
-    if(yBase>H-20)break;
-    var col=blues[row%blues.length];
-    pcbTraces.push({x1:0,y1:yBase,x2:W,y2:yBase,w:1.2+Math.random()*0.8,color:col,type:'bus'});
-    // Secondary parallel trace nearby
-    pcbTraces.push({x1:0,y1:yBase+8+Math.random()*4,x2:W,y2:yBase+8+Math.random()*4,w:0.6+Math.random()*0.6,color:col,type:'bus'});
+  var blues=['#0060d0','#0040a0','#0070e0','#003080','#0050c0','#002870'];
+  // Dense horizontal trace lines across the canvas
+  for(var y=10;y<H-10;y+=6){
+    var col=blues[Math.floor(Math.random()*blues.length)];
+    var skip=Math.random()<0.15;
+    if(!skip){
+      var x1=0,x2=W;
+      var breakAt=Math.random()<0.08?20+Math.random()*(W-40):-1;
+      cktTraces.push({x1:x1,y1:y,x2:breakAt>0?breakAt:x2,y2:y,w:0.5+Math.random()*0.8,color:col});
+      if(breakAt>0)cktTraces.push({x1:breakAt+2+Math.random()*6,y1:y,x2:x2,y2:y,w:0.5+Math.random()*0.8,color:col});
+    }
   }
-  // Vertical connector traces
-  for(var i=0;i<30;i++){
+  // Vertical stubs connecting horizontal lines
+  for(var i=0;i<60;i++){
     var x=10+Math.random()*(W-20);
     var y1=10+Math.random()*(H-20);
-    var len=10+Math.random()*40;
-    var y2=Math.min(H-5,y1+len);
+    var h=4+Math.random()*16;
     var col=blues[i%blues.length];
-    pcbTraces.push({x1:x,y1:y1,x2:x+(Math.random()-0.5)*6,y2:y2,w:0.8+Math.random()*0.8,color:col,type:'via'});
+    cktTraces.push({x1:x,y1:y1,x2:x,y2:Math.min(H-5,y1+h),w:0.5+Math.random()*0.6,color:col});
   }
-  // Gold bar pads
-  for(var i=0;i<10;i++){
-    var y=20+Math.random()*(H-40);
-    var x1=5+Math.random()*(W-45);
-    var w=10+Math.random()*25;
-    pcbChips.push({x:x1,y:y,w:w,h:3,color:'#d0be00'});
-    pcbChips.push({x:x1-1,y:y-1,w:w+2,h:1,color:'#fff8b0'});
-    pcbChips.push({x:x1-1,y:y+3,w:w+2,h:1,color:'#8a7a00'});
+  // Gold bars (like the reference image - horizontal thick strips)
+  for(var i=0;i<8;i++){
+    var y=15+Math.random()*(H-25);
+    var x=8+Math.random()*(W-50);
+    var w=12+Math.random()*25;
+    cktBars.push({x:x,y:y,w:w,h:3,color:'#d0be00'});
+    cktBars.push({x:x,y:y-1,w:w,h:1,color:'#fff8b0'});
+    cktBars.push({x:x,y:y+3,w:w,h:1,color:'#8a7a00'});
   }
-  // Solder pads (larger)
-  for(var i=0;i<25;i++){
-    pcbPads.push({x:5+Math.random()*(W-10),y:5+Math.random()*(H-10),r:2+Math.random()*2.5});
+  // Small blue dots (solder points)
+  for(var i=0;i<30;i++){
+    cktDots.push({x:5+Math.random()*(W-10),y:5+Math.random()*(H-10),r:1+Math.random()*1.5});
+  }
+  // Occasional white/gray labels
+  for(var i=0;i<3;i++){
+    var x=5+Math.random()*(W-30);
+    var y=5+Math.random()*(H-15);
+    cktDots.push({x:x,y:y,r:0,label:true});
   }
 })();
 
@@ -280,36 +287,32 @@ function checkLevelComplete(){
 function drawBackground(){
   bx.fillStyle='#000';bx.fillRect(0,0,W,H);
 
-  // Bus traces (horizontal)
-  for(var i=0;i<pcbTraces.length;i++){
-    var t=pcbTraces[i];
-    if(t.type==='bus'){
-      bx.strokeStyle=t.color;bx.lineWidth=t.w;
-      bx.beginPath();bx.moveTo(t.x1,t.y1);bx.lineTo(t.x2,t.y2);bx.stroke();
+  // Horizontal and vertical traces
+  for(var i=0;i<cktTraces.length;i++){
+    var t=cktTraces[i];
+    bx.strokeStyle=t.color;bx.lineWidth=t.w;
+    bx.beginPath();bx.moveTo(t.x1,t.y1);bx.lineTo(t.x2,t.y2);bx.stroke();
+  }
+
+  // Gold bars (highlight + body + shadow)
+  for(var i=0;i<cktBars.length;i++){
+    var b=cktBars[i];
+    bx.fillStyle=b.color;bx.fillRect(b.x,b.y,b.w,b.h);
+  }
+
+  // Blue dots (solder points)
+  for(var i=0;i<cktDots.length;i++){
+    var d=cktDots[i];
+    if(d.r>0){
+      bx.fillStyle='#0050c0';bx.beginPath();bx.arc(d.x,d.y,d.r,0,Math.PI*2);bx.fill();
+      bx.fillStyle='rgba(0,0,0,0.5)';bx.beginPath();bx.arc(d.x,d.y,d.r*0.5,0,Math.PI*2);bx.fill();
     }
   }
 
-  // Via connectors (vertical)
-  for(var i=0;i<pcbTraces.length;i++){
-    var t=pcbTraces[i];
-    if(t.type==='via'){
-      bx.strokeStyle=t.color;bx.lineWidth=t.w;
-      bx.beginPath();bx.moveTo(t.x1,t.y1);bx.lineTo(t.x2,t.y2);bx.stroke();
-    }
-  }
-
-  // Gold bar pads (3-layer: top shine, main bar, bottom shadow)
-  for(var i=0;i<pcbChips.length;i++){
-    var c=pcbChips[i];
-    if(c.color)bx.fillStyle=c.color;bx.fillRect(c.x,c.y,c.w,c.h);
-  }
-
-  // Solder pads (blue ring with dark center)
-  for(var i=0;i<pcbPads.length;i++){
-    var p=pcbPads[i];
-    bx.fillStyle='#0040b0';bx.beginPath();bx.arc(p.x,p.y,p.r,0,Math.PI*2);bx.fill();
-    bx.fillStyle='#000';bx.beginPath();bx.arc(p.x,p.y,p.r*0.5,0,Math.PI*2);bx.fill();
-  }
+  // White/gray label rectangles (like reference image has)
+  bx.fillStyle='rgba(180,180,180,0.15)';bx.fillRect(8,8,35,12);
+  bx.fillStyle='rgba(180,180,180,0.1)';bx.fillRect(W-50,15,40,10);
+  bx.fillStyle='rgba(180,180,180,0.12)';bx.fillRect(12,H-22,28,10);
 }
 
 function drawHUD(){
