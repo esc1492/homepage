@@ -121,30 +121,37 @@ var bc=document.getElementById('board'),bx=bc.getContext('2d');
 // PCB background pattern
 var pcbTraces=[],pcbPads=[],pcbChips=[];
 (function(){
-  for(var i=0;i<70;i++){
-    var x1=Math.random()*W,y1=Math.random()*H;
-    var dir=Math.floor(Math.random()*4);
-    var len=8+Math.random()*45;
-    var x2=x1,y2=y1;
-    switch(dir){
-      case 0:x2=Math.min(W,x1+len);break;
-      case 1:x2=Math.max(0,x1-len);break;
-      case 2:y2=Math.min(H,y1+len);break;
-      case 3:y2=Math.max(0,y1-len);break;
-    }
-    // Z-bend with two corners
-    var mx1=x1+(x2-x1)*0.4,my1=y1+(y2-y1)*0.4;
-    var mx2=x1+(x2-x1)*0.6,my2=y1+(y2-y1)*0.6;
-    // Add slight offset for corner
-    if(dir<2){my1+=(Math.random()-0.5)*10;my2+=(Math.random()-0.5)*10;}
-    else{mx1+=(Math.random()-0.5)*10;mx2+=(Math.random()-0.5)*10;}
-    pcbTraces.push({x1:x1,y1:y1,mx1:mx1,my1:my1,mx2:mx2,my2:my2,x2:x2,y2:y2,w:0.6+Math.random()*1.2});
+  var blues=['#0040b0','#0060d0','#003090','#0070e0','#0050c0','#002880'];
+  // Parallel horizontal bus traces (thicker, solid colors)
+  for(var row=0;row<14;row++){
+    var yBase=28+row*38;
+    if(yBase>H-20)break;
+    var col=blues[row%blues.length];
+    pcbTraces.push({x1:0,y1:yBase,x2:W,y2:yBase,w:1.2+Math.random()*0.8,color:col,type:'bus'});
+    // Secondary parallel trace nearby
+    pcbTraces.push({x1:0,y1:yBase+8+Math.random()*4,x2:W,y2:yBase+8+Math.random()*4,w:0.6+Math.random()*0.6,color:col,type:'bus'});
   }
-  for(var i=0;i<35;i++){
-    pcbPads.push({x:Math.random()*W,y:Math.random()*H,r:1.5+Math.random()*2.5});
+  // Vertical connector traces
+  for(var i=0;i<30;i++){
+    var x=10+Math.random()*(W-20);
+    var y1=10+Math.random()*(H-20);
+    var len=10+Math.random()*40;
+    var y2=Math.min(H-5,y1+len);
+    var col=blues[i%blues.length];
+    pcbTraces.push({x1:x,y1:y1,x2:x+(Math.random()-0.5)*6,y2:y2,w:0.8+Math.random()*0.8,color:col,type:'via'});
   }
-  for(var i=0;i<6;i++){
-    pcbChips.push({x:20+Math.random()*(W-40),y:20+Math.random()*(H-40),w:8+Math.random()*16,h:6+Math.random()*10});
+  // Gold bar pads
+  for(var i=0;i<10;i++){
+    var y=20+Math.random()*(H-40);
+    var x1=5+Math.random()*(W-45);
+    var w=10+Math.random()*25;
+    pcbChips.push({x:x1,y:y,w:w,h:3,color:'#d0be00'});
+    pcbChips.push({x:x1-1,y:y-1,w:w+2,h:1,color:'#fff8b0'});
+    pcbChips.push({x:x1-1,y:y+3,w:w+2,h:1,color:'#8a7a00'});
+  }
+  // Solder pads (larger)
+  for(var i=0;i<25;i++){
+    pcbPads.push({x:5+Math.random()*(W-10),y:5+Math.random()*(H-10),r:2+Math.random()*2.5});
   }
 })();
 
@@ -271,39 +278,37 @@ function checkLevelComplete(){
 
 // Drawing
 function drawBackground(){
-  bx.fillStyle='#2d6b30';bx.fillRect(0,0,W,H);
+  bx.fillStyle='#000';bx.fillRect(0,0,W,H);
 
-  // Faint grid
-  bx.strokeStyle='rgba(255,255,255,0.04)';bx.lineWidth=0.5;
-  for(var gx=0;gx<W;gx+=16){bx.beginPath();bx.moveTo(gx,0);bx.lineTo(gx,H);bx.stroke();}
-  for(var gy=0;gy<H;gy+=16){bx.beginPath();bx.moveTo(0,gy);bx.lineTo(W,gy);bx.stroke();}
-
-  // PCB traces (white lines with Z-bends)
-  bx.strokeStyle='rgba(255,255,255,0.25)';
+  // Bus traces (horizontal)
   for(var i=0;i<pcbTraces.length;i++){
     var t=pcbTraces[i];
-    bx.lineWidth=t.w;
-    bx.beginPath();
-    bx.moveTo(t.x1,t.y1);bx.lineTo(t.mx1,t.my1);bx.lineTo(t.mx2,t.my2);bx.lineTo(t.x2,t.y2);
-    bx.stroke();
+    if(t.type==='bus'){
+      bx.strokeStyle=t.color;bx.lineWidth=t.w;
+      bx.beginPath();bx.moveTo(t.x1,t.y1);bx.lineTo(t.x2,t.y2);bx.stroke();
+    }
   }
 
-  // PCB pads (white circles)
-  bx.fillStyle='rgba(255,255,255,0.2)';
-  for(var i=0;i<pcbPads.length;i++){
-    var p=pcbPads[i];
-    bx.beginPath();bx.arc(p.x,p.y,p.r,0,Math.PI*2);bx.fill();
-    bx.fillStyle='rgba(45,107,48,0.5)';
-    bx.beginPath();bx.arc(p.x,p.y,p.r*0.4,0,Math.PI*2);bx.fill();
-    bx.fillStyle='rgba(255,255,255,0.2)';
+  // Via connectors (vertical)
+  for(var i=0;i<pcbTraces.length;i++){
+    var t=pcbTraces[i];
+    if(t.type==='via'){
+      bx.strokeStyle=t.color;bx.lineWidth=t.w;
+      bx.beginPath();bx.moveTo(t.x1,t.y1);bx.lineTo(t.x2,t.y2);bx.stroke();
+    }
   }
 
-  // PCB chips (small rectangles)
-  bx.fillStyle='rgba(0,0,0,0.25)';bx.strokeStyle='rgba(255,255,255,0.12)';bx.lineWidth=0.5;
+  // Gold bar pads (3-layer: top shine, main bar, bottom shadow)
   for(var i=0;i<pcbChips.length;i++){
     var c=pcbChips[i];
-    bx.fillRect(c.x,c.y,c.w,c.h);
-    bx.strokeRect(c.x,c.y,c.w,c.h);
+    if(c.color)bx.fillStyle=c.color;bx.fillRect(c.x,c.y,c.w,c.h);
+  }
+
+  // Solder pads (blue ring with dark center)
+  for(var i=0;i<pcbPads.length;i++){
+    var p=pcbPads[i];
+    bx.fillStyle='#0040b0';bx.beginPath();bx.arc(p.x,p.y,p.r,0,Math.PI*2);bx.fill();
+    bx.fillStyle='#000';bx.beginPath();bx.arc(p.x,p.y,p.r*0.5,0,Math.PI*2);bx.fill();
   }
 }
 
