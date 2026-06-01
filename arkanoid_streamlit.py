@@ -43,27 +43,27 @@ canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; 
 .panel-value { font-size: 22px; font-weight: 500; color: #fff; }
 
 @media (max-width: 540px) {
-  body { padding: 6px 4px 0; overflow-x: hidden; }
-  #app { flex-direction: column; align-items: center; gap: 4px; }
-  #game-area { order: 2; gap: 4px; }
+  body { padding: 4px 4px 0; overflow-x: hidden; }
+  #app { flex-direction: column; align-items: center; gap: 3px; }
+  #game-area { order: 2; gap: 3px; }
   #side {
     order: 1;
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 3px;
     min-width: unset;
     width: 100%;
   }
-  #side .panel { flex: 1; min-width: 0; text-align: center; padding: 4px 4px; }
-  #side .panel-label { font-size: 9px; }
+  #side .panel { flex: 1; min-width: 0; text-align: center; padding: 3px 6px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; }
+  #side .panel-label { font-size: 10px; margin-bottom: 0; }
   #side .panel-value { font-size: 14px; }
-  #controls .ctrl-btn { width: 48px; height: 40px; font-size: 14px; }
+  #controls .ctrl-btn { width: 48px; height: 38px; font-size: 14px; }
   #controls .ctrl-btn.wide { width: 80px; font-size: 11px; }
   #controls { gap: 2px; margin-top: 0; }
   .ctrl-row { gap: 4px; }
   #key-hint { display: none; }
-  #btn-start { font-size: 12px; padding: 6px; }
+  #btn-start { font-size: 12px; padding: 5px; }
   canvas#board { max-width: 100%; height: auto; }
 }
 
