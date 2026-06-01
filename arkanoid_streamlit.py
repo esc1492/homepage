@@ -296,8 +296,8 @@ function drawBackground(){
         if((l.x!==undefined&&l.y1!==undefined)||(l.x1!==undefined&&l.y1!==undefined)){
           bx.strokeStyle=l.color;bx.lineWidth=l.w;
           bx.beginPath();
-          if(l.x!==undefined)bx.moveTo(tx+l.x,ty+l.y1);bx.lineTo(tx+l.x,ty+l.y2);
-          else bx.moveTo(tx+l.x1,ty+l.y1);bx.lineTo(tx+l.x2,ty+l.y2);
+          if(l.x!==undefined){bx.moveTo(tx+l.x,ty+l.y1);bx.lineTo(tx+l.x,ty+l.y2);}
+          else{bx.moveTo(tx+l.x1,ty+l.y1);bx.lineTo(tx+l.x2,ty+l.y2);}
           bx.stroke();
         }
       }
