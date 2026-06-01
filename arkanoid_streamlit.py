@@ -119,12 +119,12 @@ var bc=document.getElementById('board'),bx=bc.getContext('2d');
 
 // Stars
 // PCB background pattern
-var pcbTraces=[],pcbPads=[];
+var pcbTraces=[],pcbPads=[],pcbChips=[];
 (function(){
-  for(var i=0;i<40;i++){
+  for(var i=0;i<70;i++){
     var x1=Math.random()*W,y1=Math.random()*H;
     var dir=Math.floor(Math.random()*4);
-    var len=15+Math.random()*50;
+    var len=8+Math.random()*45;
     var x2=x1,y2=y1;
     switch(dir){
       case 0:x2=Math.min(W,x1+len);break;
@@ -132,11 +132,19 @@ var pcbTraces=[],pcbPads=[];
       case 2:y2=Math.min(H,y1+len);break;
       case 3:y2=Math.max(0,y1-len);break;
     }
-    var mx=(x1+x2)/2,my=(y1+y2)/2;
-    pcbTraces.push({x1:x1,y1:y1,mx:mx,my:my,x2:x2,y2:y2,w:0.8+Math.random()*1.2});
+    // Z-bend with two corners
+    var mx1=x1+(x2-x1)*0.4,my1=y1+(y2-y1)*0.4;
+    var mx2=x1+(x2-x1)*0.6,my2=y1+(y2-y1)*0.6;
+    // Add slight offset for corner
+    if(dir<2){my1+=(Math.random()-0.5)*10;my2+=(Math.random()-0.5)*10;}
+    else{mx1+=(Math.random()-0.5)*10;mx2+=(Math.random()-0.5)*10;}
+    pcbTraces.push({x1:x1,y1:y1,mx1:mx1,my1:my1,mx2:mx2,my2:my2,x2:x2,y2:y2,w:0.6+Math.random()*1.2});
   }
-  for(var i=0;i<20;i++){
-    pcbPads.push({x:Math.random()*W,y:Math.random()*H,r:2+Math.random()*2.5});
+  for(var i=0;i<35;i++){
+    pcbPads.push({x:Math.random()*W,y:Math.random()*H,r:1.5+Math.random()*2.5});
+  }
+  for(var i=0;i<6;i++){
+    pcbChips.push({x:20+Math.random()*(W-40),y:20+Math.random()*(H-40),w:8+Math.random()*16,h:6+Math.random()*10});
   }
 })();
 
@@ -263,31 +271,40 @@ function checkLevelComplete(){
 
 // Drawing
 function drawBackground(){
-  bx.fillStyle='#0a140e';bx.fillRect(0,0,W,H);
+  bx.fillStyle='#2d6b30';bx.fillRect(0,0,W,H);
 
-  // PCB traces (copper/gold lines with L-bend)
-  bx.strokeStyle='rgba(220,180,60,0.2)';
-  bx.shadowColor='rgba(220,180,60,0.06)';bx.shadowBlur=3;
+  // Faint grid
+  bx.strokeStyle='rgba(255,255,255,0.04)';bx.lineWidth=0.5;
+  for(var gx=0;gx<W;gx+=16){bx.beginPath();bx.moveTo(gx,0);bx.lineTo(gx,H);bx.stroke();}
+  for(var gy=0;gy<H;gy+=16){bx.beginPath();bx.moveTo(0,gy);bx.lineTo(W,gy);bx.stroke();}
+
+  // PCB traces (white lines with Z-bends)
+  bx.strokeStyle='rgba(255,255,255,0.25)';
   for(var i=0;i<pcbTraces.length;i++){
     var t=pcbTraces[i];
     bx.lineWidth=t.w;
     bx.beginPath();
-    bx.moveTo(t.x1,t.y1);bx.lineTo(t.mx,t.my);bx.lineTo(t.x2,t.y2);
+    bx.moveTo(t.x1,t.y1);bx.lineTo(t.mx1,t.my1);bx.lineTo(t.mx2,t.my2);bx.lineTo(t.x2,t.y2);
     bx.stroke();
   }
-  bx.shadowBlur=0;
 
-  // PCB pads (solder points)
-  bx.fillStyle='rgba(240,200,70,0.18)';
-  bx.shadowColor='rgba(240,200,70,0.08)';bx.shadowBlur=4;
+  // PCB pads (white circles)
+  bx.fillStyle='rgba(255,255,255,0.2)';
   for(var i=0;i<pcbPads.length;i++){
     var p=pcbPads[i];
     bx.beginPath();bx.arc(p.x,p.y,p.r,0,Math.PI*2);bx.fill();
-    bx.fillStyle='rgba(10,25,15,0.4)';
+    bx.fillStyle='rgba(45,107,48,0.5)';
     bx.beginPath();bx.arc(p.x,p.y,p.r*0.4,0,Math.PI*2);bx.fill();
-    bx.fillStyle='rgba(240,200,70,0.18)';
+    bx.fillStyle='rgba(255,255,255,0.2)';
   }
-  bx.shadowBlur=0;
+
+  // PCB chips (small rectangles)
+  bx.fillStyle='rgba(0,0,0,0.25)';bx.strokeStyle='rgba(255,255,255,0.12)';bx.lineWidth=0.5;
+  for(var i=0;i<pcbChips.length;i++){
+    var c=pcbChips[i];
+    bx.fillRect(c.x,c.y,c.w,c.h);
+    bx.strokeRect(c.x,c.y,c.w,c.h);
+  }
 }
 
 function drawHUD(){
@@ -397,30 +414,47 @@ function drawPaddle(){
   bx.beginPath();bx.moveTo(x+tipW,y);bx.lineTo(x+tipW,y+h);bx.stroke();
   bx.beginPath();bx.moveTo(x+w-tipW,y);bx.lineTo(x+w-tipW,y+h);bx.stroke();
 
-  // Sky-blue 3D beads at both extreme ends
-  var beadR=4,beadY=y+h/2;
-  [x,x+w].forEach(function(bxPos){
-    // Bead shadow
-    bx.fillStyle='rgba(0,0,0,0.3)';
-    bx.beginPath();bx.arc(bxPos+1,beadY+1,beadR,0,Math.PI*2);bx.fill();
+  // 3D beads at both ends (inner half red, outer half sky-blue)
+  var beadR=4,beadY=y+h/2,PI=Math.PI;
+  function drawRedHalf(cx,cy,isRight){
+    bx.save();
+    bx.beginPath();
+    if(isRight)bx.arc(cx,cy,beadR,-PI/2,PI/2); // right semicircle (inner for left bead)
+    else bx.arc(cx,cy,beadR,PI/2,-PI/2); // left semicircle (inner for right bead)
+    bx.closePath();bx.clip();
+    var bg=bx.createLinearGradient(cx-2,cy-3,cx+2,cy+3);
+    bg.addColorStop(0,'#FF4444');bg.addColorStop(0.5,'#CC2222');bg.addColorStop(1,'#991111');
+    bx.fillStyle=bg;
+    bx.beginPath();bx.arc(cx,cy,beadR,0,PI*2);bx.fill();
+    bx.restore();
+  }
+  function drawBlueHalf(cx,cy,isRight){
+    bx.save();
+    bx.beginPath();
+    if(isRight)bx.arc(cx,cy,beadR,PI/2,-PI/2); // left semicircle (outer for left bead)
+    else bx.arc(cx,cy,beadR,-PI/2,PI/2); // right semicircle (outer for right bead)
+    bx.closePath();bx.clip();
+    var bg=bx.createRadialGradient(cx-1,cy-1,0.5,cx,cy,beadR);
+    bg.addColorStop(0,'#C8F0FF');bg.addColorStop(0.3,'#66D0FF');
+    bg.addColorStop(0.6,'#33A0FF');bg.addColorStop(1,'#0070CC');
+    bx.fillStyle=bg;
+    bx.beginPath();bx.arc(cx,cy,beadR,0,PI*2);bx.fill();
+    bx.restore();
+  }
+  // Left bead (center at x = left edge)
+  // Shadow
+  bx.fillStyle='rgba(0,0,0,0.25)';bx.beginPath();bx.arc(x+1,beadY+1,beadR,0,PI*2);bx.fill();
+  drawRedHalf(x,beadY,true);   // right half (on paddle) = red
+  drawBlueHalf(x,beadY,true);  // left half (off paddle) = sky blue
+  // Specular on blue half
+  bx.fillStyle='rgba(255,255,255,0.6)';bx.beginPath();bx.arc(x-1.5,beadY-1.5,1.2,0,PI*2);bx.fill();
 
-    // Bead base (sky-blue gradient)
-    var bGrad=bx.createRadialGradient(bxPos-1,beadY-1,0.5,bxPos,beadY,beadR);
-    bGrad.addColorStop(0,'#C8F0FF');
-    bGrad.addColorStop(0.3,'#66D0FF');
-    bGrad.addColorStop(0.6,'#33A0FF');
-    bGrad.addColorStop(1,'#0070CC');
-    bx.fillStyle=bGrad;
-    bx.beginPath();bx.arc(bxPos,beadY,beadR,0,Math.PI*2);bx.fill();
-
-    // Specular highlight
-    bx.fillStyle='rgba(255,255,255,0.7)';
-    bx.beginPath();bx.arc(bxPos-1.5,beadY-1.5,1.5,0,Math.PI*2);bx.fill();
-
-    // Secondary highlight
-    bx.fillStyle='rgba(255,255,255,0.25)';
-    bx.beginPath();bx.arc(bxPos-1,beadY-2.5,0.7,0,Math.PI*2);bx.fill();
-  });
+  // Right bead (center at x+w)
+  bx.fillStyle='rgba(0,0,0,0.25)';bx.beginPath();bx.arc(x+w+1,beadY+1,beadR,0,PI*2);bx.fill();
+  drawRedHalf(x+w,beadY,false); // left half (on paddle) = red
+  drawBlueHalf(x+w,beadY,false);// right half (off paddle) = sky blue
+  // Specular on blue half
+  bx.fillStyle='rgba(255,255,255,0.6)';bx.beginPath();bx.arc(x+w+1.5,beadY-1.5,1.2,0,PI*2);bx.fill();
 
   // Subtle top highlight across entire paddle
   bx.fillStyle='rgba(255,255,255,0.15)';bx.fillRect(x+4,y+2,w-8,1.2);
