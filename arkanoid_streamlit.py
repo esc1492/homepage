@@ -40,7 +40,7 @@ canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; 
 
 @media (max-width: 540px) {
   body { padding: 4px 4px 0; overflow-x: hidden; }
-  #game-area { gap: 3px; }
+  #game-area { gap: 20px; }
   #controls .ctrl-btn { width: 48px; height: 38px; font-size: 14px; }
   #controls .ctrl-btn.wide { width: 80px; font-size: 11px; }
   #controls { gap: 2px; margin-top: 0; }
