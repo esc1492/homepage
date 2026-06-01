@@ -118,48 +118,40 @@ var BRICK_COLORS=['#FFD700','#4CAF50','#FF9800','#F44336','#2196F3','#9C27B0'];
 var bc=document.getElementById('board'),bx=bc.getContext('2d');
 
 // Stars
-// Circuit background pattern
-var cktTraces=[],cktDots=[],cktBars=[];
+// Tiled circuit pattern (80x64 tile, seamless)
+var TILE_W=80,TILE_H=64;
+var tileLines=[],tileDots=[];
 (function(){
-  var blues=['#0060d0','#0040a0','#0070e0','#003080','#0050c0','#002870'];
-  // Dense horizontal trace lines across the canvas
-  for(var y=10;y<H-10;y+=6){
-    var col=blues[Math.floor(Math.random()*blues.length)];
-    var skip=Math.random()<0.15;
-    if(!skip){
-      var x1=0,x2=W;
-      var breakAt=Math.random()<0.08?20+Math.random()*(W-40):-1;
-      cktTraces.push({x1:x1,y1:y,x2:breakAt>0?breakAt:x2,y2:y,w:0.5+Math.random()*0.8,color:col});
-      if(breakAt>0)cktTraces.push({x1:breakAt+2+Math.random()*6,y1:y,x2:x2,y2:y,w:0.5+Math.random()*0.8,color:col});
-    }
-  }
-  // Vertical stubs connecting horizontal lines
-  for(var i=0;i<60;i++){
-    var x=10+Math.random()*(W-20);
-    var y1=10+Math.random()*(H-20);
-    var h=4+Math.random()*16;
-    var col=blues[i%blues.length];
-    cktTraces.push({x1:x,y1:y1,x2:x,y2:Math.min(H-5,y1+h),w:0.5+Math.random()*0.6,color:col});
-  }
-  // Gold bars (like the reference image - horizontal thick strips)
-  for(var i=0;i<8;i++){
-    var y=15+Math.random()*(H-25);
-    var x=8+Math.random()*(W-50);
-    var w=12+Math.random()*25;
-    cktBars.push({x:x,y:y,w:w,h:3,color:'#d0be00'});
-    cktBars.push({x:x,y:y-1,w:w,h:1,color:'#fff8b0'});
-    cktBars.push({x:x,y:y+3,w:w,h:1,color:'#8a7a00'});
-  }
-  // Small blue dots (solder points)
-  for(var i=0;i<30;i++){
-    cktDots.push({x:5+Math.random()*(W-10),y:5+Math.random()*(H-10),r:1+Math.random()*1.5});
-  }
-  // Occasional white/gray labels
-  for(var i=0;i<3;i++){
-    var x=5+Math.random()*(W-30);
-    var y=5+Math.random()*(H-15);
-    cktDots.push({x:x,y:y,r:0,label:true});
-  }
+  var blues=['#0060d0','#0040a0','#0050c0','#003080'];
+  // Horizontal lines within one tile
+  tileLines.push({y:8,w:0.6,color:blues[0]});
+  tileLines.push({y:14,w:0.8,color:blues[1]});
+  tileLines.push({y:18,w:0.5,color:blues[2]});
+  tileLines.push({y:26,w:0.7,color:blues[3]});
+  tileLines.push({y:32,w:0.6,color:blues[0]});
+  tileLines.push({y:38,w:0.9,color:blues[1]});
+  tileLines.push({y:44,w:0.5,color:blues[2]});
+  tileLines.push({y:50,w:0.7,color:blues[3]});
+  tileLines.push({y:56,w:0.6,color:blues[0]});
+  // Vertical stubs
+  tileLines.push({x:10,y1:8,y2:18,w:0.5,color:blues[2]});
+  tileLines.push({x:20,y1:26,y2:38,w:0.5,color:blues[3]});
+  tileLines.push({x:35,y1:14,y2:26,w:0.6,color:blues[0]});
+  tileLines.push({x:45,y1:38,y2:50,w:0.5,color:blues[1]});
+  tileLines.push({x:55,y1:8,y2:14,w:0.5,color:blues[2]});
+  tileLines.push({x:65,y1:44,y2:56,w:0.6,color:blues[3]});
+  tileLines.push({x:75,y1:18,y2:32,w:0.5,color:blues[0]});
+  // Short diagonal segments
+  tileLines.push({x1:28,y1:26,x2:35,y2:18,w:0.5,color:blues[1]});
+  tileLines.push({x1:48,y1:50,x2:55,y2:44,w:0.5,color:blues[2]});
+  // Solder dots
+  tileDots.push({x:10,y:18,r:1.2});tileDots.push({x:20,y:26,r:1.2});
+  tileDots.push({x:35,y:14,r:1.2});tileDots.push({x:45,y:38,r:1.2});
+  tileDots.push({x:55,y:8,r:1.2});tileDots.push({x:65,y:44,r:1.2});
+  tileDots.push({x:75,y:18,r:1.2});tileDots.push({x:28,y:26,r:1});
+  tileDots.push({x:48,y:50,r:1});tileDots.push({x:35,y:26,r:1});
+  // Label rectangles
+  tileDots.push({x:4,y:3,w:14,h:5,label:true});
 })();
 
 // Color helpers
@@ -287,32 +279,40 @@ function checkLevelComplete(){
 function drawBackground(){
   bx.fillStyle='#000';bx.fillRect(0,0,W,H);
 
-  // Horizontal and vertical traces
-  for(var i=0;i<cktTraces.length;i++){
-    var t=cktTraces[i];
-    bx.strokeStyle=t.color;bx.lineWidth=t.w;
-    bx.beginPath();bx.moveTo(t.x1,t.y1);bx.lineTo(t.x2,t.y2);bx.stroke();
-  }
-
-  // Gold bars (highlight + body + shadow)
-  for(var i=0;i<cktBars.length;i++){
-    var b=cktBars[i];
-    bx.fillStyle=b.color;bx.fillRect(b.x,b.y,b.w,b.h);
-  }
-
-  // Blue dots (solder points)
-  for(var i=0;i<cktDots.length;i++){
-    var d=cktDots[i];
-    if(d.r>0){
-      bx.fillStyle='#0050c0';bx.beginPath();bx.arc(d.x,d.y,d.r,0,Math.PI*2);bx.fill();
-      bx.fillStyle='rgba(0,0,0,0.5)';bx.beginPath();bx.arc(d.x,d.y,d.r*0.5,0,Math.PI*2);bx.fill();
+  // Tile the pattern across the canvas
+  for(var ty=0;ty<H;ty+=TILE_H){
+    for(var tx=0;tx<W;tx+=TILE_W){
+      // Horizontal lines
+      for(var i=0;i<tileLines.length;i++){
+        var l=tileLines[i];
+        if(l.y!==undefined){
+          bx.strokeStyle=l.color;bx.lineWidth=l.w;
+          bx.beginPath();bx.moveTo(tx,ty+l.y);bx.lineTo(tx+TILE_W,ty+l.y);bx.stroke();
+        }
+      }
+      // Vertical/diagonal stubs
+      for(var i=0;i<tileLines.length;i++){
+        var l=tileLines[i];
+        if((l.x!==undefined&&l.y1!==undefined)||(l.x1!==undefined&&l.y1!==undefined)){
+          bx.strokeStyle=l.color;bx.lineWidth=l.w;
+          bx.beginPath();
+          if(l.x!==undefined)bx.moveTo(tx+l.x,ty+l.y1);bx.lineTo(tx+l.x,ty+l.y2);
+          else bx.moveTo(tx+l.x1,ty+l.y1);bx.lineTo(tx+l.x2,ty+l.y2);
+          bx.stroke();
+        }
+      }
+      // Solder dots
+      for(var i=0;i<tileDots.length;i++){
+        var d=tileDots[i];
+        if(d.r>0){
+          bx.fillStyle='#0050c0';bx.beginPath();bx.arc(tx+d.x,ty+d.y,d.r,0,Math.PI*2);bx.fill();
+          bx.fillStyle='rgba(0,0,0,0.5)';bx.beginPath();bx.arc(tx+d.x,ty+d.y,d.r*0.5,0,Math.PI*2);bx.fill();
+        }else if(d.label){
+          bx.fillStyle='rgba(180,180,180,0.12)';bx.fillRect(tx+d.x,ty+d.y,d.w,d.h);
+        }
+      }
     }
   }
-
-  // White/gray label rectangles (like reference image has)
-  bx.fillStyle='rgba(180,180,180,0.15)';bx.fillRect(8,8,35,12);
-  bx.fillStyle='rgba(180,180,180,0.1)';bx.fillRect(W-50,15,40,10);
-  bx.fillStyle='rgba(180,180,180,0.12)';bx.fillRect(12,H-22,28,10);
 }
 
 function drawHUD(){
