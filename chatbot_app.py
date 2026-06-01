@@ -24,7 +24,7 @@ st.markdown(
 
 st.markdown(
     "<div style='text-align:center;padding:1rem 0 0.5rem'><h1 style='font-size:24px;font-weight:500'>🐭 미키 챗봇</h1>"
-    "<p style='color:#7a7974;font-size:13px;margin-top:4px'>AI 비서 미키야! 🎉</p></div>",
+    "<p style='color:#7a7974;font-size:13px;margin-top:4px'>AI 비서 미키입니다. 🎉</p></div>",
     unsafe_allow_html=True,
 )
 
