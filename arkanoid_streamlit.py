@@ -304,13 +304,13 @@ function drawBrick(b){
 
 function drawPaddle(){
   var x=paddle.x,y=paddle.y,w=paddle.w,h=paddle.h,r=h/2;
-  var tipW=10;
+  var tipW=14;
 
-  // Dark gray body
+  // Dark gray body with 3D gradient
   var grad=bx.createLinearGradient(x,y,x,y+h);
-  grad.addColorStop(0,'#888');grad.addColorStop(0.25,'#666');
-  grad.addColorStop(0.5,'#555');grad.addColorStop(0.75,'#444');
-  grad.addColorStop(1,'#333');
+  grad.addColorStop(0,'#999');grad.addColorStop(0.2,'#777');
+  grad.addColorStop(0.45,'#555');grad.addColorStop(0.55,'#444');
+  grad.addColorStop(0.8,'#3a3a3a');grad.addColorStop(1,'#2a2a2a');
   bx.fillStyle=grad;
 
   bx.beginPath();
@@ -324,10 +324,14 @@ function drawPaddle(){
   bx.quadraticCurveTo(x,y,x+r,y);
   bx.closePath();bx.fill();
 
-  bx.strokeStyle='#222';bx.lineWidth=1;bx.stroke();
+  // Red tips with 3D gradient
+  var rGrad=bx.createLinearGradient(x,y,x,y+h);
+  rGrad.addColorStop(0,'#FF5555');rGrad.addColorStop(0.3,'#EE3333');
+  rGrad.addColorStop(0.5,'#CC2222');rGrad.addColorStop(0.7,'#AA1818');
+  rGrad.addColorStop(1,'#880E0E');
 
-  // Red tips at both ends (from edge inward)
-  bx.fillStyle='#DD2222';
+  // Left red tip
+  bx.fillStyle=rGrad;
   bx.beginPath();
   bx.moveTo(x+r,y);bx.lineTo(x+tipW,y);
   bx.lineTo(x+tipW,y+h);bx.lineTo(x+r,y+h);
@@ -336,6 +340,8 @@ function drawPaddle(){
   bx.quadraticCurveTo(x,y,x+r,y);
   bx.closePath();bx.fill();
 
+  // Right red tip
+  bx.fillStyle=rGrad;
   bx.beginPath();
   bx.moveTo(x+w-r,y);bx.lineTo(x+w-tipW,y);
   bx.lineTo(x+w-tipW,y+h);bx.lineTo(x+w-r,y+h);
@@ -344,8 +350,38 @@ function drawPaddle(){
   bx.quadraticCurveTo(x+w,y,x+w-r,y);
   bx.closePath();bx.fill();
 
-  // Subtle highlight on top edge
-  bx.fillStyle='rgba(255,255,255,0.12)';bx.fillRect(x+4,y+2,w-8,1.5);
+  // Outline
+  bx.strokeStyle='#222';bx.lineWidth=1;bx.stroke();
+
+  // Sky-blue 3D beads at both ends
+  var beadR=3,beadY=y+h/2;
+  [x+tipW/2,x+w-tipW/2].forEach(function(bxPos){
+    // Bead shadow
+    bx.fillStyle='rgba(0,0,0,0.3)';
+    bx.beginPath();bx.arc(bxPos+1,beadY+1,beadR,0,Math.PI*2);bx.fill();
+
+    // Bead base (sky-blue gradient)
+    var bGrad=bx.createRadialGradient(bxPos-1,beadY-1,0.5,bxPos,beadY,beadR);
+    bGrad.addColorStop(0,'#C8F0FF');
+    bGrad.addColorStop(0.3,'#66D0FF');
+    bGrad.addColorStop(0.6,'#33A0FF');
+    bGrad.addColorStop(1,'#0070CC');
+    bx.fillStyle=bGrad;
+    bx.beginPath();bx.arc(bxPos,beadY,beadR,0,Math.PI*2);bx.fill();
+
+    // Specular highlight
+    bx.fillStyle='rgba(255,255,255,0.7)';
+    bx.beginPath();bx.arc(bxPos-1.5,beadY-1.5,1.5,0,Math.PI*2);bx.fill();
+
+    // Secondary highlight
+    bx.fillStyle='rgba(255,255,255,0.25)';
+    bx.beginPath();bx.arc(bxPos-1,beadY-2.5,0.7,0,Math.PI*2);bx.fill();
+  });
+
+  // Subtle top highlight across entire paddle
+  bx.fillStyle='rgba(255,255,255,0.15)';bx.fillRect(x+4,y+2,w-8,1.2);
+  // Bottom shadow line
+  bx.fillStyle='rgba(0,0,0,0.2)';bx.fillRect(x+4,y+h-2,w-8,1);
 }
 
 function drawBall(){
