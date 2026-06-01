@@ -1,6 +1,7 @@
 import streamlit as st
 from anthropic import Anthropic
 import os
+import pathlib
 
 st.set_page_config(
     page_title="미키 챗봇",
@@ -41,16 +42,20 @@ client = Anthropic(api_key=api_key, base_url=base_url)
 
 WEB_TOOL = {"type": "web_search_20250305", "name": "web_search"}
 
-SYSTEM_PROMPT = (
-    "너는 '미키'야. 사용자의 개인 시작 페이지의 챗봇 도우미야. "
-    "항상 한국어로 친절하고 간결하게 답변해. "
-    "사용자가 시작 페이지 기능에 대해 물어보면 날씨, 주식, 할 일 목록 등의 기능을 안내해 줘. "
-    "실시간 정보(날씨, 뉴스, 검색 등)가 필요하면 web_search 도구를 사용해."
-)
+soul_path = pathlib.Path(__file__).parent / "SOUL.md"
+if soul_path.is_file():
+    SYSTEM_PROMPT = soul_path.read_text(encoding="utf-8").strip()
+else:
+    SYSTEM_PROMPT = (
+        "너는 '미키'야. 사용자의 개인 시작 페이지의 챗봇 도우미야. "
+        "항상 한국어로 친절하고 간결하게 답변해. "
+        "사용자가 시작 페이지 기능에 대해 물어보면 날씨, 주식, 할 일 목록 등의 기능을 안내해 줘. "
+        "실시간 정보(날씨, 뉴스, 검색 등)가 필요하면 web_search 도구를 사용해."
+    )
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "안녕! 나는 미키야! 😊\n\n무엇을 도와줄까?"}
+        {"role": "assistant", "content": "안녕하세요! 저는 미키입니다. 😊\n\n무엇을 도와드릴까요?"}
     ]
 
 for msg in st.session_state.messages:
