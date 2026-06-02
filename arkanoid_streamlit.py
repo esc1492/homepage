@@ -24,6 +24,9 @@ sound_launch_uri = 'data:audio/mp3;base64,' + sound_b64('drop')
 sound_brick_uri = 'data:audio/mp3;base64,' + sound_b64('change')
 sound_wall_uri = 'data:audio/mp3;base64,' + sound_b64('break')
 
+with open('images/arkanoid.png', 'rb') as f:
+    bg_image_uri = 'data:image/png;base64,' + base64.b64encode(f.read()).decode()
+
 GAME_HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ko">
@@ -35,6 +38,7 @@ body { background: #111; color: #eee; font-family: monospace; display: flex; jus
 #app { display: flex; flex-direction: column; align-items: center; gap: 14px; }
 
 canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; display: block; touch-action: none; max-width: 100%; height: auto; }
+canvas:focus { outline: none; }
 
 #game-area { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 
@@ -43,7 +47,7 @@ canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; 
   #game-area { gap: 20px; }
   #controls .ctrl-btn { width: 48px; height: 38px; font-size: 14px; }
   #controls .ctrl-btn.wide { width: 80px; font-size: 11px; }
-  #controls { gap: 2px; margin-top: 0; }
+  #controls { gap: 2px; margin-top: 5px; }
   .ctrl-row { gap: 4px; }
   #key-hint { display: none; }
   canvas#board { max-width: 100%; height: auto; }
@@ -79,7 +83,7 @@ canvas#board { border: 2px solid #444; border-radius: 6px; background: #0a0a12; 
 <body>
 <div id="app">
   <div id="game-area">
-    <canvas id="board" width="400" height="580"></canvas>
+    <canvas id="board" width="400" height="580" tabindex="0"></canvas>
     <div id="controls">
       <div class="ctrl-row">
         <button class="ctrl-btn" id="c-left" title="왼쪽">\u2190</button>
@@ -106,6 +110,10 @@ let soundEnabled=true;
 let isMobile=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 function playSound(n){if(soundEnabled&&audios[n]){var a=audios[n];a.currentTime=0;a.play().catch(function(){});}}
 
+// Background image
+var bgImg=new Image();
+bgImg.src='%%BG_IMAGE_URI%%';
+
 // Canvas
 var W=400,H=580;
 var BALL_R=7,PADDLE_W=80,PADDLE_H=12,PADDLE_Y=540;
@@ -116,43 +124,6 @@ var BRICK_TOP=48;
 var BRICK_COLORS=['#FFD700','#4CAF50','#FF9800','#F44336','#2196F3','#9C27B0'];
 
 var bc=document.getElementById('board'),bx=bc.getContext('2d');
-
-// Stars
-// Tiled circuit pattern (80x64 tile, seamless)
-var TILE_W=80,TILE_H=64;
-var tileLines=[],tileDots=[];
-(function(){
-  var blues=['#0060d0','#0040a0','#0050c0','#003080'];
-  // Horizontal lines within one tile
-  tileLines.push({y:8,w:0.6,color:blues[0]});
-  tileLines.push({y:14,w:0.8,color:blues[1]});
-  tileLines.push({y:18,w:0.5,color:blues[2]});
-  tileLines.push({y:26,w:0.7,color:blues[3]});
-  tileLines.push({y:32,w:0.6,color:blues[0]});
-  tileLines.push({y:38,w:0.9,color:blues[1]});
-  tileLines.push({y:44,w:0.5,color:blues[2]});
-  tileLines.push({y:50,w:0.7,color:blues[3]});
-  tileLines.push({y:56,w:0.6,color:blues[0]});
-  // Vertical stubs
-  tileLines.push({x:10,y1:8,y2:18,w:0.5,color:blues[2]});
-  tileLines.push({x:20,y1:26,y2:38,w:0.5,color:blues[3]});
-  tileLines.push({x:35,y1:14,y2:26,w:0.6,color:blues[0]});
-  tileLines.push({x:45,y1:38,y2:50,w:0.5,color:blues[1]});
-  tileLines.push({x:55,y1:8,y2:14,w:0.5,color:blues[2]});
-  tileLines.push({x:65,y1:44,y2:56,w:0.6,color:blues[3]});
-  tileLines.push({x:75,y1:18,y2:32,w:0.5,color:blues[0]});
-  // Short diagonal segments
-  tileLines.push({x1:28,y1:26,x2:35,y2:18,w:0.5,color:blues[1]});
-  tileLines.push({x1:48,y1:50,x2:55,y2:44,w:0.5,color:blues[2]});
-  // Solder dots
-  tileDots.push({x:10,y:18,r:1.2});tileDots.push({x:20,y:26,r:1.2});
-  tileDots.push({x:35,y:14,r:1.2});tileDots.push({x:45,y:38,r:1.2});
-  tileDots.push({x:55,y:8,r:1.2});tileDots.push({x:65,y:44,r:1.2});
-  tileDots.push({x:75,y:18,r:1.2});tileDots.push({x:28,y:26,r:1});
-  tileDots.push({x:48,y:50,r:1});tileDots.push({x:35,y:26,r:1});
-  // Label rectangles
-  tileDots.push({x:4,y:3,w:14,h:5,label:true});
-})();
 
 // Color helpers
 function hexToRgb(h){
@@ -277,41 +248,10 @@ function checkLevelComplete(){
 
 // Drawing
 function drawBackground(){
-  bx.fillStyle='#000';bx.fillRect(0,0,W,H);
-
-  // Tile the pattern across the canvas
-  for(var ty=0;ty<H;ty+=TILE_H){
-    for(var tx=0;tx<W;tx+=TILE_W){
-      // Horizontal lines
-      for(var i=0;i<tileLines.length;i++){
-        var l=tileLines[i];
-        if(l.y!==undefined){
-          bx.strokeStyle=l.color;bx.lineWidth=l.w;
-          bx.beginPath();bx.moveTo(tx,ty+l.y);bx.lineTo(tx+TILE_W,ty+l.y);bx.stroke();
-        }
-      }
-      // Vertical/diagonal stubs
-      for(var i=0;i<tileLines.length;i++){
-        var l=tileLines[i];
-        if((l.x!==undefined&&l.y1!==undefined)||(l.x1!==undefined&&l.y1!==undefined)){
-          bx.strokeStyle=l.color;bx.lineWidth=l.w;
-          bx.beginPath();
-          if(l.x!==undefined){bx.moveTo(tx+l.x,ty+l.y1);bx.lineTo(tx+l.x,ty+l.y2);}
-          else{bx.moveTo(tx+l.x1,ty+l.y1);bx.lineTo(tx+l.x2,ty+l.y2);}
-          bx.stroke();
-        }
-      }
-      // Solder dots
-      for(var i=0;i<tileDots.length;i++){
-        var d=tileDots[i];
-        if(d.r>0){
-          bx.fillStyle='#0050c0';bx.beginPath();bx.arc(tx+d.x,ty+d.y,d.r,0,Math.PI*2);bx.fill();
-          bx.fillStyle='rgba(0,0,0,0.5)';bx.beginPath();bx.arc(tx+d.x,ty+d.y,d.r*0.5,0,Math.PI*2);bx.fill();
-        }else if(d.label){
-          bx.fillStyle='rgba(180,180,180,0.12)';bx.fillRect(tx+d.x,ty+d.y,d.w,d.h);
-        }
-      }
-    }
+  if(bgImg.complete&&bgImg.naturalWidth>0){
+    bx.drawImage(bgImg,0,0,W,H);
+  }else{
+    bx.fillStyle='#111';bx.fillRect(0,0,W,H);
   }
 }
 
@@ -588,7 +528,15 @@ document.addEventListener('keydown',function(e){
   if((e.key===' '||e.key==='Enter')&&gameState==='ready')launchBall();
   if((e.key===' '||e.key==='Enter')&&(gameState==='gameOver'||gameState==='win'))start();
 });
+// Also listen on canvas for keyboard events (works even if document isn't focused)
+bc.addEventListener('keydown',function(e){
+  keysHeld[e.key]=true;
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' ','Enter'].indexOf(e.key)!==-1)e.preventDefault();
+  if((e.key===' '||e.key==='Enter')&&gameState==='ready')launchBall();
+  if((e.key===' '||e.key==='Enter')&&(gameState==='gameOver'||gameState==='win'))start();
+});
 document.addEventListener('keyup',function(e){keysHeld[e.key]=false;});
+bc.addEventListener('keyup',function(e){keysHeld[e.key]=false;});
 
 // Mouse
 bc.addEventListener('mousemove',function(e){
@@ -598,6 +546,7 @@ bc.addEventListener('mousemove',function(e){
   clampPaddle();
 });
 bc.addEventListener('click',function(){
+  bc.focus();
   if(gameState==='ready')launchBall();
   if(gameState==='gameOver'||gameState==='win')start();
 });
@@ -641,6 +590,8 @@ document.getElementById('c-launch').addEventListener('touchstart',function(e){
 
 // Start game immediately
 start();
+// Focus canvas so keyboard events work right away
+setTimeout(function(){bc.focus();},100);
 </script>
 </body>
 </html>
@@ -650,6 +601,7 @@ GAME_HTML = (GAME_HTML_TEMPLATE
     .replace('%%PADDLE_URI%%', sound_paddle_uri)
     .replace('%%LAUNCH_URI%%', sound_launch_uri)
     .replace('%%BRICK_URI%%', sound_brick_uri)
-    .replace('%%WALL_URI%%', sound_wall_uri))
+    .replace('%%WALL_URI%%', sound_wall_uri)
+    .replace('%%BG_IMAGE_URI%%', bg_image_uri))
 
 components.html(GAME_HTML, height=720, scrolling=False)
