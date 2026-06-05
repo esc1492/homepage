@@ -121,6 +121,7 @@ var BALL_BASE=4;
 var COLS=8,ROWS=6,BRICK_W=44,BRICK_H=16,GAP=4;
 var BRICK_LEFT=(W-COLS*BRICK_W-(COLS-1)*GAP)/2;
 var BRICK_TOP=48;
+var WALL_LEFT=14,WALL_RIGHT=386,BEAD_R=4;
 var BRICK_COLORS=['#FFD700','#4CAF50','#FF9800','#F44336','#2196F3','#9C27B0'];
 
 // Item system
@@ -221,7 +222,7 @@ var ball={x:W/2,y:PADDLE_Y-BALL_R-1,r:BALL_R,dx:0,dy:0,caught:false};
 var raf,keysHeld={},mobileDir=0;
 var items=[],lasers=[],extraBalls=[],activeEffects={},portal=null,laserCooldown=0;
 
-function clampPaddle(){paddle.x=Math.max(0,Math.min(W-paddle.w,paddle.x));}
+function clampPaddle(){paddle.x=Math.max(WALL_LEFT+BEAD_R,Math.min(WALL_RIGHT-paddle.w-BEAD_R,paddle.x));}
 
 function ballSpeed(){var s=BALL_BASE*(1+(round-1)*0.12);return activeEffects.S?s*0.5:s;}
 
@@ -301,7 +302,7 @@ function activateItem(type){
       }
       break;
     case'S':activeEffects.S=SLOW_DURATION;break;
-    case'B':portal={x:W-PORTAL_W-2,y:H/2-PORTAL_H/2,w:PORTAL_W,h:PORTAL_H};break;
+    case'B':portal={x:WALL_RIGHT-PORTAL_W-2,y:H/2-PORTAL_H/2,w:PORTAL_W,h:PORTAL_H};break;
     case'P':lives++;break;
   }
 }
@@ -362,13 +363,13 @@ function updateExtraBalls(){
   for(var i=extraBalls.length-1;i>=0;i--){
     var eb=extraBalls[i];
     eb.x+=eb.dx;eb.y+=eb.dy;
-    if(eb.x-eb.r<=0){eb.x=eb.r;eb.dx=-eb.dx;playSound('wall');}
-    if(eb.x+eb.r>=W){eb.x=W-eb.r;eb.dx=-eb.dx;playSound('wall');}
+    if(eb.x-eb.r<=WALL_LEFT){eb.x=WALL_LEFT+eb.r;eb.dx=-eb.dx;playSound('wall');}
+    if(eb.x+eb.r>=WALL_RIGHT){eb.x=WALL_RIGHT-eb.r;eb.dx=-eb.dx;playSound('wall');}
     if(eb.y-eb.r<=0){eb.y=eb.r;eb.dy=-eb.dy;playSound('wall');}
     if(eb.y+eb.r>=H){extraBalls.splice(i,1);continue;}
 
     if(eb.dy>0&&eb.y+eb.r>=paddle.y&&eb.y+eb.r<=paddle.y+paddle.h+4&&
-       eb.x>=paddle.x-eb.r&&eb.x<=paddle.x+paddle.w+eb.r){
+       eb.x>=paddle.x&&eb.x<=paddle.x+paddle.w){
       var hit=(eb.x-(paddle.x+paddle.w/2))/(paddle.w/2);
       var ang=hit*Math.PI/3;
       var spd=Math.sqrt(eb.dx*eb.dx+eb.dy*eb.dy);
@@ -533,8 +534,8 @@ function drawPaddle(){
   bx.beginPath();bx.moveTo(x+tipW,y);bx.lineTo(x+tipW,y+h);bx.stroke();
   bx.beginPath();bx.moveTo(x+w-tipW,y);bx.lineTo(x+w-tipW,y+h);bx.stroke();
 
-  // 3D beads at both ends (inner half red, outer half sky-blue)
-  var beadR=4,beadY=y+h/2,PI=Math.PI;
+  // 3D beads at both ends (outer half sky-blue only)
+  var beadR=BEAD_R,beadY=y+h/2,PI=Math.PI;
   function drawRedHalf(cx,cy,isRight){
     bx.save();
     bx.beginPath();
@@ -560,19 +561,14 @@ function drawPaddle(){
     bx.beginPath();bx.arc(cx,cy,beadR,0,PI*2);bx.fill();
     bx.restore();
   }
-  // Left bead (center at x = left edge)
-  // Shadow
+  // Left bead (center at left edge, outer half only — no overlap with paddle)
   bx.fillStyle='rgba(0,0,0,0.25)';bx.beginPath();bx.arc(x+1,beadY+1,beadR,0,PI*2);bx.fill();
-  drawRedHalf(x,beadY,true);   // right half (on paddle) = red
   drawBlueHalf(x,beadY,true);  // left half (off paddle) = sky blue
-  // Specular on blue half
   bx.fillStyle='rgba(255,255,255,0.6)';bx.beginPath();bx.arc(x-1.5,beadY-1.5,1.2,0,PI*2);bx.fill();
 
-  // Right bead (center at x+w)
+  // Right bead (center at x+w, outer half only)
   bx.fillStyle='rgba(0,0,0,0.25)';bx.beginPath();bx.arc(x+w+1,beadY+1,beadR,0,PI*2);bx.fill();
-  drawRedHalf(x+w,beadY,false); // left half (on paddle) = red
   drawBlueHalf(x+w,beadY,false);// right half (off paddle) = sky blue
-  // Specular on blue half
   bx.fillStyle='rgba(255,255,255,0.6)';bx.beginPath();bx.arc(x+w+1.5,beadY-1.5,1.2,0,PI*2);bx.fill();
 
   // Subtle top highlight across entire paddle
@@ -582,15 +578,11 @@ function drawPaddle(){
 }
 
 function drawOneBall(b){
-  bx.fillStyle='rgba(255,255,255,0.1)';
-  bx.beginPath();bx.arc(b.x+2,b.y+3,b.r+5,0,Math.PI*2);bx.fill();
   var grad=bx.createRadialGradient(b.x-2,b.y-2,1,b.x,b.y,b.r);
   grad.addColorStop(0,'#fff');grad.addColorStop(0.5,'#e8ecf4');
   grad.addColorStop(1,'#8890a0');
   bx.fillStyle=grad;
   bx.beginPath();bx.arc(b.x,b.y,b.r,0,Math.PI*2);bx.fill();
-  bx.fillStyle='rgba(255,255,255,0.7)';
-  bx.beginPath();bx.arc(b.x-2,b.y-3,2.5,0,Math.PI*2);bx.fill();
 }
 
 function drawBall(){
@@ -663,7 +655,7 @@ function updateBall(){
 
   ball.x+=ball.dx;ball.y+=ball.dy;
 
-  if(ball.x-ball.r<=0){ball.x=ball.r;ball.dx=-ball.dx;playSound('wall');}
+  if(ball.x-ball.r<=WALL_LEFT){ball.x=WALL_LEFT+ball.r;ball.dx=-ball.dx;playSound('wall');}
 
   // Portal (right side)
   if(portal&&ball.x+ball.r>=portal.x&&ball.x-ball.r<=portal.x+portal.w&&
@@ -671,7 +663,7 @@ function updateBall(){
     portal=null;triggerLevelSkip();return;
   }
 
-  if(ball.x+ball.r>=W){ball.x=W-ball.r;ball.dx=-ball.dx;playSound('wall');}
+  if(ball.x+ball.r>=WALL_RIGHT){ball.x=WALL_RIGHT-ball.r;ball.dx=-ball.dx;playSound('wall');}
   if(ball.y-ball.r<=0){ball.y=ball.r;ball.dy=-ball.dy;playSound('wall');}
 
   if(ball.y+ball.r>=H){
@@ -681,7 +673,7 @@ function updateBall(){
 
   // Paddle
   if(ball.dy>0&&ball.y+ball.r>=paddle.y&&ball.y+ball.r<=paddle.y+paddle.h+4&&
-     ball.x>=paddle.x-ball.r&&ball.x<=paddle.x+paddle.w+ball.r){
+     ball.x>=paddle.x&&ball.x<=paddle.x+paddle.w){
     // Catch
     if(activeEffects.C){
       ball.dx=0;ball.dy=0;ball.caught=true;delete activeEffects.C;playSound('paddle');return;
