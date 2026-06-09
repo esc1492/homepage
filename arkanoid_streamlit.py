@@ -404,31 +404,26 @@ function updateExtraBalls(){
 
 // Drawing
 function drawBackground(){
+  bx.fillStyle='#111';bx.fillRect(0,0,W,H);
   if(bgImg.complete&&bgImg.naturalWidth>0){
-    bx.drawImage(bgImg,0,0,W,H);
-  }else{
-    bx.fillStyle='#111';bx.fillRect(0,0,W,H);
+    bx.drawImage(bgImg,0,36,W,H);
   }
 }
 
 function drawHUD(){
   bx.fillStyle='#888';bx.font='11px monospace';bx.textAlign='left';
-  bx.fillText('SCORE',12,16);
+  bx.fillText('SCORE',12,9);
   bx.fillStyle='#fff';bx.font='bold 16px monospace';
-  bx.fillText(String(score).padStart(6,'0'),12,34);
+  bx.fillText(String(score).padStart(6,'0'),12,27);
 
   bx.textAlign='center';bx.fillStyle='#888';bx.font='11px monospace';
-  bx.fillText('ROUND',W/2,16);
+  bx.fillText('ROUND',W/2,9);
   bx.fillStyle='#fff';bx.font='bold 16px monospace';
-  bx.fillText(round,W/2,34);
+  bx.fillText(round,W/2,27);
 
-  bx.textAlign='right';bx.fillStyle='#888';bx.font='11px monospace';
-  bx.fillText('LIVES',W-12,16);
-  bx.fillStyle='#F44336';bx.font='16px monospace';
-  bx.fillText('\u2764'.repeat(Math.max(0,lives)),W-12,34);
 
   bx.strokeStyle='rgba(255,255,255,0.08)';bx.lineWidth=1;
-  bx.beginPath();bx.moveTo(0,42);bx.lineTo(W,42);bx.stroke();
+  bx.beginPath();bx.moveTo(0,33);bx.lineTo(W,33);bx.stroke();
 
   // Active effect indicators
   var acts=[];
@@ -438,12 +433,99 @@ function drawHUD(){
   if(ball.caught)acts.push('◉');
   if(acts.length){
     bx.fillStyle='#FFD700';bx.font='bold 9px monospace';bx.textAlign='left';
-    bx.fillText('▶ '+acts.join(' '),12,56);
+    bx.fillText('▶ '+acts.join(' '),12,45);
   }
   // Portal indicator
   if(portal){
     bx.fillStyle='#FFD700';bx.font='bold 9px monospace';bx.textAlign='right';
-    bx.fillText('BREAK ▶',W-12,56);
+    bx.fillText('BREAK ▶',W-12,45);
+  }
+  // Life bars (mini paddles with red tips and beads) at bottom-left
+  var extra = lives - 1;
+  if(extra > 0){
+    var mw = PADDLE_W / 2 | 0, mh = PADDLE_H / 2 | 0, tipW = 7;
+    var bx2 = WALL_LEFT + 2, by = H - 6, PI = Math.PI;
+    for(var i = 0; i < extra; i++){
+      var px = bx2 + i * (mw + 6), r = mh / 2;
+      // Dark gray body with gradient
+      var g = bx.createLinearGradient(px, by, px, by + mh);
+      g.addColorStop(0, '#999'); g.addColorStop(0.2, '#777');
+      g.addColorStop(0.45, '#555'); g.addColorStop(0.55, '#444');
+      g.addColorStop(0.8, '#3a3a3a'); g.addColorStop(1, '#2a2a2a');
+      bx.fillStyle = g;
+      bx.beginPath();
+      bx.moveTo(px + r, by);
+      bx.lineTo(px + mw - r, by);
+      bx.quadraticCurveTo(px + mw, by, px + mw, by + r);
+      bx.lineTo(px + mw, by + mh - r);
+      bx.quadraticCurveTo(px + mw, by + mh, px + mw - r, by + mh);
+      bx.lineTo(px + r, by + mh);
+      bx.quadraticCurveTo(px, by + mh, px, by + mh - r);
+      bx.lineTo(px, by + r);
+      bx.quadraticCurveTo(px, by, px + r, by);
+      bx.closePath(); bx.fill();
+
+      // Red tip gradient
+      var rg = bx.createLinearGradient(px, by, px, by + mh);
+      rg.addColorStop(0, '#FF5555'); rg.addColorStop(0.3, '#EE3333');
+      rg.addColorStop(0.5, '#CC2222'); rg.addColorStop(0.7, '#AA1818');
+      rg.addColorStop(1, '#880E0E');
+      // Left red tip
+      bx.fillStyle = rg;
+      bx.beginPath();
+      bx.moveTo(px + r, by); bx.lineTo(px + tipW, by);
+      bx.lineTo(px + tipW, by + mh); bx.lineTo(px + r, by + mh);
+      bx.quadraticCurveTo(px, by + mh, px, by + mh - r);
+      bx.lineTo(px, by + r);
+      bx.quadraticCurveTo(px, by, px + r, by);
+      bx.closePath(); bx.fill();
+      // Right red tip
+      bx.fillStyle = rg;
+      bx.beginPath();
+      bx.moveTo(px + mw - r, by); bx.lineTo(px + mw - tipW, by);
+      bx.lineTo(px + mw - tipW, by + mh); bx.lineTo(px + mw - r, by + mh);
+      bx.quadraticCurveTo(px + mw, by + mh, px + mw, by + mh - r);
+      bx.lineTo(px + mw, by + r);
+      bx.quadraticCurveTo(px + mw, by, px + mw - r, by);
+      bx.closePath(); bx.fill();
+
+      // Outline
+      bx.strokeStyle = '#222'; bx.lineWidth = 1; bx.stroke();
+      // Dividing lines
+      bx.strokeStyle = '#111'; bx.lineWidth = 1;
+      bx.beginPath(); bx.moveTo(px + tipW, by); bx.lineTo(px + tipW, by + mh); bx.stroke();
+      bx.beginPath(); bx.moveTo(px + mw - tipW, by); bx.lineTo(px + mw - tipW, by + mh); bx.stroke();
+
+      // Beads at ends (outer half sky-blue)
+      var beadR = 3, beadY = by + mh / 2;
+      // Left bead
+      bx.fillStyle = 'rgba(0,0,0,0.25)';
+      bx.beginPath(); bx.arc(px + 1, beadY + 1, beadR, 0, PI * 2); bx.fill();
+      bx.save(); bx.beginPath();
+      bx.arc(px, beadY, beadR, PI / 2, -PI / 2);
+      bx.closePath(); bx.clip();
+      var bgL = bx.createRadialGradient(px - 1, beadY - 1, 0.5, px, beadY, beadR);
+      bgL.addColorStop(0, '#C8F0FF'); bgL.addColorStop(0.3, '#66D0FF');
+      bgL.addColorStop(0.6, '#33A0FF'); bgL.addColorStop(1, '#0070CC');
+      bx.fillStyle = bgL; bx.beginPath(); bx.arc(px, beadY, beadR, 0, PI * 2); bx.fill();
+      bx.restore();
+      bx.fillStyle = 'rgba(255,255,255,0.6)';
+      bx.beginPath(); bx.arc(px - 1, beadY - 1, 0.8, 0, PI * 2); bx.fill();
+
+      // Right bead
+      bx.fillStyle = 'rgba(0,0,0,0.25)';
+      bx.beginPath(); bx.arc(px + mw + 1, beadY + 1, beadR, 0, PI * 2); bx.fill();
+      bx.save(); bx.beginPath();
+      bx.arc(px + mw, beadY, beadR, -PI / 2, PI / 2);
+      bx.closePath(); bx.clip();
+      var bgR = bx.createRadialGradient(px + mw - 1, beadY - 1, 0.5, px + mw, beadY, beadR);
+      bgR.addColorStop(0, '#C8F0FF'); bgR.addColorStop(0.3, '#66D0FF');
+      bgR.addColorStop(0.6, '#33A0FF'); bgR.addColorStop(1, '#0070CC');
+      bx.fillStyle = bgR; bx.beginPath(); bx.arc(px + mw, beadY, beadR, 0, PI * 2); bx.fill();
+      bx.restore();
+      bx.fillStyle = 'rgba(255,255,255,0.6)';
+      bx.beginPath(); bx.arc(px + mw - 1, beadY - 1, 0.8, 0, PI * 2); bx.fill();
+    }
   }
 }
 
