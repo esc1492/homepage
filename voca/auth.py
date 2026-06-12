@@ -1,4 +1,3 @@
-import base64
 import json
 
 import streamlit as st
@@ -12,12 +11,14 @@ SCOPES = [
 
 def get_credentials() -> Credentials | None:
     try:
-        encoded = st.secrets["gcp"]["sa_b64"].replace("\n", "").replace(" ", "")
-        raw = base64.b64decode(encoded).decode("utf-8")
+        raw = st.secrets["gcp"]["sa_json"]
         info = json.loads(raw)
         return Credentials.from_service_account_info(info, scopes=SCOPES)
     except KeyError:
-        st.error("secrets.toml에 [gcp] sa_b64 키가 없습니다.")
+        st.error("secrets.toml에 [gcp] sa_json 키가 없습니다.")
+        return None
+    except json.JSONDecodeError as e:
+        st.error(f"JSON 파싱 오류: {e}")
         return None
     except Exception as e:
         st.error(f"인증 오류: {e}")
