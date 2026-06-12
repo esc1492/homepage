@@ -67,6 +67,42 @@ Sync the same ticker list in `fetch.py` line ~35 (`tickers` array).
 - **Personal**: Stored in `localStorage` key `myTodos` — works offline
 - **Family**: Uses Google Apps Script endpoint (`SCRIPT_URL`) — CRUD via `GET ?action=getAll` and `POST {action, text/id}`
 
+## VOCA (Google Sheets Editor - Streamlit)
+
+**`voca/`** — Streamlit 앱. Google Sheets 데이터를 읽고/쓰고/행을 추가할 수 있음.
+
+### Auth: Google Service Account (OAuth 없음)
+
+사용자 로그인 절차 없이 서비스 계정으로 자동 인증.
+
+### Service Account 설정 방법
+
+1. **GCP Console** (`console.cloud.google.com/apis/credentials`) → 사용자 인증 정보 만들기 → 서비스 계정
+2. 서비스 계정 생성 후 **키 탭 → 키 추가 → 새 키 만들기 → JSON** 다운로드
+3. 다운로드한 JSON을 **Google Sheet**와 공유 (시트 우상단 공유 → 서비스 계정 이메일을 편집자로 추가)
+4. **Streamlit Cloud** (`share.streamlit.io`) → 앱 → Settings → Secrets 에 아래 형식으로 등록:
+
+```toml
+p1 = "base64-chunk-1"
+p2 = "base64-chunk-2"
+...
+p40 = "base64-chunk-40"
+```
+
+base64 인코딩 방법:
+```bash
+base64 -i /path/to/service-account.json | python3 -c "import sys; b=sys.stdin.read().strip(); [print(f'p{i+1} = \"{b[i:i+80]}\"') for i in range(0, len(b), 80)]"
+```
+
+위 명령어로 생성된 p1~p40 키를 그대로 복사해서 Streamlit Cloud Secrets에 붙여넣기.
+
+### 주의사항
+
+- `private_key` 줄바꿈 문제를 피하기 위해 **꼭 base64 인코딩**해서 사용할 것
+- TOML 멀티라인 문자열(`'''`, `"""`) 대신 **짧은 여러 개의 키**로 나누는 것이 안정적
+- `.streamlit/secrets.toml`은 `.gitignore`에 등록되어 있음
+- `secrets_cloud.toml` 같은 임시 파일은 사용 후 반드시 삭제
+
 ## Compaction
 
 When compacting, always preserve:
