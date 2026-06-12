@@ -12,7 +12,7 @@ SCOPES = [
 
 def get_credentials() -> Credentials | None:
     try:
-        raw = st.secrets["sa"]
+        raw = st.secrets["sa"].replace("\n", "")
         info = json.loads(raw)
         return Credentials.from_service_account_info(info, scopes=SCOPES)
     except KeyError:
