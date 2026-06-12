@@ -1,6 +1,3 @@
-import json
-import traceback
-
 import streamlit as st
 from google.oauth2.service_account import Credentials
 
@@ -12,22 +9,20 @@ SCOPES = [
 
 def get_credentials() -> Credentials | None:
     try:
-        raw = st.secrets["gcp"]["service_account_json"]
+        return Credentials.from_service_account_info(
+            st.secrets["gcp_service_account"], scopes=SCOPES
+        )
     except KeyError:
-        st.error("secrets.toml에 [gcp] service_account_json이 없습니다.")
+        st.error(
+            "secrets.toml에 [gcp_service_account] 섹션이 없습니다. "
+            "GCP 서비스 계정 JSON 키의 각 필드를 [gcp_service_account] 아래에 입력해주세요."
+        )
         return None
-
-    try:
-        info = json.loads(raw)
-    except json.JSONDecodeError as e:
-        st.error(f"service_account_json JSON 파싱 오류: {e}")
+    except ValueError as e:
+        st.error(f"서비스 계정 키 값이 올바르지 않습니다: {e}")
         return None
-
-    try:
-        return Credentials.from_service_account_info(info, scopes=SCOPES)
     except Exception as e:
-        st.error(f"서비스 계정 인증 실패: {e}")
-        st.code(traceback.format_exc(), line_limit=10)
+        st.error(f"인증 오류: {type(e).__name__}: {e}")
         return None
 
 
