@@ -19,9 +19,10 @@ with st.sidebar:
     st.header("시트 설정")
     sheet_url = st.text_input(
         "Google Sheets URL",
+        value="https://docs.google.com/spreadsheets/d/1vuj_GBNSx5b4F-P5N3GUQ8pTJYXkrGS4IpnUd45q_qk/edit?usp=sharing",
         placeholder="https://docs.google.com/spreadsheets/d/...",
     )
-    worksheet_name = st.text_input("워크시트 이름", value="Sheet1")
+    worksheet_name = st.text_input("워크시트 이름", value="todos")
 
 if not sheet_url:
     st.warning("사이드바에서 Google Sheets URL을 입력해주세요.")
