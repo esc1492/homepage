@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
 import gspread
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
+from google.auth.credentials import Credentials
 import re
 
 
@@ -15,10 +14,6 @@ def _extract_sheet_id(url: str) -> str:
 
 
 def _get_client(creds: Credentials) -> gspread.Client:
-    # 토큰 만료 시 자동 갱신
-    if creds.expired and creds.refresh_token:
-        creds.refresh(Request())
-    # 구버전 authorize() 대신 최신 방식 사용
     return gspread.Client(auth=creds)
 
 

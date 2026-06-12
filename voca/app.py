@@ -7,19 +7,12 @@ st.set_page_config(page_title="Google Sheets Manager", page_icon="📊", layout=
 
 st.title("📊 Google Sheets Manager")
 
-# ── 인증 ──────────────────────────────────────────
+# ── 서비스 계정 인증 (자동, 사용자 액션 없음) ────────
 creds = get_credentials()
 
 if not creds:
-    st.info("Google 계정으로 로그인하세요.")
+    st.error("서비스 계정 인증에 실패했습니다. 관리자에게 문의하세요.")
     st.stop()
-
-# 로그아웃 버튼
-with st.sidebar:
-    st.success("✅ 로그인됨")
-    if st.button("로그아웃"):
-        logout()
-        st.rerun()
 
 # ── 시트 URL 입력 ─────────────────────────────────
 with st.sidebar:
@@ -49,7 +42,6 @@ with tab_view:
         st.write(f"**{len(df)}행 × {len(df.columns)}열**")
         st.dataframe(df, use_container_width=True, height=400)
 
-        # CSV 다운로드
         csv = df.to_csv(index=False).encode("utf-8-sig")
         st.download_button("⬇️ CSV 다운로드", csv, "data.csv", "text/csv")
     else:
