@@ -12,7 +12,8 @@ SCOPES = [
 
 def get_credentials() -> Credentials | None:
     try:
-        raw = base64.b64decode(st.secrets["gcp"]["sa_b64"]).decode("utf-8")
+        encoded = st.secrets["gcp"]["sa_b64"].replace("\n", "").replace(" ", "")
+        raw = base64.b64decode(encoded).decode("utf-8")
         info = json.loads(raw)
         return Credentials.from_service_account_info(info, scopes=SCOPES)
     except KeyError:
