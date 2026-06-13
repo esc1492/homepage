@@ -41,7 +41,36 @@ with tab_view:
 
     if df is not None and not df.empty:
         st.write(f"**{len(df)}행 × {len(df.columns)}열**")
-        st.dataframe(df, use_container_width=True, height=400)
+
+        edited_df = st.data_editor(
+            df,
+            use_container_width=True,
+            height=400,
+            key="data_editor",
+            num_rows="fixed",
+        )
+
+        col1, col2 = st.columns([1, 6])
+        with col1:
+            if st.button("💾 변경사항 저장"):
+                changes = 0
+                for row_idx in range(len(df)):
+                    for col_idx in range(len(df.columns)):
+                        old_val = df.iloc[row_idx, col_idx]
+                        new_val = edited_df.iloc[row_idx, col_idx]
+                        if pd.isna(old_val) and pd.isna(new_val):
+                            continue
+                        if old_val != new_val:
+                            sheet_row = row_idx + 2
+                            sheet_col = col_idx + 1
+                            val = "" if pd.isna(new_val) else str(new_val)
+                            write_sheet(creds, sheet_url, worksheet_name, sheet_row, sheet_col, val)
+                            changes += 1
+                if changes > 0:
+                    st.success(f"✅ {changes}개 셀 저장 완료")
+                    st.cache_data.clear()
+                else:
+                    st.info("변경된 내용이 없습니다.")
 
         csv = df.to_csv(index=False).encode("utf-8-sig")
         st.download_button("⬇️ CSV 다운로드", csv, "data.csv", "text/csv")

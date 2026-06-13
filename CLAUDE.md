@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Communication
+
+- Always use polite/formal Korean (존댓말, 하십시오체) when responding to the user.
+- Never use 반말 (informal speech). This rule persists across all sessions and context resets.
+
 ## Project Overview
 
 Korean-language personal start page (시작 페이지) with weather, stock watchlist, news, and todo lists. Single HTML file (`index.html`) with inline CSS and vanilla JS. Data is fetched by a Python script and served via static `data.json`.
