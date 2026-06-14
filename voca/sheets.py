@@ -73,6 +73,22 @@ def append_row(creds: Credentials, sheet_url: str, worksheet_name: str, values: 
         return False
 
 
+def delete_row(creds: Credentials, sheet_url: str, worksheet_name: str, row: int) -> bool:
+    """시트에서 특정 행 삭제 (row는 1부터 시작)"""
+    try:
+        gc = _get_client(creds)
+        sheet_id = _extract_sheet_id(sheet_url)
+        worksheet = gc.open_by_key(sheet_id).worksheet(worksheet_name)
+        worksheet.delete_rows(row)
+        return True
+    except gspread.exceptions.APIError as e:
+        st.error(f"API 오류 ({e.response.status_code}): {e.response.json().get('error', {}).get('message', e)}")
+        return False
+    except Exception as e:
+        st.error(f"삭제 오류: {type(e).__name__}: {e}")
+        return False
+
+
 def get_sheet_list(creds: Credentials, sheet_url: str) -> list[str]:
     """스프레드시트의 모든 시트 이름 목록 반환"""
     try:
