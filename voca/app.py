@@ -3,9 +3,9 @@ import pandas as pd
 from auth import get_credentials, logout
 from sheets import read_sheet, write_sheet, append_row, delete_row, get_sheet_list, create_worksheet
 
-st.set_page_config(page_title="Google Sheets Manager", page_icon="📊", layout="wide")
+st.set_page_config(page_title="English Vocabulary Study", page_icon="📖", layout="wide", initial_sidebar_state="collapsed")
 
-st.title("📊 Google Sheets Manager")
+st.markdown("### 📖 English Vocabulary Study")
 
 # ── 서비스 계정 인증 (자동, 사용자 액션 없음) ────────
 creds = get_credentials()
@@ -22,12 +22,39 @@ with st.sidebar:
         value="https://docs.google.com/spreadsheets/d/1ZWF6z7gYS88_ru6b9aBkbopEsDSbIbm3sE1Kx9mTL98/edit?usp=sharing",
         placeholder="https://docs.google.com/spreadsheets/d/...",
     )
+    MODE_CUSTOM = "✏️ 직접 입력"
+
     if "_switch_to_sheet" in st.session_state:
-        st.session_state["worksheet_name"] = st.session_state.pop("_switch_to_sheet")
-    worksheet_name = st.text_input("워크시트 이름", value="시트1", key="worksheet_name")
+        st.session_state["_ws_select"] = MODE_CUSTOM
+        st.session_state["_ws_custom"] = st.session_state.pop("_switch_to_sheet")
+
+    sheet_names = get_sheet_list(creds, sheet_url) if sheet_url else []
+
+    if (st.session_state.get("_ws_select") == MODE_CUSTOM
+            and st.session_state.get("_ws_custom", "").strip() in sheet_names):
+        st.session_state["_ws_select"] = st.session_state["_ws_custom"].strip()
+
+    if "_ws_current" not in st.session_state:
+        st.session_state["_ws_current"] = "시트1"
+    if "_ws_custom" not in st.session_state:
+        st.session_state["_ws_custom"] = ""
+    if "_ws_select" not in st.session_state:
+        cur = st.session_state["_ws_current"]
+        st.session_state["_ws_select"] = cur if cur in sheet_names else MODE_CUSTOM
+
+    options = [MODE_CUSTOM] + sheet_names
+    selected = st.selectbox("워크시트 이름", options=options, key="_ws_select")
+
+    if selected == MODE_CUSTOM:
+        st.text_input("워크시트 이름 입력", key="_ws_custom", placeholder="시트 이름을 입력하세요")
+        custom_val = st.session_state["_ws_custom"].strip()
+        worksheet_name = custom_val if custom_val else st.session_state["_ws_current"]
+    else:
+        worksheet_name = selected
+
+    st.session_state["_ws_current"] = worksheet_name
 
     with st.expander("시트 관리"):
-        sheet_names = get_sheet_list(creds, sheet_url) if sheet_url else []
         if sheet_names:
             st.caption(f"현재 시트: {', '.join(sheet_names)}")
 
@@ -37,7 +64,6 @@ with st.sidebar:
                 if new_sheet_name.strip() in sheet_names:
                     st.warning(f"'{new_sheet_name}' 시트가 이미 존재합니다.")
                 else:
-                    # 시트1의 헤더 가져오기 (항상 고정)
                     headers = None
                     df_source = read_sheet(creds, sheet_url, "시트1")
                     if df_source is not None and len(df_source.columns) > 0:
@@ -173,35 +199,64 @@ with tab_study:
             with cb_center:
                 hide_right = st.checkbox("**한글** 가리기", value=False) if len(cols) > 1 else None
 
+        all_selected = len(st.session_state.get("_study_sel", set())) == len(df_study) and not df_study.empty
+        btn_label = "⬜ 전체 해제" if all_selected else "✅ 전체 선택"
+        if st.button(btn_label, key="_sel_toggle"):
+            if all_selected:
+                st.session_state["_study_sel"] = set()
+            else:
+                st.session_state["_study_sel"] = set(df_study.index) if not df_study.empty else set()
+            st.session_state["_study_key"] = 1 - st.session_state.get("_study_key", 0)
+            st.rerun()
+
+        if "_study_sel" not in st.session_state:
+            st.session_state["_study_sel"] = set()
+
         df_display = df_study.copy()
-        column_config = {}
+        df_display.insert(0, " ", False)
+
+        for idx in df_display.index:
+            if idx in st.session_state["_study_sel"]:
+                df_display.loc[idx, " "] = True
+
+        column_config = {
+            " ": st.column_config.CheckboxColumn(" ", default=False, width=40),
+        }
 
         if len(cols) > 0:
             column_config[cols[0]] = st.column_config.TextColumn(
-                cols[0], disabled=not hide_left
+                cols[0], disabled=not hide_left, width="large"
             )
             if hide_left:
-                df_display[cols[0]] = ""
+                mask = df_display[" "] == True
+                df_display.loc[mask, cols[0]] = ""
         if len(cols) > 1:
             column_config[cols[1]] = st.column_config.TextColumn(
-                cols[1], disabled=not hide_right
+                cols[1], disabled=not hide_right, width="large"
             )
             if hide_right:
-                df_display[cols[1]] = ""
+                mask = df_display[" "] == True
+                df_display.loc[mask, cols[1]] = ""
 
         row_h = 35
         hdr_h = 38
-        nrows = max(len(df_study), 1)
+        nrows = max(len(df_display), 1)
         study_height = min(hdr_h + nrows * row_h, 800)
 
-        st.data_editor(
+        edited_df = st.data_editor(
             df_display,
             column_config=column_config,
             use_container_width=True,
             height=study_height,
-            key="study_editor",
-            hide_index=False,
+            key=f"s{st.session_state.get('_study_key', 0)}",
+            hide_index=True,
             num_rows="dynamic",
         )
+
+        new_sel = {i for i in edited_df.index if edited_df.loc[i, " "]}
+        if new_sel != st.session_state["_study_sel"]:
+            st.session_state["_study_sel"] = new_sel
+            st.session_state["_study_key"] = 1 - st.session_state.get("_study_key", 0)
+            st.rerun()
     else:
         st.info("데이터를 불러올 수 없습니다.")
