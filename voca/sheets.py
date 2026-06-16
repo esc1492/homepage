@@ -26,6 +26,12 @@ def read_sheet(_creds, sheet_url: str, worksheet_name: str) -> pd.DataFrame | No
         spreadsheet = gc.open_by_key(sheet_id)
         worksheet = spreadsheet.worksheet(worksheet_name)
         data = worksheet.get_all_records()
+        if data:
+            return pd.DataFrame(data)
+        # 데이터 행이 없으면 헤더 행이라도 있으면 컬럼 구조 유지
+        all_values = worksheet.get_all_values()
+        if all_values and all_values[0] and any(v != "" for v in all_values[0]):
+            return pd.DataFrame([], columns=all_values[0])
         return pd.DataFrame(data)
     except gspread.exceptions.SpreadsheetNotFound:
         st.error("스프레드시트를 찾을 수 없습니다. URL 또는 접근 권한을 확인해주세요.")
@@ -86,6 +92,24 @@ def delete_row(creds: Credentials, sheet_url: str, worksheet_name: str, row: int
         return False
     except Exception as e:
         st.error(f"삭제 오류: {type(e).__name__}: {e}")
+        return False
+
+
+def create_worksheet(creds: Credentials, sheet_url: str, title: str, rows: int = 100, cols: int = 26, headers: list[str] | None = None) -> bool:
+    """새 워크시트 생성, 선택적으로 헤더 행도 추가"""
+    try:
+        gc = _get_client(creds)
+        sheet_id = _extract_sheet_id(sheet_url)
+        spreadsheet = gc.open_by_key(sheet_id)
+        sheet = spreadsheet.add_worksheet(title=title, rows=rows, cols=cols)
+        if headers:
+            sheet.update(values=[headers], range_name="A1:B1")
+        return True
+    except gspread.exceptions.APIError as e:
+        st.error(f"API 오류 ({e.response.status_code}): {e.response.json().get('error', {}).get('message', e)}")
+        return False
+    except Exception as e:
+        st.error(f"시트 생성 오류: {type(e).__name__}: {e}")
         return False
 
 

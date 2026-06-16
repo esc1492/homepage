@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from auth import get_credentials, logout
-from sheets import read_sheet, write_sheet, append_row, delete_row, get_sheet_list
+from sheets import read_sheet, write_sheet, append_row, delete_row, get_sheet_list, create_worksheet
 
 st.set_page_config(page_title="Google Sheets Manager", page_icon="📊", layout="wide")
 
@@ -22,7 +22,35 @@ with st.sidebar:
         value="https://docs.google.com/spreadsheets/d/1ZWF6z7gYS88_ru6b9aBkbopEsDSbIbm3sE1Kx9mTL98/edit?usp=sharing",
         placeholder="https://docs.google.com/spreadsheets/d/...",
     )
-    worksheet_name = st.text_input("워크시트 이름", value="시트1")
+    if "_switch_to_sheet" in st.session_state:
+        st.session_state["worksheet_name"] = st.session_state.pop("_switch_to_sheet")
+    worksheet_name = st.text_input("워크시트 이름", value="시트1", key="worksheet_name")
+
+    with st.expander("시트 관리"):
+        sheet_names = get_sheet_list(creds, sheet_url) if sheet_url else []
+        if sheet_names:
+            st.caption(f"현재 시트: {', '.join(sheet_names)}")
+
+        new_sheet_name = st.text_input("새 시트 이름", placeholder="시트2", key="new_sheet")
+        if st.button("➕ 새 시트 생성", use_container_width=True):
+            if new_sheet_name.strip():
+                if new_sheet_name.strip() in sheet_names:
+                    st.warning(f"'{new_sheet_name}' 시트가 이미 존재합니다.")
+                else:
+                    # 시트1의 헤더 가져오기 (항상 고정)
+                    headers = None
+                    df_source = read_sheet(creds, sheet_url, "시트1")
+                    if df_source is not None and len(df_source.columns) > 0:
+                        headers = df_source.columns.tolist()
+
+                    ok = create_worksheet(creds, sheet_url, new_sheet_name.strip(), headers=headers)
+                    if ok:
+                        st.success(f"'{new_sheet_name}' 시트가 생성되었습니다.")
+                        st.session_state["_switch_to_sheet"] = new_sheet_name.strip()
+                        st.cache_data.clear()
+                        st.rerun()
+            else:
+                st.warning("시트 이름을 입력해주세요.")
 
 if not sheet_url:
     st.warning("사이드바에서 Google Sheets URL을 입력해주세요.")
@@ -39,12 +67,14 @@ with tab_view:
     with st.spinner("시트 데이터 불러오는 중..."):
         df = read_sheet(creds, sheet_url, worksheet_name)
 
-    if df is not None and not df.empty:
-        st.write(f"**{len(df)}행 × {len(df.columns)}열**")
+    if df is not None and len(df.columns) > 0:
+        if not df.empty:
+            st.write(f"**{len(df)}행 × {len(df.columns)}열**")
 
         row_h = 35
         hdr_h = 38
-        edit_height = min(hdr_h + (len(df) + 1) * row_h, 800)
+        nrows = max(len(df), 1)
+        edit_height = min(hdr_h + nrows * row_h, 800)
 
         edited_df = st.data_editor(
             df,
@@ -54,30 +84,31 @@ with tab_view:
             num_rows="fixed",
         )
 
-        col_csv, _, col_save = st.columns([2, 8, 1.2])
-        with col_csv:
-            csv = df.to_csv(index=False).encode("utf-8-sig")
-            st.download_button("⬇️ CSV 다운로드", csv, "data.csv", "text/csv")
-        with col_save:
-            if st.button("💾 저장", use_container_width=True):
-                changes = 0
-                for row_idx in range(len(df)):
-                    for col_idx in range(len(df.columns)):
-                        old_val = df.iloc[row_idx, col_idx]
-                        new_val = edited_df.iloc[row_idx, col_idx]
-                        if pd.isna(old_val) and pd.isna(new_val):
-                            continue
-                        if old_val != new_val:
-                            sheet_row = row_idx + 2
-                            sheet_col = col_idx + 1
-                            val = "" if pd.isna(new_val) else str(new_val)
-                            write_sheet(creds, sheet_url, worksheet_name, sheet_row, sheet_col, val)
-                            changes += 1
-                if changes > 0:
-                    st.cache_data.clear()
+        if not df.empty:
+            col_csv, _, col_save = st.columns([2, 8, 1.2])
+            with col_csv:
+                csv = df.to_csv(index=False).encode("utf-8-sig")
+                st.download_button("⬇️ CSV 다운로드", csv, "data.csv", "text/csv")
+            with col_save:
+                if st.button("💾 저장", use_container_width=True):
+                    changes = 0
+                    for row_idx in range(len(df)):
+                        for col_idx in range(len(df.columns)):
+                            old_val = df.iloc[row_idx, col_idx]
+                            new_val = edited_df.iloc[row_idx, col_idx]
+                            if pd.isna(old_val) and pd.isna(new_val):
+                                continue
+                            if old_val != new_val:
+                                sheet_row = row_idx + 2
+                                sheet_col = col_idx + 1
+                                val = "" if pd.isna(new_val) else str(new_val)
+                                write_sheet(creds, sheet_url, worksheet_name, sheet_row, sheet_col, val)
+                                changes += 1
+                    if changes > 0:
+                        st.cache_data.clear()
 
     else:
-        st.info("데이터가 없거나 시트를 불러올 수 없습니다.")
+        st.info("시트를 불러올 수 없습니다.")
 
 # ── 탭 2: 행 추가 ────────────────────────────────
 with tab_append:
@@ -85,10 +116,11 @@ with tab_append:
 
     df_append = read_sheet(creds, sheet_url, worksheet_name)
 
-    if df_append is not None and not df_append.empty:
+    if df_append is not None and len(df_append.columns) > 0:
         row_h = 35
         hdr_h = 38
-        table_height = min(hdr_h + (len(df_append) + 1) * row_h, 800)
+        nrows = max(len(df_append), 1)
+        table_height = min(hdr_h + nrows * row_h, 800)
 
         edited_append = st.data_editor(
             df_append,
@@ -130,7 +162,7 @@ with tab_study:
 
     df_study = read_sheet(creds, sheet_url, worksheet_name)
 
-    if df_study is not None and not df_study.empty:
+    if df_study is not None and len(df_study.columns) > 0:
         cols = df_study.columns.tolist()
 
         col_left, col_right = st.columns(2)
@@ -159,7 +191,8 @@ with tab_study:
 
         row_h = 35
         hdr_h = 38
-        study_height = min(hdr_h + (len(df_study) + 1) * row_h, 800)
+        nrows = max(len(df_study), 1)
+        study_height = min(hdr_h + nrows * row_h, 800)
 
         st.data_editor(
             df_display,
