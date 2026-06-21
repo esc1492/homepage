@@ -118,10 +118,10 @@ bgImg.src='%%BG_IMAGE_URI%%';
 var W=400,H=580;
 var BALL_R=7,PADDLE_W=80,PADDLE_H=12,PADDLE_Y=540;
 var BALL_BASE=4;
-var COLS=8,ROWS=6,BRICK_W=44,BRICK_H=16,GAP=4;
+var COLS=12,ROWS=6,BRICK_W=31,BRICK_H=16,GAP=0;
 var BRICK_LEFT=(W-COLS*BRICK_W-(COLS-1)*GAP)/2;
-var BRICK_TOP=48;
-var WALL_LEFT=14,WALL_RIGHT=386,BEAD_R=4;
+var BRICK_TOP=102;
+var WALL_LEFT=14,WALL_RIGHT=386,BEAD_R=4,CEILING_Y=54;
 var BRICK_COLORS=['#FFD700','#4CAF50','#FF9800','#F44336','#2196F3','#9C27B0'];
 
 // Item system
@@ -180,8 +180,9 @@ function genLevel(n){
       for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++)bricks.push(makeBrick(r,c));
       break;
     case 1:
+      var cx=(COLS-1)/2,cy=(ROWS-1)/2;
       for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++){
-        d=Math.abs(c-3.5)+Math.abs(r-2.5);
+        d=Math.abs(c-cx)+Math.abs(r-cy);
         if(d<=3.5)bricks.push(makeBrick(r,c));
       }
       break;
@@ -365,7 +366,7 @@ function updateExtraBalls(){
     eb.x+=eb.dx;eb.y+=eb.dy;
     if(eb.x-eb.r<=WALL_LEFT){eb.x=WALL_LEFT+eb.r;eb.dx=-eb.dx;playSound('wall');}
     if(eb.x+eb.r>=WALL_RIGHT){eb.x=WALL_RIGHT-eb.r;eb.dx=-eb.dx;playSound('wall');}
-    if(eb.y-eb.r<=0){eb.y=eb.r;eb.dy=-eb.dy;playSound('wall');}
+    if(eb.y-eb.r<=CEILING_Y){eb.y=CEILING_Y+eb.r;eb.dy=-eb.dy;playSound('wall');}
     if(eb.y+eb.r>=H){extraBalls.splice(i,1);continue;}
 
     if(eb.dy>0&&eb.y+eb.r>=paddle.y&&eb.y+eb.r<=paddle.y+paddle.h+4&&
@@ -558,6 +559,7 @@ function drawBrick(b){
       bx.fillRect(x+3,y+h-5,(w-6)*(b.hp/b.maxHp),2);
     }
   }
+  bx.strokeStyle='#111';bx.lineWidth=1;bx.strokeRect(x,y,w,h);
 }
 
 function drawPaddle(){
@@ -746,7 +748,7 @@ function updateBall(){
   }
 
   if(ball.x+ball.r>=WALL_RIGHT){ball.x=WALL_RIGHT-ball.r;ball.dx=-ball.dx;playSound('wall');}
-  if(ball.y-ball.r<=0){ball.y=ball.r;ball.dy=-ball.dy;playSound('wall');}
+  if(ball.y-ball.r<=CEILING_Y){ball.y=CEILING_Y+ball.r;ball.dy=-ball.dy;playSound('wall');}
 
   if(ball.y+ball.r>=H){
     if(extraBalls.length>0){var eb=extraBalls.pop();ball.x=eb.x;ball.y=eb.y;ball.dx=eb.dx;ball.dy=eb.dy;return;}
