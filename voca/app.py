@@ -225,14 +225,14 @@ with tab_study:
 
         if len(cols) > 0:
             column_config[cols[0]] = st.column_config.TextColumn(
-                cols[0], disabled=not hide_left, width="large"
+                cols[0], disabled=not hide_left, width="medium"
             )
             if hide_left:
                 mask = df_display[" "] == True
                 df_display.loc[mask, cols[0]] = ""
         if len(cols) > 1:
             column_config[cols[1]] = st.column_config.TextColumn(
-                cols[1], disabled=not hide_right, width="large"
+                cols[1], disabled=not hide_right, width="medium"
             )
             if hide_right:
                 mask = df_display[" "] == True
