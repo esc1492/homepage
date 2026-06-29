@@ -29,7 +29,7 @@ st.set_page_config(
 # ── Header ────────────────────────────────────────
 st.markdown("""
 <style>
-    .block-container { padding-top: 1.5rem; }
+    .block-container { padding-top: 3rem; }
 </style>
 """, unsafe_allow_html=True)
 st.markdown("### 🔍 OCR 텍스트 추출")
