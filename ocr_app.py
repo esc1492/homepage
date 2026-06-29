@@ -3,9 +3,11 @@ import json
 import uuid
 import time
 import base64
+import io
 import os
 import urllib.request
 import urllib.error
+from PIL import Image, ImageOps
 
 try:
     import fitz  # pymupdf
@@ -60,10 +62,13 @@ if uploaded_file.type == "application/pdf":
     api_format = "png"
     display_img = img_bytes_for_api
 else:
-    img_bytes_for_api = file_bytes
-    fmt = uploaded_file.type.split("/")[-1]
-    api_format = "jpg" if fmt == "jpeg" else fmt
-    display_img = file_bytes
+    img = Image.open(io.BytesIO(file_bytes))
+    img = ImageOps.exif_transpose(img)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    img_bytes_for_api = buf.getvalue()
+    api_format = "png"
+    display_img = img_bytes_for_api
 
 # ── Two-Column Layout ─────────────────────────────
 col_left, col_right = st.columns(2)
