@@ -27,8 +27,12 @@ st.set_page_config(
 )
 
 # ── Header ────────────────────────────────────────
+st.markdown("""
+<style>
+    .block-container { padding-top: 1.5rem; }
+</style>
+""", unsafe_allow_html=True)
 st.markdown("### 🔍 OCR 텍스트 추출")
-st.caption("이미지(JPG, PNG) 또는 PDF에서 텍스트를 추출합니다.")
 
 # ── File Upload (with callback to clear previous result) ──
 def on_file_change():
@@ -42,7 +46,6 @@ uploaded_file = st.file_uploader(
 )
 
 if uploaded_file is None:
-    st.info("👆 이미지 또는 PDF 파일을 업로드해 주세요.")
     st.stop()
 
 # ── Prepare Image Data ────────────────────────────
@@ -184,6 +187,5 @@ with col_right:
             )
         else:
             st.info("인식된 텍스트가 없습니다.")
-    else:
-        if not do_ocr and "_ocr_text" not in st.session_state:
-            st.info("👈 텍스트 추출 버튼을 눌러주세요.")
+    elif "_ocr_text" not in st.session_state:
+        pass
