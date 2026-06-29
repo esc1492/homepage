@@ -124,37 +124,31 @@ with col_right:
                     st.warning("인식된 텍스트가 없습니다.")
                     st.session_state["_ocr_text"] = ""
                 else:
-                    # Sort by Y then X for natural reading order
-                    def sort_key(f):
-                        v = f.get("boundingPoly", {}).get("vertices", [{}])
-                        return (
-                            v[0].get("y", 0) if len(v) > 0 else 0,
-                            v[0].get("x", 0) if len(v) > 0 else 0,
-                        )
-
-                    sorted_fields = sorted(fields, key=sort_key)
-
-                    # Group by line (similar Y position)
+                    # API returns fields in reading order — preserve it
                     lines = []
                     current_line = []
                     current_y = None
-                    Y_THRESHOLD = 10
+                    Y_THRESHOLD = 30  # pixels; same-line tolerance
 
-                    for field in sorted_fields:
-                        v = field.get("boundingPoly", {}).get("vertices", [{}])
-                        y = v[0].get("y", 0) if len(v) > 0 else 0
+                    for field in fields:
+                        v = field.get("boundingPoly", {}).get("vertices", [])
+                        if not v:
+                            continue
+                        # Use center Y of the bounding box
+                        ys = [p.get("y", 0) for p in v]
+                        cy = sum(ys) / len(ys)
                         text = field.get("inferText", "")
 
                         if current_y is None:
                             current_line = [text]
-                            current_y = y
-                        elif abs(y - current_y) <= Y_THRESHOLD:
+                            current_y = cy
+                        elif abs(cy - current_y) <= Y_THRESHOLD:
                             current_line.append(text)
                         else:
                             if current_line:
                                 lines.append(" ".join(current_line))
                             current_line = [text]
-                            current_y = y
+                            current_y = cy
 
                     if current_line:
                         lines.append(" ".join(current_line))
