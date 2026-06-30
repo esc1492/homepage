@@ -212,7 +212,7 @@ with col_right:
             trans_label = "🔤 원문 보기" if show_original else "🌐 번역"
             trans_url = "?translate=1"
 
-            st.components.html(f"""
+            st.components.v1.html(f"""
 <style>
 .ocr-bar {{ display:flex; align-items:center; justify-content:space-between; }}
 .ocr-bar .label {{ color:#9ca3af; font-size:13px; white-space:nowrap; }}
