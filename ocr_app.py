@@ -146,6 +146,8 @@ with col_right:
                     lines = []
                     current_line = []
                     prev_top = prev_bottom = 0
+                    line_bottom = 0          # max bottom of current line
+                    prev_line_bottom = None  # bottom of previous line (for paragraph gap)
 
                     for field in fields:
                         text = field.get("inferText", "")
@@ -158,6 +160,7 @@ with col_right:
                         if not current_line:
                             current_line = [text]
                             prev_top, prev_bottom = ftop, fbottom
+                            line_bottom = fbottom
                         else:
                             # Compare against previous field (pairwise)
                             overlap_top = max(prev_top, ftop)
@@ -168,10 +171,21 @@ with col_right:
                             if min_h > 0 and overlap > min_h * 0.25:
                                 current_line.append(text)
                                 prev_top, prev_bottom = ftop, fbottom
+                                line_bottom = max(line_bottom, fbottom)
                             else:
-                                lines.append(" ".join(current_line))
+                                # --- Line break detected ---
+                                line_text = " ".join(current_line)
+                                # Check paragraph gap
+                                if prev_line_bottom is not None:
+                                    gap = ftop - prev_line_bottom
+                                    if gap > fheight * 1.8:
+                                        lines.append("")  # blank line = paragraph break
+                                lines.append(line_text)
+                                # Start new line
                                 current_line = [text]
                                 prev_top, prev_bottom = ftop, fbottom
+                                prev_line_bottom = line_bottom
+                                line_bottom = fbottom
 
                     if current_line:
                         lines.append(" ".join(current_line))
