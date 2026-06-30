@@ -145,7 +145,7 @@ with col_right:
 
                     lines = []
                     current_line = []
-                    current_top, current_bottom = 0, 0
+                    ref_top = ref_bottom = 0
 
                     for field in fields:
                         text = field.get("inferText", "")
@@ -157,23 +157,20 @@ with col_right:
 
                         if not current_line:
                             current_line = [text]
-                            current_top, current_bottom = ftop, fbottom
+                            ref_top, ref_bottom = ftop, fbottom
                         else:
-                            # Vertical overlap ratio
-                            overlap_top = max(current_top, ftop)
-                            overlap_bottom = min(current_bottom, fbottom)
+                            # Compare against the FIRST field in the line (fixed reference)
+                            overlap_top = max(ref_top, ftop)
+                            overlap_bottom = min(ref_bottom, fbottom)
                             overlap = max(0, overlap_bottom - overlap_top)
-                            ch = current_bottom - current_top
-                            min_h = min(ch, fheight) if ch > 0 and fheight > 0 else 0
-                            # Same line if overlap > 40% of the shorter box
+                            ref_h = ref_bottom - ref_top
+                            min_h = min(ref_h, fheight) if ref_h > 0 and fheight > 0 else 0
                             if min_h > 0 and overlap > min_h * 0.4:
                                 current_line.append(text)
-                                current_top = min(current_top, ftop)
-                                current_bottom = max(current_bottom, fbottom)
                             else:
                                 lines.append(" ".join(current_line))
                                 current_line = [text]
-                                current_top, current_bottom = ftop, fbottom
+                                ref_top, ref_bottom = ftop, fbottom
 
                     if current_line:
                         lines.append(" ".join(current_line))
