@@ -135,7 +135,7 @@ with col_right:
                     st.warning("인식된 텍스트가 없습니다.")
                     st.session_state["_ocr_text"] = ""
                 else:
-                    # Group fields by vertical overlap (same visual line)
+                    # Group fields by vertical overlap — pairwise comparison
                     def get_y_range(field):
                         v = field.get("boundingPoly", {}).get("vertices", [])
                         if not v:
@@ -145,7 +145,7 @@ with col_right:
 
                     lines = []
                     current_line = []
-                    ref_top = ref_bottom = 0
+                    prev_top = prev_bottom = 0
 
                     for field in fields:
                         text = field.get("inferText", "")
@@ -157,20 +157,21 @@ with col_right:
 
                         if not current_line:
                             current_line = [text]
-                            ref_top, ref_bottom = ftop, fbottom
+                            prev_top, prev_bottom = ftop, fbottom
                         else:
-                            # Compare against the FIRST field in the line (fixed reference)
-                            overlap_top = max(ref_top, ftop)
-                            overlap_bottom = min(ref_bottom, fbottom)
+                            # Compare against previous field (pairwise)
+                            overlap_top = max(prev_top, ftop)
+                            overlap_bottom = min(prev_bottom, fbottom)
                             overlap = max(0, overlap_bottom - overlap_top)
-                            ref_h = ref_bottom - ref_top
-                            min_h = min(ref_h, fheight) if ref_h > 0 and fheight > 0 else 0
-                            if min_h > 0 and overlap > min_h * 0.4:
+                            prev_h = prev_bottom - prev_top
+                            min_h = min(prev_h, fheight) if prev_h > 0 and fheight > 0 else 0
+                            if min_h > 0 and overlap > min_h * 0.25:
                                 current_line.append(text)
+                                prev_top, prev_bottom = ftop, fbottom
                             else:
                                 lines.append(" ".join(current_line))
                                 current_line = [text]
-                                ref_top, ref_bottom = ftop, fbottom
+                                prev_top, prev_bottom = ftop, fbottom
 
                     if current_line:
                         lines.append(" ".join(current_line))
