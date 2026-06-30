@@ -220,7 +220,7 @@ with col_right:
 .ocr-bar .btn {{ background:none; border:none; color:#9ca3af; cursor:pointer; font-size:13px; padding:5px 10px; border-radius:4px; white-space:nowrap; text-decoration:none; display:inline-flex; align-items:center; }}
 .ocr-bar .btn:hover {{ color:#f3f4f6; background:rgba(255,255,255,0.08); }}
 .ocr-divider {{ border:none; border-top:1px solid #333; margin:8px 0 12px; }}
-pre#_ocr { display:none; }}
+pre#_ocr {{ display:none; }}
 </style>
 <div class="ocr-bar">
   <span class="label">{label}:</span>
