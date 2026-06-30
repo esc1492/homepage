@@ -220,7 +220,7 @@ with col_right:
 .ocr-bar .btn {{ background:none; border:none; color:#9ca3af; cursor:pointer; font-size:13px; padding:5px 10px; border-radius:4px; white-space:nowrap; text-decoration:none; display:inline-flex; align-items:center; }}
 .ocr-bar .btn:hover {{ color:#f3f4f6; background:rgba(255,255,255,0.08); }}
 .ocr-divider {{ border:none; border-top:1px solid #333; margin:8px 0 12px; }}
-pre#_ocr {{ color:#e5e5e5; font-size:14px; line-height:1.6; white-space:pre-wrap; word-break:break-word; margin-top:0; }}
+pre#_ocr {{ color:#f3f4f6; font-size:14px; line-height:1.6; white-space:pre-wrap; word-break:break-word; margin-top:0; }}
 </style>
 <div class="ocr-bar">
   <span class="label">{label}:</span>
@@ -232,7 +232,7 @@ pre#_ocr {{ color:#e5e5e5; font-size:14px; line-height:1.6; white-space:pre-wrap
 </div>
 <hr class="ocr-divider">
 <pre id="_ocr">{html_mod.escape(display_text)}</pre>
-""", height=250, scrolling=True)
+""", height=600, scrolling=True)
 
         else:
             st.info("인식된 텍스트가 없습니다.")
