@@ -5,9 +5,16 @@ import time
 import base64
 import io
 import os
+import html as html_mod
 import urllib.request
 import urllib.error
 from PIL import Image, ImageOps
+
+try:
+    from deep_translator import GoogleTranslator
+    HAS_TRANSLATE = True
+except ImportError:
+    HAS_TRANSLATE = False
 
 try:
     import fitz  # pymupdf
@@ -37,6 +44,7 @@ st.markdown("### 🔍 OCR 텍스트 추출")
 # ── File Upload (with callback to clear previous result) ──
 def on_file_change():
     st.session_state.pop("_ocr_text", None)
+    st.session_state.pop("_translated", None)
 
 uploaded_file = st.file_uploader(
     "파일 선택",
@@ -175,16 +183,57 @@ with col_right:
     if "_ocr_text" in st.session_state:
         text = st.session_state["_ocr_text"]
         if text:
-            st.caption("추출된 텍스트:")
-            st.code(text, language=None, line_numbers=False)
+            # ── Handle translation ──
+            do_translate = st.query_params.get("translate") == "1"
+            if do_translate and "_translated" not in st.session_state:
+                st.query_params.pop("translate", None)
+                if HAS_TRANSLATE:
+                    with st.spinner("번역 중입니다..."):
+                        try:
+                            # Auto-detect: Korean ↔ English
+                            korean_chars = sum(1 for c in text if '가' <= c <= '힯')
+                            src = "ko" if korean_chars > len(text) * 0.3 else "en"
+                            tgt = "en" if src == "ko" else "ko"
+                            translated = GoogleTranslator(source=src, target=tgt).translate(text)
+                            st.session_state["_translated"] = translated
+                        except Exception as e:
+                            st.session_state["_translated"] = f"(번역 오류: {e})"
+                else:
+                    st.session_state["_translated"] = "(deep-translator 라이브러리가 필요합니다)"
 
-            st.download_button(
-                "⬇️ 텍스트 다운로드 (.txt)",
-                text,
-                f"{uploaded_file.name.rsplit('.', 1)[0]}.txt",
-                "text/plain",
-                use_container_width=True,
-            )
+            display_text = st.session_state.get("_translated", text)
+            show_original = "_translated" in st.session_state
+
+            # ── Button row: copy / download / translate ──
+            safe_name = html_mod.escape(uploaded_file.name.rsplit(".", 1)[0])
+            # For JS embedding: escape backslash, backtick, and dollar signs
+            js_text = display_text.replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$")
+            label = "번역 결과" if show_original else "추출된 텍스트"
+            trans_label = "🔤 원문 보기" if show_original else "🌐 번역"
+            trans_url = "?translate=1"
+
+            st.components.html(f"""
+<style>
+.ocr-bar {{ display:flex; align-items:center; justify-content:space-between; }}
+.ocr-bar .label {{ color:#9ca3af; font-size:13px; white-space:nowrap; }}
+.ocr-bar .btn-group {{ display:flex; gap:2px; }}
+.ocr-bar .btn {{ background:none; border:none; color:#9ca3af; cursor:pointer; font-size:13px; padding:5px 10px; border-radius:4px; white-space:nowrap; text-decoration:none; display:inline-flex; align-items:center; }}
+.ocr-bar .btn:hover {{ color:#f3f4f6; background:rgba(255,255,255,0.08); }}
+.ocr-divider {{ border:none; border-top:1px solid #333; margin:8px 0 12px; }}
+pre#_ocr { display:none; }}
+</style>
+<div class="ocr-bar">
+  <span class="label">{label}:</span>
+  <span class="btn-group">
+    <button class="btn" onclick="(function(){{var t=document.getElementById('_ocr').textContent;navigator.clipboard.writeText(t).then(function(){{var b=document.getElementById('_cp');b.innerHTML='&#9989; 복사됨';setTimeout(function(){{b.innerHTML='&#128203; 복사';}},1200);}});}})();return false;" id="_cp">📋 복사</button>
+    <button class="btn" onclick="(function(){{var t=document.getElementById('_ocr').textContent;var b=new Blob([t],{{type:'text/plain'}});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='{safe_name}.txt';a.click();URL.revokeObjectURL(u);}})();return false;">⬇️ 다운로드</button>
+    <a class="btn" href="{trans_url}">{trans_label}</a>
+  </span>
+</div>
+<hr class="ocr-divider">
+<pre id="_ocr">{html_mod.escape(display_text)}</pre>
+""", height=250, scrolling=True)
+
         else:
             st.info("인식된 텍스트가 없습니다.")
     elif "_ocr_text" not in st.session_state:
