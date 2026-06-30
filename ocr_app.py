@@ -135,31 +135,18 @@ with col_right:
                     st.warning("인식된 텍스트가 없습니다.")
                     st.session_state["_ocr_text"] = ""
                 else:
-                    # API returns fields in reading order — preserve it
+                    # Use API's lineBreak hints for accurate line grouping
                     lines = []
                     current_line = []
-                    current_y = None
-                    Y_THRESHOLD = 30  # pixels; same-line tolerance
 
                     for field in fields:
-                        v = field.get("boundingPoly", {}).get("vertices", [])
-                        if not v:
-                            continue
-                        # Use center Y of the bounding box
-                        ys = [p.get("y", 0) for p in v]
-                        cy = sum(ys) / len(ys)
                         text = field.get("inferText", "")
-
-                        if current_y is None:
-                            current_line = [text]
-                            current_y = cy
-                        elif abs(cy - current_y) <= Y_THRESHOLD:
-                            current_line.append(text)
-                        else:
-                            if current_line:
-                                lines.append(" ".join(current_line))
-                            current_line = [text]
-                            current_y = cy
+                        if not text:
+                            continue
+                        current_line.append(text)
+                        if field.get("lineBreak", False):
+                            lines.append(" ".join(current_line))
+                            current_line = []
 
                     if current_line:
                         lines.append(" ".join(current_line))
@@ -218,7 +205,8 @@ with col_right:
 <button onclick="var t={safe_js};navigator.clipboard.writeText(t).then(function(){{var b=document.getElementById('cp');b.innerHTML='&#9989; 복사됨';setTimeout(function(){{b.innerHTML='&#128203; 복사';}},1200);}});" id="cp" style="border:none;background:none;color:#6b7280;cursor:pointer;font-size:13px;padding:5px 10px;border-radius:4px;width:100%;" onmouseover="this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.background='none'">📋 복사</button>
 """, height=34)
 
-            st.divider()
+            st.markdown('<hr style="margin:4px 0 10px;border:none;border-top:1px solid #d1d5db;">',
+                        unsafe_allow_html=True)
             st.code(display_text, language=None, line_numbers=False)
 
             # ── Row 2: download + translate below text ──
