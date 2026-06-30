@@ -135,18 +135,45 @@ with col_right:
                     st.warning("인식된 텍스트가 없습니다.")
                     st.session_state["_ocr_text"] = ""
                 else:
-                    # Use API's lineBreak hints for accurate line grouping
+                    # Group fields by vertical overlap (same visual line)
+                    def get_y_range(field):
+                        v = field.get("boundingPoly", {}).get("vertices", [])
+                        if not v:
+                            return (0, 0)
+                        ys = [p.get("y", 0) for p in v]
+                        return (min(ys), max(ys))
+
                     lines = []
                     current_line = []
+                    current_top, current_bottom = 0, 0
 
                     for field in fields:
                         text = field.get("inferText", "")
                         if not text:
                             continue
-                        current_line.append(text)
-                        if field.get("lineBreak", False):
-                            lines.append(" ".join(current_line))
-                            current_line = []
+
+                        ftop, fbottom = get_y_range(field)
+                        fheight = fbottom - ftop
+
+                        if not current_line:
+                            current_line = [text]
+                            current_top, current_bottom = ftop, fbottom
+                        else:
+                            # Vertical overlap ratio
+                            overlap_top = max(current_top, ftop)
+                            overlap_bottom = min(current_bottom, fbottom)
+                            overlap = max(0, overlap_bottom - overlap_top)
+                            ch = current_bottom - current_top
+                            min_h = min(ch, fheight) if ch > 0 and fheight > 0 else 0
+                            # Same line if overlap > 40% of the shorter box
+                            if min_h > 0 and overlap > min_h * 0.4:
+                                current_line.append(text)
+                                current_top = min(current_top, ftop)
+                                current_bottom = max(current_bottom, fbottom)
+                            else:
+                                lines.append(" ".join(current_line))
+                                current_line = [text]
+                                current_top, current_bottom = ftop, fbottom
 
                     if current_line:
                         lines.append(" ".join(current_line))
