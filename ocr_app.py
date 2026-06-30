@@ -135,7 +135,7 @@ with col_right:
                     st.warning("인식된 텍스트가 없습니다.")
                     st.session_state["_ocr_text"] = ""
                 else:
-                    # ── Pass 1: group fields into lines, record gaps ──
+                    # Group fields by vertical overlap — pairwise comparison
                     def get_y_range(field):
                         v = field.get("boundingPoly", {}).get("vertices", [])
                         if not v:
@@ -143,10 +143,9 @@ with col_right:
                         ys = [p.get("y", 0) for p in v]
                         return (min(ys), max(ys))
 
-                    raw_lines = []
+                    lines = []
                     current_line = []
                     prev_top = prev_bottom = 0
-                    line_bottom = 0
 
                     for field in fields:
                         text = field.get("inferText", "")
@@ -159,7 +158,6 @@ with col_right:
                         if not current_line:
                             current_line = [text]
                             prev_top, prev_bottom = ftop, fbottom
-                            line_bottom = fbottom
                         else:
                             overlap_top = max(prev_top, ftop)
                             overlap_bottom = min(prev_bottom, fbottom)
@@ -169,37 +167,13 @@ with col_right:
                             if min_h > 0 and overlap > min_h * 0.25:
                                 current_line.append(text)
                                 prev_top, prev_bottom = ftop, fbottom
-                                line_bottom = max(line_bottom, fbottom)
                             else:
-                                raw_lines.append((" ".join(current_line), line_bottom, ftop))
+                                lines.append(" ".join(current_line))
                                 current_line = [text]
                                 prev_top, prev_bottom = ftop, fbottom
-                                line_bottom = fbottom
 
                     if current_line:
-                        raw_lines.append((" ".join(current_line), line_bottom, None))
-
-                    # ── Compute typical line gap ──
-                    gaps = []
-                    for i in range(1, len(raw_lines)):
-                        _, prev_bottom, _ = raw_lines[i - 1]
-                        _, _, curr_top = raw_lines[i]
-                        if curr_top is not None and prev_bottom is not None:
-                            g = curr_top - prev_bottom
-                            if g > 0:
-                                gaps.append(g)
-
-                    typical_gap = sorted(gaps)[len(gaps) // 2] if gaps else 10  # median
-
-                    # ── Pass 2: insert paragraph breaks ──
-                    lines = []
-                    for i, (line_text, _, curr_top) in enumerate(raw_lines):
-                        if i > 0 and curr_top is not None:
-                            prev_bottom = raw_lines[i - 1][1]
-                            gap = curr_top - prev_bottom
-                            if gap > typical_gap * 1.3 and gap > 5:
-                                lines.append("")  # paragraph break
-                        lines.append(line_text)
+                        lines.append(" ".join(current_line))
 
                     extracted_text = "\n".join(lines)
                     st.session_state["_ocr_text"] = extracted_text
