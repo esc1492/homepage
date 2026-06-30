@@ -197,7 +197,7 @@ with col_right:
                         if i > 0 and curr_top is not None:
                             prev_bottom = raw_lines[i - 1][1]
                             gap = curr_top - prev_bottom
-                            if gap > typical_gap * 2.0 and gap > 5:
+                            if gap > typical_gap * 1.3 and gap > 5:
                                 lines.append("")  # paragraph break
                         lines.append(line_text)
 
