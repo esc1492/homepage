@@ -90,7 +90,7 @@ with col_left:
         st.image(display_img, use_container_width=True)
 
 with col_right:
-    do_ocr = st.button("🔍 텍스트 추출", type="primary", use_container_width=True)
+    do_ocr = st.button("🔍 텍스트 추출", type="secondary", use_container_width=True)
 
     if do_ocr:
         with st.spinner("OCR 처리 중입니다..."):
