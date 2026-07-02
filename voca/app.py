@@ -1,7 +1,10 @@
+import json
+import os
 import streamlit as st
 import pandas as pd
 from auth import get_credentials, logout
 from sheets import read_sheet, write_sheet, append_row, delete_row, get_sheet_list, create_worksheet
+from openai import OpenAI
 
 st.set_page_config(page_title="English Vocabulary Study", page_icon="📖", layout="wide", initial_sidebar_state="collapsed")
 
@@ -83,7 +86,7 @@ if not sheet_url:
     st.stop()
 
 # ── 탭 구성 ───────────────────────────────────────
-tab_view, tab_append, tab_study = st.tabs(["📝 편집", "➕ 행 추가", "📚 학습"])
+tab_view, tab_append, tab_study, tab_chatbot = st.tabs(["📝 편집", "➕ 행 추가", "📚 학습", "🤖 텍스트 가져오기"])
 
 # ── 탭 1: 데이터 보기 ─────────────────────────────
 with tab_view:
@@ -260,3 +263,147 @@ with tab_study:
             st.rerun()
     else:
         st.info("데이터를 불러올 수 없습니다.")
+
+# ── 탭 4: OCR 텍스트 가져오기 ──────────────────────
+with tab_chatbot:
+    st.subheader("OCR 텍스트에서 영단어 추출")
+
+    api_key = st.secrets.get("DEEPSEEK_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")
+    if not api_key:
+        st.error(
+            "DEEPSEEK_API_KEY가 설정되지 않았습니다.\n\n"
+            "`.streamlit/secrets.toml`에 `DEEPSEEK_API_KEY = \"sk-...\"`를 추가해주세요."
+        )
+        st.stop()
+
+    ocr_text = st.text_area(
+        "OCR 텍스트 붙여넣기",
+        height=200,
+        placeholder="OCR로 추출한 영어 텍스트를 여기에 붙여넣으세요...",
+        value=st.session_state.get("_chatbot_ocr", ""),
+    )
+
+    if st.button("🤖 단어 추출", type="primary", use_container_width=True):
+        if not ocr_text.strip():
+            st.warning("텍스트를 입력해주세요.")
+        else:
+            with st.spinner("DeepSeek가 단어를 분석 중입니다..."):
+                client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+                system_prompt = (
+                    "You are an English vocabulary extractor. Given OCR text, extract English words and phrases "
+                    "that are worth studying for Korean learners.\n\n"
+                    "Rules:\n"
+                    "1. Extract individual words, idioms, and phrasal verbs that have educational value.\n"
+                    "2. Filter out basic stop words (the, a, an, is, are, was, were, be, been, have, has, had, do, does, did, will, would, can, could, may, might, shall, should, it, they, we, you, he, she, I, me, him, her, us, them, my, your, his, our, their, this, that, these, those, in, on, at, to, for, of, from, by, with, about, as, into, through, during, before, after, above, below, between, under, again, then, than, so, if, but, or, and, not, no, nor, yet, both, either, neither, each, every, all, any, few, more, most, other, some, such, only, own, same, very, just, because, as, until, while).\n"
+                    "3. For idioms and phrasal verbs, include the full phrase (e.g., 'look up to', 'break down').\n"
+                    "4. Provide accurate, natural Korean translations.\n"
+                    "5. If a word appears in multiple forms (run, ran, running), use the base form.\n"
+                    "6. Output ONLY a valid JSON array of objects. No markdown, no code fences, no explanation.\n\n"
+                    'Output format:\n[{"english": "word or phrase", "korean": "한국어 번역"}, ...]'
+                )
+
+                try:
+                    response = client.chat.completions.create(
+                        model="deepseek-v4-flash",
+                        max_tokens=4096,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": f"Extract English vocabulary from this text and provide Korean translations:\n\n{ocr_text}"},
+                        ],
+                    )
+
+                    raw = response.choices[0].message.content
+                    cleaned = raw.strip()
+                    if "```json" in cleaned:
+                        cleaned = cleaned.split("```json")[1].split("```")[0].strip()
+                    elif "```" in cleaned:
+                        cleaned = cleaned.split("```")[1].split("```")[0].strip()
+
+                    vocab_list = json.loads(cleaned)
+
+                    if not isinstance(vocab_list, list) or len(vocab_list) == 0:
+                        st.warning("추출된 단어가 없습니다. 텍스트에 학습할 만한 영어 단어가 있는지 확인해주세요.")
+                    else:
+                        st.session_state["_chatbot_vocab"] = vocab_list
+                        st.session_state["_chatbot_ocr"] = ocr_text
+                        st.success(f"{len(vocab_list)}개 단어를 추출했습니다.")
+                        st.rerun()
+
+                except json.JSONDecodeError:
+                    st.error("DeepSeek 응답을 파싱하는 데 실패했습니다. 다시 시도해주세요.")
+                    with st.expander("원본 응답 보기"):
+                        st.code(raw)
+                except Exception as e:
+                    st.error(f"API 오류: {type(e).__name__}: {e}")
+
+    st.divider()
+
+    if "_chatbot_vocab" in st.session_state and st.session_state["_chatbot_vocab"]:
+        vocab_list = st.session_state["_chatbot_vocab"]
+        df_vocab = pd.DataFrame(vocab_list)
+
+        if "english" not in df_vocab.columns:
+            df_vocab["english"] = ""
+        if "korean" not in df_vocab.columns:
+            df_vocab["korean"] = ""
+
+        st.subheader(f"추출된 단어 ({len(df_vocab)}개)")
+        st.caption("필요에 따라 단어를 추가/수정/삭제한 후 아래에서 저장하세요.")
+
+        edited_df = st.data_editor(
+            df_vocab[["english", "korean"]],
+            use_container_width=True,
+            num_rows="dynamic",
+            key="chatbot_editor",
+            column_config={
+                "english": st.column_config.TextColumn("English", width="medium"),
+                "korean": st.column_config.TextColumn("한국어", width="medium"),
+            },
+            hide_index=False,
+        )
+
+        st.divider()
+        st.subheader("새 워크시트에 저장")
+
+        col_name, col_btn = st.columns([3, 1])
+        with col_name:
+            new_ws_name = st.text_input(
+                "워크시트 이름",
+                placeholder="예: Chapter 1 단어",
+                key="chatbot_new_ws",
+            )
+        with col_btn:
+            save_clicked = st.button("💾 저장", type="primary", use_container_width=True)
+
+        if save_clicked:
+            ws_name = new_ws_name.strip()
+            if not ws_name:
+                st.warning("워크시트 이름을 입력해주세요.")
+            else:
+                existing = get_sheet_list(creds, sheet_url)
+                if ws_name in existing:
+                    st.warning(f"'{ws_name}' 시트가 이미 존재합니다. 다른 이름을 사용해주세요.")
+                else:
+                    ok = create_worksheet(
+                        creds, sheet_url, ws_name,
+                        headers=["English", "Korean"],
+                    )
+                    if ok:
+                        saved_count = 0
+                        for _, row in edited_df.iterrows():
+                            eng = "" if pd.isna(row.get("english")) else str(row["english"])
+                            kor = "" if pd.isna(row.get("korean")) else str(row["korean"])
+                            if eng.strip() or kor.strip():
+                                append_row(creds, sheet_url, ws_name, [eng, kor])
+                                saved_count += 1
+
+                        st.success(f"'{ws_name}' 시트에 {saved_count}개 단어가 저장되었습니다.")
+                        st.balloons()
+                        st.cache_data.clear()
+
+                        for key in ["_chatbot_vocab", "_chatbot_ocr"]:
+                            if key in st.session_state:
+                                del st.session_state[key]
+                        st.rerun()
+    else:
+        st.info("OCR 텍스트를 붙여넣고 '단어 추출' 버튼을 눌러주세요.")
