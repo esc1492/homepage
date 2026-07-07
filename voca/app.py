@@ -366,10 +366,12 @@ with tab_chatbot:
         st.divider()
         st.subheader("새 워크시트에 저장")
 
+        st.caption("워크시트 이름")
         col_name, col_btn = st.columns([3, 1])
         with col_name:
             new_ws_name = st.text_input(
                 "워크시트 이름",
+                label_visibility="collapsed",
                 placeholder="예: Chapter 1 단어",
                 key="chatbot_new_ws",
             )
