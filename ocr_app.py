@@ -226,7 +226,40 @@ with col_right:
             with col_copy:
                 safe_js = json.dumps(display_text)
                 st.components.v1.html(f"""
-<button onclick="var t={safe_js};navigator.clipboard.writeText(t).then(function(){{var b=document.getElementById('cp');b.innerHTML='&#9989; 복사됨';setTimeout(function(){{b.innerHTML='&#128203; 복사';}},1200);}});" id="cp" style="border:none;background:none;color:#6b7280;cursor:pointer;font-size:13px;padding:5px 10px;border-radius:4px;width:100%;" onmouseover="this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.background='none'">📋 복사</button>
+<script>
+function copyText(text) {{
+    var btn = document.getElementById('cp');
+    function done() {{
+        btn.innerHTML = '&#9989; 복사됨';
+        setTimeout(function(){{ btn.innerHTML = '&#128203; 복사'; }}, 1200);
+    }}
+    function fail() {{
+        btn.innerHTML = '&#10060; 실패';
+        setTimeout(function(){{ btn.innerHTML = '&#128203; 복사'; }}, 1200);
+    }}
+    if (navigator.clipboard && navigator.clipboard.writeText) {{
+        navigator.clipboard.writeText(text).then(done).catch(function(){{ fallback(text, done, fail); }});
+    }} else {{
+        fallback(text, done, fail);
+    }}
+}}
+function fallback(text, done, fail) {{
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '-9999px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {{
+        var ok = document.execCommand('copy');
+        if (ok) done(); else fail();
+    }} catch(e) {{ fail(); }}
+    document.body.removeChild(ta);
+}}
+</script>
+<button onclick="copyText({safe_js});" id="cp" style="border:none;background:none;color:#6b7280;cursor:pointer;font-size:13px;padding:5px 10px;border-radius:4px;width:100%;" onmouseover="this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.background='none'">📋 복사</button>
 """, height=34)
 
             st.markdown('<hr style="margin:4px 0 10px;border:none;border-top:1px solid #d1d5db;">',
