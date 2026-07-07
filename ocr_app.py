@@ -219,22 +219,11 @@ with col_right:
             trans_label = "🔤 원문" if show_original else "🌐 번역"
             safe_name = html_mod.escape(uploaded_file.name.rsplit(".", 1)[0])
 
-            # ── Row 1: label + copy button (right-aligned) ──
-            col_label, col_copy = st.columns([5, 0.7])
-            with col_label:
-                st.caption(f"{label}:")
-            with col_copy:
-                safe_html = html_mod.escape(display_text)
-                st.markdown(f"""
-<span id="cptext" style="display:none;">{safe_html}</span>
-<button onclick="var t=document.getElementById('cptext').textContent;navigator.clipboard.writeText(t).then(function(){{var b=document.getElementById('cpbtn');b.innerHTML='&#9989; 복사됨';setTimeout(function(){{b.innerHTML='&#128203; 복사';}},1200);}}).catch(function(){{var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);var b=document.getElementById('cpbtn');b.innerHTML='&#9989; 복사됨';setTimeout(function(){{b.innerHTML='&#128203; 복사';}},1200);}});" id="cpbtn" style="border:none;background:none;color:#6b7280;cursor:pointer;font-size:13px;padding:5px 10px;border-radius:4px;width:100%;" onmouseover="this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.background='none'">📋 복사</button>
-""", unsafe_allow_html=True)
+            # ── Text display with native copy support ──
+            st.caption(f"{label}:")
+            st.text_area(" ", display_text, height=250, label_visibility="collapsed", key=f"ocr_{show_original}")
 
-            st.markdown('<hr style="margin:4px 0 10px;border:none;border-top:1px solid #d1d5db;">',
-                        unsafe_allow_html=True)
-            st.code(display_text, language=None, line_numbers=False)
-
-            # ── Row 2: download + translate below text ──
+            # ── download + translate below text ──
             col_dl, col_trans = st.columns([0.9, 0.9])
             with col_dl:
                 st.download_button("⬇️ 다운로드", display_text, f"{safe_name}.txt", "text/plain",
