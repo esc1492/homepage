@@ -219,18 +219,13 @@ with col_right:
             trans_label = "🔤 원문" if show_original else "🌐 번역"
             safe_name = html_mod.escape(uploaded_file.name.rsplit(".", 1)[0])
 
-            # ── Row 1: label + copy area (right-aligned) ──
-            col_label, col_copy = st.columns([5, 0.7])
-            with col_label:
-                st.caption(f"{label}:")
-            with col_copy:
-                st.text_area(" ", display_text, height=68, label_visibility="collapsed", key=f"cp_{show_original}")
-
+            # ── Text display ──
+            st.caption(f"{label}:")
             st.markdown('<hr style="margin:4px 0 10px;border:none;border-top:1px solid #d1d5db;">',
                         unsafe_allow_html=True)
             st.code(display_text, language=None, line_numbers=False)
 
-            # ── Row 2: download + translate below text ──
+            # ── download + translate below text ──
             col_dl, col_trans = st.columns([0.9, 0.9])
             with col_dl:
                 st.download_button("⬇️ 다운로드", display_text, f"{safe_name}.txt", "text/plain",
