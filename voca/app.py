@@ -284,7 +284,7 @@ with tab_chatbot:
         value=st.session_state.get("_chatbot_ocr", ""),
     )
 
-    if st.button("🤖 단어 추출", type="primary", use_container_width=True):
+    if st.button("🤖 단어 추출", type="secondary", use_container_width=True):
         if not ocr_text.strip():
             st.warning("텍스트를 입력해주세요.")
         else:
@@ -376,7 +376,7 @@ with tab_chatbot:
                 key="chatbot_new_ws",
             )
         with col_btn:
-            save_clicked = st.button("💾 저장", type="primary", use_container_width=True)
+            save_clicked = st.button("💾 저장", type="secondary", use_container_width=True)
 
         if save_clicked:
             ws_name = new_ws_name.strip()
