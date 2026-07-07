@@ -119,7 +119,7 @@ with tab_view:
                 csv = df.to_csv(index=False).encode("utf-8-sig")
                 st.download_button("⬇️ CSV 다운로드", csv, "data.csv", "text/csv")
             with col_save:
-                if st.button("💾 저장", use_container_width=True):
+                if st.button("💾 저장", use_container_width=True, key="save_edit"):
                     changes = 0
                     for row_idx in range(len(df)):
                         for col_idx in range(len(df.columns)):
@@ -376,7 +376,7 @@ with tab_chatbot:
                 key="chatbot_new_ws",
             )
         with col_btn:
-            save_clicked = st.button("💾 저장", type="secondary", use_container_width=True)
+            save_clicked = st.button("💾 저장", type="secondary", use_container_width=True, key="save_chatbot")
 
         if save_clicked:
             ws_name = new_ws_name.strip()
