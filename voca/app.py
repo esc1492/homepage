@@ -268,28 +268,13 @@ with tab_study:
 with tab_chatbot:
     st.subheader("OCR 텍스트에서 영단어 추출")
 
-    # Debug: st.secrets에 어떤 키들이 있는지 확인
-    secret_keys = list(st.secrets.keys()) if st.secrets else []
-
-    api_key = None
-    if "DEEPSEEK_API_KEY" in st.secrets:
-        api_key = st.secrets["DEEPSEEK_API_KEY"]
-    if not api_key:
-        api_key = os.environ.get("DEEPSEEK_API_KEY")
-
+    api_key = st.secrets.get("DEEPSEEK_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")
     if not api_key:
         st.error(
             "DEEPSEEK_API_KEY가 설정되지 않았습니다.\n\n"
             "Streamlit Cloud: 대시보드 Settings → Secrets에 다음을 추가해주세요:\n"
-            '```\nDEEPSEEK_API_KEY = "sk-..."\n```\n\n'
-            "참고: 앱 재배포가 필요할 수 있습니다 (리부트)."
+            '```\nDEEPSEEK_API_KEY = "sk-..."\n```'
         )
-        with st.expander("디버그: 현재 Secrets 키 목록"):
-            if secret_keys:
-                st.write(f"총 {len(secret_keys)}개 키: {', '.join(sorted(secret_keys))}")
-            else:
-                st.write("Secrets에 등록된 키가 없습니다.")
-            st.write(f"DEEPSEEK_API_KEY 포함 여부: {'DEEPSEEK_API_KEY' in st.secrets}")
         st.stop()
 
     ocr_text = st.text_area(
