@@ -513,60 +513,6 @@ body {
   line-height: 1.2;
 }
 
-/* === Stocks === */
-.stock-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-8) 0;
-  border-bottom: 1px solid var(--color-highlight-beige);
-  cursor: pointer;
-  transition: opacity 150ms;
-}
-.stock-row:last-child { border-bottom: none; }
-.stock-row:hover { opacity: 0.7; }
-
-.sname { font-size: 13px; font-weight: 500; color: var(--color-inkwell); }
-.sticker { font-size: 10px; color: var(--color-muted-stone); margin-top: 1px; letter-spacing: 0.04em; }
-.sright { text-align: right; }
-.sprice { font-size: 14px; font-weight: 500; color: var(--color-inkwell); font-variant-numeric: tabular-nums; }
-.schange { font-size: 11px; margin-top: 1px; font-variant-numeric: tabular-nums; }
-.up { color: var(--color-forest-green-action); }
-.dn { color: #c94a3a; }
-.flat { color: var(--color-muted-stone); }
-
-.add-stock-form {
-  display: none;
-  gap: 6px;
-  margin-bottom: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.add-stock-form.open { display: flex; }
-.add-stock-form input { min-width: 80px; }
-
-.stock-row { position: relative; }
-.stock-click { flex: 1; display: flex; align-items: center; justify-content: space-between; min-width: 0; cursor: pointer; }
-.stock-del {
-  font-size: 13px;
-  color: var(--color-muted-stone);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px 0 4px 6px;
-  opacity: 0.4;
-  transition: opacity 150ms;
-}
-.stock-del:hover { opacity: 1; color: #c94a3a; }
-
-.updated {
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  color: var(--color-muted-stone);
-  text-align: right;
-  margin-top: var(--spacing-8);
-}
-
 .msg {
   font-size: 12px;
   color: var(--color-muted-stone);
@@ -798,7 +744,6 @@ body {
     <div class="dropdown-section"><h3>바로가기</h3>
       <div class="dropdown-items">
         <div class="dropdown-item" data-scroll="weather-card"><div class="icon">🌤</div><div class="info"><span class="title">날씨</span><span class="desc">서울 날씨 · 미세먼지 · 주간 예보</span></div></div>
-        <div class="dropdown-item" data-scroll="stock-card"><div class="icon">📈</div><div class="info"><span class="title">관심 종목</span><span class="desc">국내 주식 현재가 · 등락률</span></div></div>
         <div class="dropdown-item" data-scroll="todo-card"><div class="icon">✅</div><div class="info"><span class="title">할 일</span><span class="desc">나의 할 일 · 가족 할 일</span></div></div>
         <div class="dropdown-item" data-link="https://homepage-gjxpbxm4hvrb5ztmpnrkbi.streamlit.app/"><div class="icon">🐭</div><div class="info"><span class="title">챗봇</span><span class="desc">미키</span></div></div>
         <div class="dropdown-item" data-link="https://homepage-3yhnryaak9uzgxrkmedepf.streamlit.app"><div class="icon">📚</div><div class="info"><span class="title">학습</span><span class="desc">영단어</span></div></div>
@@ -883,16 +828,6 @@ body {
         </div>
       </article>
 
-      <article id="stock-card" class="card">
-        <div class="card-title"><span>관심 종목</span><span><button class="btn-ghost" onclick="toggleAddStock()">+ 추가</button><button class="btn-ghost" onclick="loadStocks()">새로고침</button></span></div>
-        <div id="add-stock-form" class="add-stock-form">
-          <input id="add-stock-name" type="text" placeholder="종목명" class="todo-input" style="flex:1;min-width:70px">
-          <button onclick="addStock()" class="btn-outline" style="flex-shrink:0">추가</button>
-          <button onclick="toggleAddStock()" class="btn-ghost" style="flex-shrink:0">취소</button>
-        </div>
-        <div id="stock-list"><div class="msg">불러오는 중...</div></div>
-        <div class="updated" id="stock-time"></div>
-      </article>
     </div>
 
     <div class="sidebar">
@@ -1070,77 +1005,6 @@ function loadWeather(){
   });
 }
 
-var STOCKS=[
-  {ticker:'005930',name:'삼성전자'},
-  {ticker:'034020',name:'두산에너빌리티'},
-  {ticker:'035420',name:'NAVER'},
-  {ticker:'018260',name:'삼성에스디에스'},
-  {ticker:'000660',name:'SK하이닉스'},
-  {ticker:'064350',name:'현대로템'},
-];
-function getStockList(){
-  var saved=localStorage.getItem('myStocks');
-  return saved?JSON.parse(saved):STOCKS.slice();
-}
-var stockList=getStockList();
-var stockNameMap={};
-function saveStockList(){localStorage.setItem('myStocks',JSON.stringify(stockList));}
-function toggleAddStock(){
-  document.getElementById('add-stock-form').classList.toggle('open');
-  document.getElementById('add-stock-name').focus();
-}
-function addStock(){
-  var name=document.getElementById('add-stock-name').value.trim();
-  if(!name) return;
-  var ticker=stockNameMap[name];
-  if(!ticker){alert('\''+name+'\'의 종목코드를 찾을 수 없습니다.');return;}
-  if(stockList.some(function(s){return s.ticker===ticker;})){alert('이미 등록된 종목입니다.');return;}
-  stockList.push({ticker:ticker,name:name});
-  saveStockList(); loadStocks();
-  document.getElementById('add-stock-name').value='';
-  toggleAddStock();
-}
-function deleteStock(ticker){
-  stockList=stockList.filter(function(s){return s.ticker!==ticker;});
-  saveStockList(); loadStocks();
-}
-function loadStocks(){
-  var el=document.getElementById('stock-list');
-  el.innerHTML='<div class="msg">불러오는 중...</div>';
-  fetch('./data.json?t='+Date.now())
-  .then(function(r){return r.json();})
-  .then(function(json){
-    var stocks=json.stocks;
-    if(!stocks||!Object.keys(stocks).length){
-      el.innerHTML='<div class="msg">데이터를 불러올 수 없습니다.</div>';
-      return;
-    }
-    if(json.stockNameMap) stockNameMap=json.stockNameMap;
-    el.innerHTML=stockList.map(function(s){
-      var d=stocks[s.ticker];
-      if(!d||!d.closePrice) return '<div class="stock-row"><div class="stock-click"><div><div class="sname">'+s.name+'</div><div class="sticker">'+s.ticker+'</div></div><div class="sright"><div class="schange flat">–</div></div></div><button class="stock-del" onclick="event.stopPropagation();deleteStock(\''+s.ticker+'\')">✕</button></div>';
-      var rate=parseFloat(d.fluctuationsRatio)||0;
-      var code=d.compareToPreviousPrice?d.compareToPreviousPrice.code:'';
-      var up=code==='2'||code==='1';
-      var dn=code==='5'||code==='4';
-      var cls=up?'up':dn?'dn':'flat';
-      var sign=up?'+':'';
-      return '<div class="stock-row"><div class="stock-click" onclick="window.open(\'https://m.stock.naver.com/domestic/stock/'+s.ticker+'\',\'_blank\')">'
-        +'<div><div class="sname">'+d.stockName+'</div><div class="sticker">'+s.ticker+'</div></div>'
-        +'<div class="sright"><div class="sprice">'+d.closePrice+'원</div>'
-        +'<div class="schange '+cls+'">'+sign+rate.toFixed(2)+'% ('+d.compareToPreviousClosePrice+')</div></div></div>'
-        +'<button class="stock-del" onclick="event.stopPropagation();deleteStock(\''+s.ticker+'\')">✕</button></div>';
-    }).join('');
-    var updated=new Date(json.updated);
-    var t=updated.toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-    document.getElementById('stock-time').textContent=t+' 기준 · 장중 10분 자동 업데이트';
-  })
-  .catch(function(e){
-    el.innerHTML='<div class="msg">데이터를 불러올 수 없습니다.</div>';
-    console.error(e);
-  });
-}
-
 
 var SCRIPT_URL='https://script.google.com/macros/s/AKfycbwT5m4gBvs7_WpM9UmE1A7BfI6sLrfuI1yKxDHY0no3s-MHsA6nW8bFiarS1EEv5sNiRA/exec';
 var myTodos=JSON.parse(localStorage.getItem('myTodos')||'[]');
@@ -1253,11 +1117,9 @@ var passwordHash=null;
 fetch('./data.json?t='+Date.now()).then(function(r){return r.json();}).then(function(d){passwordHash=d.passwordHash||null;}).catch(function(){});
 if(localStorage.getItem('loggedIn')) document.getElementById('loginBtn').classList.add('logged-in');
 loadWeather();
-loadStocks();
 document.getElementById('my-todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addMyTodo();});
 renderMyTodos();
 document.getElementById('todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addTodo();});
-document.getElementById('add-stock-name').addEventListener('keydown',function(e){if(e.key==='Enter')addStock();});
 loadTodosFromGithub();
 (function(){
   var imgs=document.querySelectorAll('.deco-wrap .deco-image');
