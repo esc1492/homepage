@@ -9,7 +9,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Korean-language personal start page (시작 페이지) with weather, stock watchlist, news, and todo lists. Single HTML file (`index.html`) with inline CSS and vanilla JS. Data is fetched by a Python script and served via static `data.json`.
+Korean-language personal start page (시작 페이지) with weather, stock watchlist, news, and todo lists. Single HTML file (`index.html`) with inline CSS and vanilla JS. Data is fetched by a Python script and served via static `data.json`. Deployed on Vercel; login is Supabase email/password auth.
+
+## Deployment
+
+- Hosted on Vercel (project `homepage`, team `dwkim`) — static file deploy, no build step
+- `vercel.json` sets `outputDirectory: "."` and serves `index.html` + `data.json`
+- Production URL: https://homepage-dwkim.vercel.app
 
 ## Data Pipeline
 
@@ -30,9 +36,9 @@ fetch.py (Python 3, no deps) → data.json ← index.html (fetch + render)
 
 ## Frontend Architecture
 
-- **Single file**: `index.html` (~450 lines)
+- **Single file**: `index.html` (~1200 lines)
 - **No framework, no build step** — pure HTML/CSS/JS
-- **No external JS dependencies** — everything inline
+- **One external JS dependency** — Supabase loaded from CDN (`@supabase/supabase-js@2`) for auth only
 - Dark theme (CSS custom properties for consistent tokens)
 - Responsive: 2-column layout on desktop, 1-column on mobile (768px breakpoint)
 
@@ -66,6 +72,18 @@ Sync the same ticker list in `fetch.py` line ~35 (`tickers` array).
 - Open-Meteo (free, no API key): 7-day forecast + air quality
 - Location: Seoul (hardcoded lat/lon)
 - Weather code → icon/desc mapping in `loadWeather()`
+
+## Auth / Login (Supabase)
+
+Login modal authenticates via Supabase Auth (email/password):
+
+- **Fixed email**: `dwkim1492@gmail.com` (hardcoded in `index.html`)
+- Supabase JS loaded from CDN (`https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2`)
+- Supabase URL + publishable key hardcoded inline near the bottom of `index.html` (`SUPABASE_URL` / `SUPABASE_KEY`); publishable key is safe to expose client-side
+- Login: `signInWithPassword({ email, password })` → sets `localStorage.loggedIn`, opens the Streamlit app in a new tab
+- Logout: `signOut()` + removes `localStorage.loggedIn`
+
+Note: `package.json` Supabase deps (`@supabase/supabase-js`, `@supabase/ssr`) and `.env.local` (`NEXT_PUBLIC_*`) are currently unused by the static site (CDN + inline config) — reserved for a planned Next.js migration.
 
 ## Todo Lists
 

@@ -1148,11 +1148,6 @@ loadTodosFromGithub();
   </div>
 </div>
 <script>
-function sha256(str){
-  return crypto.subtle.digest('SHA-256',new TextEncoder().encode(str)).then(function(buf){
-    return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
-  });
-}
 function openLoginModal(){
   document.getElementById('loginModal').classList.add('open');
   document.getElementById('loginPass').focus();
