@@ -1100,7 +1100,11 @@ function renderTodos(){
   document.getElementById('todo-count').textContent=done+'/'+todos.length+' 완료';
 }
 function addTodo(){
-  if(!currentToken) return;
+  if(!currentToken){
+    document.getElementById('todo-list').innerHTML='<div class="msg">로그인이 필요합니다.</div>';
+    document.getElementById('todo-count').textContent='';
+    return;
+  }
   var inp=document.getElementById('todo-inp');
   var text=inp.value.trim();
   if(!text) return;
@@ -1220,7 +1224,7 @@ var SUPABASE_KEY = 'sb_publishable_XVSK5Evl0W64_7h-XLZ1cQ_rnzo3qMC';
 var sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* === 로그인 상태 복원 및 가족 투두 로드 === */
-sbClient.auth.onAuthStateChange(function(event,session){
+function applyAuthState(session){
   if(session){
     currentToken=session.access_token;
     localStorage.setItem('loggedIn','1');
@@ -1230,9 +1234,13 @@ sbClient.auth.onAuthStateChange(function(event,session){
     localStorage.removeItem('loggedIn');
     document.getElementById('loginBtn').classList.remove('logged-in');
   }
-  if(event==='SIGNED_IN'||event==='SIGNED_OUT'){
-    loadTodosFromGithub();
-  }
+  loadTodosFromGithub();
+}
+sbClient.auth.onAuthStateChange(function(event,session){
+  applyAuthState(session);
+});
+sbClient.auth.getSession().then(function(res){
+  applyAuthState(res.data && res.data.session);
 });
 </script>
 </body>
