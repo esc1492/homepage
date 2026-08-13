@@ -1008,7 +1008,8 @@ function loadWeather(){
 }
 
 
-var SCRIPT_URL='https://script.google.com/macros/s/AKfycbwT5m4gBvs7_WpM9UmE1A7BfI6sLrfuI1yKxDHY0no3s-MHsA6nW8bFiarS1EEv5sNiRA/exec';
+var SCRIPT_URL='https://script.google.com/macros/s/AKfycbwgv1utLiGy-4m2IPJpXhJG1_VPim4AyZM0jdnNUu1WU2ug-mbzraJxKhxuflD2fdjYCQ/exec';
+var currentToken=null;
 var myTodos=JSON.parse(localStorage.getItem('myTodos')||'[]');
 function saveMyTodos(){localStorage.setItem('myTodos',JSON.stringify(myTodos));}
 function renderMyTodos(){
@@ -1053,9 +1054,15 @@ function clearMyDone(){
   renderMyTodos();
 }
 function loadTodosFromGithub(){
-  fetch(SCRIPT_URL+'?action=getAll')
+  if(!currentToken){
+    document.getElementById('todo-list').innerHTML='<div class="msg">로그인이 필요합니다.</div>';
+    document.getElementById('todo-count').textContent='';
+    return;
+  }
+  fetch(SCRIPT_URL+'?action=getAll&token='+encodeURIComponent(currentToken))
   .then(function(r){return r.json();})
   .then(function(data){
+    if(data&&data.error){throw new Error(data.error);}
     todos=data||[];
     renderTodos();
   })
@@ -1066,7 +1073,8 @@ function loadTodosFromGithub(){
 }
 
 function saveTodosToGithub(action,payload){
-  var body=Object.assign({action:action},payload);
+  if(!currentToken) return;
+  var body=Object.assign({action:action,token:currentToken},payload);
   fetch(SCRIPT_URL,{
     method:'POST',
     body:JSON.stringify(body)
@@ -1090,6 +1098,7 @@ function renderTodos(){
   document.getElementById('todo-count').textContent=done+'/'+todos.length+' 완료';
 }
 function addTodo(){
+  if(!currentToken) return;
   var inp=document.getElementById('todo-inp');
   var text=inp.value.trim();
   if(!text) return;
@@ -1097,7 +1106,7 @@ function addTodo(){
   todos.push(newTodo);
   renderTodos();
   inp.value='';
-  saveTodosToGithub('add',{text:text});
+  saveTodosToGithub('add',{id:newTodo.id,text:text});
 }
 function toggleTodo(i){
   todos[i].done=!todos[i].done;
@@ -1115,12 +1124,10 @@ function clearDone(){
   renderTodos();
   saveTodosToGithub('clearDone',{});
 }
-if(localStorage.getItem('loggedIn')) document.getElementById('loginBtn').classList.add('logged-in');
 loadWeather();
 document.getElementById('my-todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addMyTodo();});
 renderMyTodos();
 document.getElementById('todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addTodo();});
-loadTodosFromGithub();
 (function(){
   var imgs=document.querySelectorAll('.deco-wrap .deco-image');
   var i=0;
@@ -1206,6 +1213,22 @@ document.getElementById('loginPass').addEventListener('keydown',function(e){
 var SUPABASE_URL = 'https://oggzgullnohqehthewuw.supabase.co';
 var SUPABASE_KEY = 'sb_publishable_XVSK5Evl0W64_7h-XLZ1cQ_rnzo3qMC';
 var sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* === 로그인 상태 복원 및 가족 투두 로드 === */
+sbClient.auth.onAuthStateChange(function(event,session){
+  if(session){
+    currentToken=session.access_token;
+    localStorage.setItem('loggedIn','1');
+    document.getElementById('loginBtn').classList.add('logged-in');
+  }else{
+    currentToken=null;
+    localStorage.removeItem('loggedIn');
+    document.getElementById('loginBtn').classList.remove('logged-in');
+  }
+  if(event==='SIGNED_IN'||event==='SIGNED_OUT'){
+    loadTodosFromGithub();
+  }
+});
 </script>
 </body>
 </html>

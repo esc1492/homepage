@@ -88,7 +88,7 @@ Note: `package.json` Supabase deps (`@supabase/supabase-js`, `@supabase/ssr`) an
 ## Todo Lists
 
 - **Personal**: Stored in `localStorage` key `myTodos` — works offline
-- **Family**: Uses Google Apps Script endpoint (`SCRIPT_URL`) — CRUD via `GET ?action=getAll` and `POST {action, text/id}`
+- **Family**: Uses Google Apps Script endpoint (`SCRIPT_URL`) — CRUD via `GET ?action=getAll` and `POST {action, text/id}`. Now requires Supabase login: the frontend sends the access token (JWT), and the backend (`family-todos.gs`) verifies it via Supabase `/auth/v1/user` before allowing access.
 
 ## VOCA (Google Sheets Editor - Streamlit)
 
