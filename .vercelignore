@@ -1,0 +1,21 @@
+# Vercel 배포에서 제외 — 정적 홈페이지(index.html)만 서빙
+# Streamlit 앱들은 별도 스트리밃 클라우드(.streamlit.app)에서 운용
+
+# Python / Streamlit 소스는 Vercel에 배포하지 않음
+*.py
+requirements.txt
+start.sh
+server.py
+
+# 로컬/개발용 디렉토리
+.vscode/
+.playwright-mcp/
+*.md
+
+# OS/환경 파일
+.DS_Store
+.env
+.env.*
+__pycache__/
+.streamlit/
+.git/
