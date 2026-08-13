@@ -923,6 +923,7 @@ body {
       var url=this.getAttribute('data-link');
       if(url==='https://homepage-gjxpbxm4hvrb5ztmpnrkbi.streamlit.app/'&&!localStorage.getItem('loggedIn')){
         closePanel();
+        pendingLink=url;
         openLoginModal();
         return;
       }
@@ -1010,6 +1011,7 @@ function loadWeather(){
 
 var SCRIPT_URL='https://script.google.com/macros/s/AKfycbwgv1utLiGy-4m2IPJpXhJG1_VPim4AyZM0jdnNUu1WU2ug-mbzraJxKhxuflD2fdjYCQ/exec';
 var currentToken=null;
+var pendingLink=null;
 var myTodos=JSON.parse(localStorage.getItem('myTodos')||'[]');
 function saveMyTodos(){localStorage.setItem('myTodos',JSON.stringify(myTodos));}
 function renderMyTodos(){
@@ -1164,6 +1166,7 @@ function closeLoginModal(){
   document.getElementById('loginModal').classList.remove('open');
   document.getElementById('loginPass').value='';
   document.getElementById('loginMsg').textContent='';
+  pendingLink=null;
 }
 function handleLogin(){
   var email='dwkim1492@gmail.com';  // 고정 이메일
@@ -1182,8 +1185,10 @@ function handleLogin(){
     localStorage.setItem('loggedIn','1');
     document.getElementById('loginBtn').classList.add('logged-in');
     document.getElementById('loginMsg').textContent='';
+    var target=pendingLink;
+    pendingLink=null;
     closeLoginModal();
-    window.open('https://homepage-gjxpbxm4hvrb5ztmpnrkbi.streamlit.app/','_blank');
+    if(target){window.open(target,'_blank');}
   });
 }
 document.getElementById('loginBtn').addEventListener('click',function(){
