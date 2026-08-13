@@ -1,0 +1,24 @@
+{
+  "name": "-volumes-satechi-hd-users-dwkim--claude-projects-homepage",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/esc1492/homepage.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/esc1492/homepage/issues"
+  },
+  "homepage": "https://github.com/esc1492/homepage#readme",
+  "dependencies": {
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.112.3"
+  }
+}
