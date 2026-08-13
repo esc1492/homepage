@@ -4,4 +4,6 @@ __pycache__/
 .playwright-mcp/
 memory/
 .env
+.env.local
+.env.*.local
 node_modules/
