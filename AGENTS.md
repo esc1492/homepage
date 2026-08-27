@@ -1,6 +1,6 @@
 # AGENTS
 
-Address the user as **동완님**. The user's name is stored in `memory/user_preferences.md`.
+Always use polite/formal Korean (존댓말, 하십시오체). Do not use a specific name/honorific for the user.
 
 ## What this repo is
 
@@ -66,10 +66,12 @@ Available sounds: `break.mp3`, `change.mp3`, `drop.mp3`, `swipe.mp3`
 ### Existing apps
 | File | What |
 |------|------|
-| `index.html` | Main start page (~1336 lines, vanilla) |
+| `index.html` | Main start page (~1273 lines, vanilla) |
 | `tetris_streamlit.py` | Tetris game |
 | `arkanoid_streamlit.py` | Arkanoid game |
 | `chatbot_app.py` | Chatbot using Anthropic SDK + web_search tool |
+| `ocr_app.py` | OCR 텍스트 추출 (Naver Clova OCR + 번역) |
+| `voca/` | 영단어 학습 (Google Sheets + DeepSeek) |
 
 ## Server
 
@@ -85,5 +87,5 @@ python3 server.py              # starts on :8080
 - `.env.local` (gitignored) — `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (Next.js 마이그레이션 예약용, 정적 사이트 미사용)
 
 ## Memory
-- `memory/user_preferences.md` — user's name preference
+- `memory/user_preferences.md` — 커뮤니케이션 선호 (호칭 미사용, 존댓말)
 - `memory/MEMORY.md` — memory index
