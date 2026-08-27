@@ -51,7 +51,7 @@ fetch.py (Python 3, no deps) → data.json ← index.html (fetch + render)
 | General News | `data.json` → `news` (eco/world/local) or fallback | `loadNews('general')` |
 | Tech News | `data.json` → `news` (tech) or fallback | `loadNews('tech')` |
 | Personal Todos | `localStorage` | `myTodos` array |
-| Family Todos | Google Sheets via Apps Script | `SCRIPT_URL` |
+| Family Todos | Supabase `todos` 테이블 (RLS) | `loadFamilyTodos()` |
 
 ## Stock Watchlist
 
@@ -88,7 +88,8 @@ Note: `package.json` Supabase deps (`@supabase/supabase-js`, `@supabase/ssr`) an
 ## Todo Lists
 
 - **Personal**: Stored in `localStorage` key `myTodos` — works offline
-- **Family**: Uses Google Apps Script endpoint (`SCRIPT_URL`) — CRUD via `GET ?action=getAll` and `POST {action, text/id}`. Now requires Supabase login: the frontend sends the access token (JWT), and the backend (`family-todos.gs`) verifies it via Supabase `/auth/v1/user` before allowing access.
+- **Family**: Supabase `public.todos` 테이블 (uuid pk, text, done, created_at). 로그인(`isAuthed`) 후 `sbClient.from('todos')` CRUD로 직접 읽기/쓰기. RLS: 로그인한 사용자(`authenticated`)만 모든 행 조회/추가/수정/삭제 가능. `loadFamilyTodos()` / `addTodo()` / `toggleTodo()` / `deleteTodo()` / `clearDone()`.
+  - **이전(구버전)**: Google Apps Script(`family-todos.gs`) + Google 시트 사용 → 2026-08-27 Supabase 테이블로 이전, `SCRIPT_URL`·`currentToken` 제거. `family-todos.gs`는 보관만 하고 미사용.
 
 ## VOCA (Google Sheets Editor - Streamlit)
 
