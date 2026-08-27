@@ -20,33 +20,32 @@ No test framework, no linter, no build system.
 
 ## Architecture
 
-### Main page (`index.html`, ~1336 lines)
+### Main page (`index.html`, ~1273 lines)
 - Vanilla HTML/CSS/JS — no frameworks, no npm, no build
 - CSS custom properties for all design tokens (see `:root` vars)
-- Responsive: 2-column → 1-column at 768px
-- Cards in order: Weather | Stocks | General News | Tech News | Personal Todos | Family Todos
-- Functions: `loadWeather()`, `loadStocks()`, `loadNews('general')`, `loadNews('tech')`
+- Responsive: 메인+사이드바 2열 → 1열 at 768px
+- Cards in order: Weather | Personal Todos | Family Todos
+- Functions: `loadWeather()`, `loadFamilyTodos()`, `addTodo()` 등
+- **주식/뉴스 카드 제거됨** — `data.json` 미사용 (레거시)
 
-### Data pipeline
+### Data pipeline (레거시 — 프론트 미사용)
 ```
-fetch.py (stdlib only) → data.json ← index.html (fetch + render)
+fetch.py (stdlib only) → data.json
 ```
+- **주의**: `index.html`이 더 이상 `data.json`을 소비하지 않음 (주식/뉴스 카드 제거). 보관/재개발용.
 - `fetch.py` uses `urllib`, `json`, `re`, `html` — no pip
 - Stocks: Naver Finance API `https://m.stock.naver.com/api/stock/{ticker}/basic`
 - News: Hankyung RSS (`economy`, `international`, `it`, `society`)
-- CI `.github/workflows/update-stocks.yml`: every 10min weekdays KST 09:00-15:30, auto-commits `data.json`
+- CI `.github/workflows/update-stocks.yml` — **제거됨** (주기 갱신 중단)
 
-### Stock ticker sync
-Tickers must match in two places:
-- `index.html:1065` — `var STOCKS=[...]`
-- `fetch.py:86` — `tickers = [...]`
+### Stock ticker sync (레거시)
+Tickers are defined only in `fetch.py` — `tickers = [...]`. (`index.html`의 `STOCKS` 배열은 주식 카드 제거로 삭제됨)
 
-Add/remove stocks in both files together.
-
-### Auth
-- Password in `.env`: `LOGIN_PASSWORD="..."` (gitignored)
-- `fetch.py` hashes it with SHA-256 → stored in `data.json`
-- `index.html` checks hash client-side
+### Auth (Supabase email/password)
+- Supabase Auth 이메일/비밀번호 로그인 — 고정 이메일 `dwkim1492@gmail.com`
+- supabase-js v2 CDN 로드, `index.html`에 `SUPABASE_URL`/`SUPABASE_KEY` 인라인
+- 가족 할일: 로그인 후 Supabase `todos` 테이블 사용 (RLS: authenticated)
+- 로그인 상태: `onAuthStateChange`/`getSession` → `applyAuthState` → `isAuthed`
 
 ## Streamlit apps
 
@@ -83,7 +82,7 @@ python3 server.py              # starts on :8080
 ## Config files
 - `.streamlit/config.toml` — headless mode, XSRF off
 - `.devcontainer/devcontainer.json` — Codespaces, defaults to Tetris on port 8501
-- `.env` (gitignored) — `LOGIN_PASSWORD` only
+- `.env.local` (gitignored) — `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (Next.js 마이그레이션 예약용, 정적 사이트 미사용)
 
 ## Memory
 - `memory/user_preferences.md` — user's name preference

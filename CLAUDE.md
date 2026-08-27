@@ -9,63 +9,46 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Korean-language personal start page (시작 페이지) with weather, stock watchlist, news, and todo lists. Single HTML file (`index.html`) with inline CSS and vanilla JS. Data is fetched by a Python script and served via static `data.json`. Deployed on Vercel; login is Supabase email/password auth.
+Korean-language personal start page (시작 페이지) with weather and todo lists. Single HTML file (`index.html`) with inline CSS and vanilla JS. Deployed on Vercel; login is Supabase email/password auth.
 
 ## Deployment
 
 - Hosted on Vercel (project `homepage`, team `dwkim`) — static file deploy, no build step
-- `vercel.json` sets `outputDirectory: "."` and serves `index.html` + `data.json`
+- `vercel.json` sets `outputDirectory: "."` so `index.html` (및 repo 루트의 정적 파일)이 그대로 서빙됨
 - Production URL: https://homepage-dwkim.vercel.app
 
-## Data Pipeline
+## Data Pipeline (레거시 — 현재 프론트에서 미사용)
 
 ```text
-fetch.py (Python 3, no deps) → data.json ← index.html (fetch + render)
+fetch.py (Python 3, no deps) → data.json
 ```
+
+> **⚠️ 주의**: 주식/뉴스 카드가 제거되면서 `index.html`은 더 이상 `data.json`을 소비하지 않습니다 (2026-08-27 기준). `fetch.py`·`data.json`은 보관/재개발용입니다.
 
 - `fetch.py` uses only `urllib`, `json`, `re`, `html` from stdlib — no pip install needed
 - Run: `python3 fetch.py` (updates data.json with stocks + RSS news)
 - Stocks come from Naver Finance API: `https://m.stock.naver.com/api/stock/{ticker}/basic`
 - News comes from Hankyung RSS: `https://www.hankyung.com/feed/{category}`
-
   - Categories: `economy`, `international`, `it`, `society`
-- Run on schedule via GitHub Actions (`.github/workflows/update-stocks.yml`):
-
-  - Every 10min on weekdays during market hours (KST 09:00~15:30)
-  - Manual trigger via `workflow_dispatch`
+- (구버전) GitHub Actions(`.github/workflows/update-stocks.yml`) 10분 주기 자동 갱신 — **워크플로 제거됨**
 
 ## Frontend Architecture
 
-- **Single file**: `index.html` (~1200 lines)
+- **Single file**: `index.html` (~1270 lines)
 - **No framework, no build step** — pure HTML/CSS/JS
 - **One external JS dependency** — Supabase loaded from CDN (`@supabase/supabase-js@2`) for auth only
-- Dark theme (CSS custom properties for consistent tokens)
-- Responsive: 2-column layout on desktop, 1-column on mobile (768px breakpoint)
+- Light theme (CSS custom properties for consistent tokens) — warm ivory (Cursor 스타일, `DESIGN.md` 참조)
+- Responsive: 메인+사이드바 2열 → 1열 (768px breakpoint)
 
-### Cards (in order)
+### Cards
 
 | Card | Data Source | Key Function |
 | --- | --- | --- |
 | Weather | Open-Meteo API + Air Quality API | `loadWeather()` |
-| Stock Watchlist | `data.json` → `stocks` | `loadStocks()` |
-| General News | `data.json` → `news` (eco/world/local) or fallback | `loadNews('general')` |
-| Tech News | `data.json` → `news` (tech) or fallback | `loadNews('tech')` |
 | Personal Todos | `localStorage` | `myTodos` array |
 | Family Todos | Supabase `todos` 테이블 (RLS) | `loadFamilyTodos()` |
 
-## Stock Watchlist
-
-Modify in `index.html` — the `STOCKS` array at line ~233:
-
-```js
-var STOCKS=[
-  {ticker:'005930',name:'삼성전자'},
-  {ticker:'034020',name:'두산에너빌리티'},
-  ...
-];
-```
-
-Sync the same ticker list in `fetch.py` line ~35 (`tickers` array).
+> 주식/뉴스 카드는 제거됨 (커밋 `1228363` 참조). 관련 코드(`loadStocks`, `loadNews`, `STOCKS` 배열)도 삭제됨.
 
 ## Weather
 
@@ -80,8 +63,8 @@ Login modal authenticates via Supabase Auth (email/password):
 - **Fixed email**: `dwkim1492@gmail.com` (hardcoded in `index.html`)
 - Supabase JS loaded from CDN (`https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2`)
 - Supabase URL + publishable key hardcoded inline near the bottom of `index.html` (`SUPABASE_URL` / `SUPABASE_KEY`); publishable key is safe to expose client-side
-- Login: `signInWithPassword({ email, password })` → sets `localStorage.loggedIn`, opens the Streamlit app in a new tab
-- Logout: `signOut()` + removes `localStorage.loggedIn`
+- Login: `signInWithPassword({ email, password })` → `onAuthStateChange`/`getSession`가 `applyAuthState(session)` 실행 → `isAuthed` + `localStorage.loggedIn` 설정. 새 탭은 챗봇 메뉴 경유 로그인(`pendingLink`)일 때만 열림
+- Logout: `signOut()` + `applyAuthState(null)`가 `isAuthed`/`localStorage.loggedIn` 해제
 
 Note: `package.json` Supabase deps (`@supabase/supabase-js`, `@supabase/ssr`) and `.env.local` (`NEXT_PUBLIC_*`) are currently unused by the static site (CDN + inline config) — reserved for a planned Next.js migration.
 
