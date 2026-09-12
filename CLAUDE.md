@@ -17,7 +17,8 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
 
 - Hosted on Vercel (project `homepage`, team `dwkim`) — static file deploy, no build step
 - `vercel.json` sets `outputDirectory: "."` so `index.html` (및 repo 루트의 정적 파일)이 그대로 서빙됨
-- `vercel.json`의 `rewrites`가 `/album`·`/album/*`을 `/album/index.html`로 보내 SPA 딥링크 새로고침을 처리
+- `vercel.json`의 `rewrites`가 `/album`·`/album/*`을 `/album/index`로 보내 SPA 딥링크 새로고침을 처리
+  - ⚠️ **destination에 `.html`을 쓰면 동작하지 않습니다.** `cleanUrls: true`가 확장자를 제거하므로 `/album/index.html`은 매칭되지 않고 404가 됩니다 (2026-09-12 첫 배포에서 실제 발생 → `/album/index`로 수정)
 - `.vercelignore`가 `moment/`를 제외 — 서빙되는 것은 빌드 산출물 `album/`뿐
 - Production URL: https://homepage-dwkim.vercel.app (앨범: `/album`)
 
