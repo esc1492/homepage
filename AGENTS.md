@@ -14,9 +14,12 @@ python3 -m http.server 8080   # serve index.html locally
 streamlit run tetris_streamlit.py
 streamlit run arkanoid_streamlit.py
 streamlit run chatbot_app.py
+
+cd moment && npm run build    # 앨범 재빌드 → repo 루트 album/ 갱신
+cd moment && npm run dev      # 앨범 개발 서버
 ```
 
-No test framework, no linter, no build system.
+No test framework, no linter, no build system — **단 하나의 예외**: `moment/`(앨범)는 Vite + React 프로젝트로 자체 `npm run build`가 있고, 그 산출물 `album/`이 커밋됩니다. 나머지 repo는 여전히 빌드가 없습니다.
 
 ## Architecture
 
@@ -47,6 +50,13 @@ Tickers are defined only in `fetch.py` — `tickers = [...]`. (`index.html`의 `
 - 가족 할일: 로그인 후 Supabase `todos` 테이블 사용 (RLS: authenticated)
 - 로그인 상태: `onAuthStateChange`/`getSession` → `applyAuthState` → `isAuthed`
 
+### Album SPA (`moment/` → `album/`)
+- **유일하게 빌드가 있는 부분.** Vite + React 19 + react-router 7 + @supabase/supabase-js v2
+- `moment/vite.config.js`: `base: "/album/"`, `build.outDir: "../album"`, `emptyOutDir: true`
+- 소스 수정 후 **반드시** `cd moment && npm run build` → `album/` 재생성 → 커밋 (Vercel은 빌드하지 않음)
+- 홈페이지와 **같은 Supabase 프로젝트**를 쓰며, 같은 origin이라 로그인 세션이 자동 공유됨
+- 홈페이지 바로가기 타일: `index.html`의 `data-link="/album"` (끝 슬래시 없음 — `trailingSlash: false`)
+
 ## Streamlit apps
 
 All Streamlit apps follow the same pattern:
@@ -72,6 +82,7 @@ Available sounds: `break.mp3`, `change.mp3`, `drop.mp3`, `swipe.mp3`
 | `chatbot_app.py` | Chatbot using Anthropic SDK + web_search tool |
 | `ocr_app.py` | OCR 텍스트 추출 (Naver Clova OCR + 번역) |
 | `voca/` | 영단어 학습 (Google Sheets + DeepSeek) |
+| `moment/` → `album/` | 앨범 — 사진 게시판 SPA. 소스는 `moment/`, 서빙되는 빌드 산출물은 `album/` (`/album` 경로) |
 
 ## Server
 

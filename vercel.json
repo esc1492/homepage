@@ -4,5 +4,9 @@
   "buildCommand": null,
   "outputDirectory": ".",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/album", "destination": "/album/index.html" },
+    { "source": "/album/:path*", "destination": "/album/index.html" }
+  ]
 }

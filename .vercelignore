@@ -11,6 +11,7 @@ server.py
 .vscode/
 .playwright-mcp/
 *.md
+moment/
 
 # OS/환경 파일
 .DS_Store

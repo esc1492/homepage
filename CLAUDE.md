@@ -11,11 +11,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Korean-language personal start page (시작 페이지) with weather and todo lists. Single HTML file (`index.html`) with inline CSS and vanilla JS. Deployed on Vercel; login is Supabase email/password auth.
 
+바로가기 '앨범' 항목으로 **모먼트(사진 게시판)** 를 같은 사이트의 `/album` 경로에서 엽니다 (`moment/` 소스 + `album/` 빌드 산출물).
+
 ## Deployment
 
 - Hosted on Vercel (project `homepage`, team `dwkim`) — static file deploy, no build step
 - `vercel.json` sets `outputDirectory: "."` so `index.html` (및 repo 루트의 정적 파일)이 그대로 서빙됨
-- Production URL: https://homepage-dwkim.vercel.app
+- `vercel.json`의 `rewrites`가 `/album`·`/album/*`을 `/album/index.html`로 보내 SPA 딥링크 새로고침을 처리
+- `.vercelignore`가 `moment/`를 제외 — 서빙되는 것은 빌드 산출물 `album/`뿐
+- Production URL: https://homepage-dwkim.vercel.app (앨범: `/album`)
 
 ## Data Pipeline (레거시 — 현재 프론트에서 미사용)
 
@@ -73,6 +77,25 @@ Note: `package.json` Supabase deps (`@supabase/supabase-js`, `@supabase/ssr`) an
 - **Personal**: Stored in `localStorage` key `myTodos` — works offline
 - **Family**: Supabase `public.todos` 테이블 (uuid pk, text, done, created_at). 로그인(`isAuthed`) 후 `sbClient.from('todos')` CRUD로 직접 읽기/쓰기. RLS: 로그인한 사용자(`authenticated`)만 모든 행 조회/추가/수정/삭제 가능. `loadFamilyTodos()` / `addTodo()` / `toggleTodo()` / `deleteTodo()` / `clearDone()`.
   - **이전(구버전)**: Google Apps Script(`family-todos.gs`) + Google 시트 사용 → 2026-08-27 Supabase 테이블로 이전, `SCRIPT_URL`·`currentToken` 제거. `family-todos.gs`는 보관만 하고 미사용.
+
+## 앨범 (모먼트) — `/album`
+
+전자책 『비전공자도 끝까지 만드는 첫 풀스택 웹 서비스』의 완성 예제. 사진 게시판(회원가입 · 글 CRUD · 사진 업로드 · 좋아요/댓글 실시간).
+
+- **소스**: `moment/` (Vite + React 19 + react-router 7 + @supabase/supabase-js v2)
+- **서빙**: `album/` — 빌드 산출물. Vercel은 빌드하지 않으므로 **이 폴더가 실제 배포본**
+- **경로**: `https://homepage-dwkim.vercel.app/album` (홈페이지 바로가기 '앨범' 타일 → 새 탭)
+- **백엔드**: 홈페이지와 **같은 Supabase 프로젝트**(`oggzgullnohqehthewuw`). `posts`·`likes`·`comments` 테이블 + `photos` 버킷(Public). 설정 SQL은 `moment/supabase_setup.sql`
+- **로그인**: 같은 origin이라 Supabase 세션이 **자동 공유**됨 — 홈페이지에서 로그인하면 앨범은 재로그인 불필요
+
+### ⚠️ 빌드 산출물을 커밋하므로 소스 수정 시 재빌드 필수
+
+```sh
+cd moment && npm run build     # → repo 루트 album/ 갱신 (vite.config.js의 outDir)
+```
+
+`moment/vite.config.js`에 `base: "/album/"`, `build.outDir: "../album"`, `emptyOutDir: true`가 설정되어 있습니다.
+**`album/`을 커밋하지 않으면 배포본이 소스와 어긋납니다.** Supabase 키를 회전하면 `moment/.env.local` 수정 후 재빌드해야 합니다 (키가 번들에 인라인됨 — Vercel 환경변수 불필요).
 
 ## VOCA (Google Sheets Editor - Streamlit)
 
