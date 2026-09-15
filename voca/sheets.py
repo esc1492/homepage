@@ -101,9 +101,14 @@ def create_worksheet(creds: Credentials, sheet_url: str, title: str, rows: int =
         gc = _get_client(creds)
         sheet_id = _extract_sheet_id(sheet_url)
         spreadsheet = gc.open_by_key(sheet_id)
+        # 헤더가 기본 열 수(26)보다 넓으면 시트도 그만큼 넓혀야 기록됩니다
+        if headers:
+            cols = max(cols, len(headers))
         sheet = spreadsheet.add_worksheet(title=title, rows=rows, cols=cols)
         if headers:
-            sheet.update(values=[headers], range_name="A1:B1")
+            # 범위를 주지 않으면 A1부터 헤더 개수만큼 기록됩니다.
+            # ("A1:B1" 고정이던 때는 헤더가 3개 이상이면 잘렸습니다)
+            sheet.update([headers])
         return True
     except gspread.exceptions.APIError as e:
         st.error(f"API 오류 ({e.response.status_code}): {e.response.json().get('error', {}).get('message', e)}")
