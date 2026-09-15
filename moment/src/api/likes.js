@@ -12,10 +12,29 @@ export async function fetchLikeCounts() {
   return counts;
 }
 
+// 내가 좋아요한 글 id 집합 (새로고침해도 하트 표시가 유지되도록)
+export async function fetchMyLikes(userId) {
+  const { data, error } = await supabase
+    .from("likes")
+    .select("post_id")
+    .eq("user_id", userId);
+  if (error) throw error;
+
+  return new Set(data.map((like) => like.post_id));
+}
+
 // 좋아요 추가 / 취소
 export async function addLike(postId, userId) {
-  await supabase.from("likes").insert({ post_id: postId, user_id: userId });
+  const { error } = await supabase
+    .from("likes")
+    .insert({ post_id: postId, user_id: userId });
+  if (error) throw error;
 }
 export async function removeLike(postId, userId) {
-  await supabase.from("likes").delete().eq("post_id", postId).eq("user_id", userId);
+  const { error } = await supabase
+    .from("likes")
+    .delete()
+    .eq("post_id", postId)
+    .eq("user_id", userId);
+  if (error) throw error;
 }

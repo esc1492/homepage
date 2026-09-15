@@ -4,22 +4,25 @@ import { supabase } from "../lib/supabase";
 import PostCard from "../components/PostCard";
 import NewPostForm from "../components/NewPostForm";
 import { fetchPosts, createPost, deletePost, uploadImage } from "../api/posts";
-import { fetchLikeCounts } from "../api/likes";
+import { fetchLikeCounts, fetchMyLikes } from "../api/likes";
 
 function FeedPage({ user }) {
   const [posts, setPosts] = useState([]);
   const [likeCounts, setLikeCounts] = useState({});
+  const [myLikes, setMyLikes] = useState(() => new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const [postData, counts] = await Promise.all([
+        const [postData, counts, mine] = await Promise.all([
           fetchPosts(),
           fetchLikeCounts(),
+          fetchMyLikes(user.id),
         ]);
         setPosts(postData);
         setLikeCounts(counts);
+        setMyLikes(mine);
       } catch (e) {
         console.error("불러오기 실패:", e.message);
       } finally {
@@ -43,7 +46,7 @@ function FeedPage({ user }) {
 
     // 정리: 페이지를 떠날 때 구독 해제
     return () => supabase.removeChannel(channel);
-  }, []);
+  }, [user.id]);
 
   async function handleAdd(content, file) {
     let imageUrl = null;
@@ -51,12 +54,12 @@ function FeedPage({ user }) {
       imageUrl = await uploadImage(file, user.id); // 사진 먼저 업로드
     }
     const newPost = await createPost({ content, imageUrl, user });
-    setPosts([newPost, ...posts]); // 화면 맨 위에 바로 반영
+    setPosts((prev) => [newPost, ...prev]); // 화면 맨 위에 바로 반영
   }
 
   async function handleDelete(id) {
     await deletePost(id);
-    setPosts(posts.filter((p) => p.id !== id)); // 화면에서도 제거
+    setPosts((prev) => prev.filter((p) => p.id !== id)); // 화면에서도 제거
   }
 
   return (
@@ -74,6 +77,7 @@ function FeedPage({ user }) {
                 post={post}
                 user={user}
                 count={likeCounts[post.id] ?? 0}
+                initialLiked={myLikes.has(post.id)}
                 onDelete={handleDelete}
               />
             </Link>
