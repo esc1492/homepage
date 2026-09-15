@@ -134,6 +134,33 @@ base64 -i /path/to/service-account.json | python3 -c "import sys; b=sys.stdin.re
 - `.streamlit/secrets.toml`은 `.gitignore`에 등록되어 있음
 - `secrets_cloud.toml` 같은 임시 파일은 사용 후 반드시 삭제
 
+## Browser Automation
+
+### 도구 선택 규칙
+
+| 상황 | 도구 |
+| --- | --- |
+| 단순 화면 확인 / 스크린샷 / 렌더링 체크 | `agent-browser` |
+| 로그인 세션 유지, 폼 다단계 입력, CI에 넣을 스크립트 필요 | Playwright MCP |
+| 애매함 | 먼저 `agent-browser`로 빠르게 확인 → 실패하거나 복잡해지면 Playwright로 전환 |
+
+### agent-browser
+
+플러그인 `agent-browser@agent-browser`로 설치됩니다. Chrome/Chromium을 CDP로 직접 제어하며, 접근성 트리 스냅샷의 `@eN` 참조 ID로 요소를 조작합니다.
+
+```sh
+agent-browser open <url>          # 페이지 이동
+agent-browser snapshot -i         # 상호작용 가능한 요소 목록 ([ref=e1] … 형태로 출력)
+agent-browser click @e1           # 출력된 ref를 @e1 처럼 지정해 클릭
+agent-browser fill @e2 "텍스트"    # 참조 ID로 입력
+agent-browser screenshot <파일>    # 스크린샷 저장
+```
+
+- **페이지가 바뀌면 반드시 다시 `snapshot`** 을 떠서 참조 ID를 갱신한 뒤 조작합니다. 이전 스냅샷의 `@eN`은 무효입니다.
+- 전체 명령은 `agent-browser --help`, 워크플로·문제 해결은 `agent-browser skills get core`.
+- 설치 완료 (2026-09-15, v0.37.1 / Chrome 153) — 다른 머신에서는 `npm i -g agent-browser && agent-browser install`이 필요합니다.
+  플러그인 설치(`/plugin install`)만으로는 바이너리가 내려오지 않아 `No binary found for darwin-arm64` 오류가 납니다.
+
 ## Compaction
 
 When compacting, always preserve:
