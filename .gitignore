@@ -2,6 +2,8 @@
 __pycache__/
 .streamlit/
 .playwright-mcp/
+.serena/
+.mcp.json
 memory/
 .env
 .env.local
