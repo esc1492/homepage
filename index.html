@@ -934,6 +934,12 @@ body {
   });
 })();
 
+function esc(s){
+  return String(s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
 function getAirGrade(val,type){
   if(type==='pm10'){
     if(val<=30) return {text:'좋음',color:'#34785c'};
@@ -1025,7 +1031,7 @@ function renderMyTodos(){
   el.innerHTML=myTodos.map(function(t,i){
     return '<div class="todo-row">'
       +'<input type="checkbox" '+(t.done?'checked':'')+' onchange="toggleMyTodo('+i+')">'
-      +'<span class="todo-text'+(t.done?' done':'')+'">'+t.text+'</span>'
+      +'<span class="todo-text'+(t.done?' done':'')+'">'+esc(t.text)+'</span>'
       +'<button class="todo-del" onclick="deleteMyTodo('+i+')">✕</button>'
       +'</div>';
   }).join('');
@@ -1084,7 +1090,7 @@ function renderTodos(){
   el.innerHTML=todos.map(function(t,i){
     return '<div class="todo-row">'
       +'<input type="checkbox" '+(t.done?'checked':'')+' onchange="toggleTodo('+i+')">'
-      +'<span class="todo-text'+(t.done?' done':'')+'">'+t.text+'</span>'
+      +'<span class="todo-text'+(t.done?' done':'')+'">'+esc(t.text)+'</span>'
       +'<button class="todo-del" onclick="deleteTodo('+i+')">✕</button>'
       +'</div>';
   }).join('');
