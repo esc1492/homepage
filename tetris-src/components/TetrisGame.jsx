@@ -7,6 +7,7 @@ import { createInitialState, reduce } from '../game/reducer.js';
 import { drawNext, drawScene, setupCanvas } from '../game/render.js';
 import { useAudio } from '../hooks/useAudio.js';
 import { useGameLoop } from '../hooks/useGameLoop.js';
+import { useHighScore } from '../hooks/useHighScore.js';
 import { useKeyboard } from '../hooks/useKeyboard.js';
 import { useSwipe } from '../hooks/useSwipe.js';
 import HudPanel from './HudPanel.jsx';
@@ -32,6 +33,9 @@ export default function TetrisGame() {
   const needsDrawRef = useRef(true);
 
   const { enabled: soundEnabled, play, startTheme, stopTheme, toggle } = useAudio();
+
+  // 현재 점수가 기록을 넘으면 즉시 올라가므로, 플레이 중에도 갱신되는 것이 보입니다.
+  const highScore = useHighScore(state.score);
 
   const isPlaying = state.status === 'playing';
 
@@ -162,6 +166,7 @@ export default function TetrisGame() {
 
       <aside className="side">
         <HudPanel label="점수" value={state.score} />
+        <HudPanel label="최고" value={highScore} />
         <HudPanel label="레벨" value={state.level} />
         <HudPanel label="줄" value={state.lines} />
         <div className="panel">

@@ -1,2 +1,2 @@
 :HL["/tetris/_next/static/chunks/3og_5qqgq6fob.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}},"staleTime":300,"buildId":"exfVly6XWG5PPXquLlYeJ"}
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}},"staleTime":300,"buildId":"HL5F9fvl1CFHPgFFO7kyK"}

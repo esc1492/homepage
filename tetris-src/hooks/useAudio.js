@@ -3,6 +3,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 const SFX_NAMES = ['drop', 'swipe', 'change', 'break'];
 
 /**
+ * 효과음 하나당 보이스 수.
+ *
+ * 단일 Audio 객체를 매번 `currentTime = 0` 으로 되감아 재생하면 앞의 소리가 잘립니다.
+ * 'drop' 은 고정될 때마다(최대 초당 12.5회) 울리고 길이가 0.24초라 최대 3개까지 겹치므로,
+ * 4개면 여유가 있습니다. 'change'(0.45초)도 회전 연타를 충분히 감당합니다.
+ */
+const VOICES_PER_SOUND = 4;
+
+/**
  * ⚠️ basePath('/tetris') 는 문자열 URL 에 자동으로 붙지 않습니다.
  *    next/link·next/image·CSS 는 자동 처리되지만 new Audio('/audio/..') 는 그대로 나가
  *    404 가 됩니다. NEXT_PUBLIC_BASE_PATH 를 직접 앞에 붙여야 합니다.
@@ -26,9 +35,14 @@ export function useAudio() {
   useEffect(() => {
     const sfx = {};
     for (const name of SFX_NAMES) {
-      const voice = new Audio(audioUrl(`${name}.mp3`));
-      voice.preload = 'auto'; // 효과음 4개 합계 약 30KB
-      sfx[name] = voice;
+      const url = audioUrl(`${name}.mp3`);
+      const voices = [];
+      for (let i = 0; i < VOICES_PER_SOUND; i++) {
+        const voice = new Audio(url);
+        voice.preload = 'auto'; // 효과음 4개 합계 약 30KB (같은 URL 이라 실제 요청은 4건)
+        voices.push(voice);
+      }
+      sfx[name] = { voices, next: 0 };
     }
 
     const theme = new Audio(audioUrl('theme.mp3'));
@@ -40,6 +54,9 @@ export function useAudio() {
 
     return () => {
       theme.pause();
+      for (const { voices } of Object.values(sfx)) {
+        for (const voice of voices) voice.pause();
+      }
       sfxRef.current = null;
       themeRef.current = null;
     };
@@ -47,8 +64,18 @@ export function useAudio() {
 
   const play = useCallback((name) => {
     if (!enabledRef.current) return;
-    const voice = sfxRef.current?.[name];
-    if (!voice) return;
+    const pool = sfxRef.current?.[name];
+    if (!pool) return;
+
+    // 재생이 끝난 보이스는 paused 가 true 입니다. 놀고 있는 것을 우선 쓰고,
+    // 전부 재생 중이면 차례대로 돌며 가장 오래된 것을 빼앗습니다.
+    const free = pool.voices.find((voice) => voice.paused);
+    let voice = free;
+    if (!voice) {
+      voice = pool.voices[pool.next];
+      pool.next = (pool.next + 1) % pool.voices.length;
+    }
+
     voice.currentTime = 0;
     voice.play().catch(() => {}); // 자동재생 차단 등은 조용히 무시
   }, []);

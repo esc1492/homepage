@@ -123,16 +123,18 @@ Next.js는 자산을 `/tetris/_next/...` 로 참조하므로, 산출물이 `tetr
 | --- | --- |
 | `game/constants.js` | 보드 크기·색·테트로미노·속도 공식 |
 | `game/reducer.js` | **순수 게임 로직** (React 미import — 그대로 테스트 가능) |
-| `game/reducer.test.js` | 단위 테스트 21개 (`node --test`) |
+| `game/reducer.test.js` | 게임 로직 단위 테스트 21개 (`node --test`) |
 | `game/render.js` | Canvas 그리기 (`(ctx, state)` 순수 함수) + DPR 보정 |
-| `hooks/` | `useGameLoop`(rAF) · `useKeyboard` · `useSwipe` · `useAudio` |
+| `hooks/` | `useGameLoop`(rAF) · `useKeyboard` · `useSwipe` · `useAudio` · `useHighScore` |
+| `hooks/useHighScore.test.js` | 저장값 파싱 테스트 3개 |
 | `components/TetrisGame.jsx` | 오케스트레이터 |
 
 ### 설계 요점
 
 - **상태**: `useReducer` 가 단일 진실 공급원. 하강 간격은 `max(80, 800-(level-1)*70)` ms 라 최대 초당 12.5회만 dispatch 됩니다. 60fps는 **그리기에만** 해당하며 rAF 루프가 ref로 명령형 호출합니다(React 렌더 우회).
 - **`setInterval` 대신 rAF**: 백그라운드 탭에서 자동 정지, 드리프트 없음. 단 `ts - lastT` 가 커지면 하강이 폭주하므로 `MAX_FRAME_DELTA_MS = 200` 으로 자릅니다.
-- **오디오**: 테마곡은 96kbps·2.1MB로 재인코딩해 `public/audio/` 에 두고 `preload="none"` + '시작' 클릭 시 로드. 효과음 4개는 합계 30KB.
+- **오디오**: 테마곡은 96kbps·2.1MB로 재인코딩해 `public/audio/` 에 두고 `preload="none"` + '시작' 클릭 시 로드. 효과음 4개는 합계 30KB. 효과음은 **소리마다 보이스 4개 풀**을 돌려 연타 시 앞 소리가 잘리지 않게 합니다(`VOICES_PER_SOUND`).
+- **최고점수**: `localStorage` 키 `tetrisHighScore` (홈페이지의 `myTodos`·`loggedIn` 과 같은 평면 네이밍). 현재 점수가 기록을 넘는 순간 저장하므로 게임오버를 기다리지 않습니다. `localStorage` 는 브라우저 전용이라 **렌더 중에 읽지 않고 effect 에서** 읽습니다 — 서버 프리렌더에서 `ReferenceError` 가 나거나 하이드레이션 불일치가 생깁니다.
 
 ### ⚠️ 변환 시 걸린 함정 (재발 방지)
 

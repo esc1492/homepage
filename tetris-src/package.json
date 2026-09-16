@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build && rm -rf ../tetris && cp -R out ../tetris",
-    "test": "node --test \"game/*.test.js\""
+    "test": "node --test \"game/*.test.js\" \"hooks/*.test.js\""
   },
   "dependencies": {
     "next": "16.3.5",
