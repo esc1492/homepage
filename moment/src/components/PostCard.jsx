@@ -6,7 +6,12 @@ function PostCard({ post, user, count = 0, initialLiked = false, onDelete }) {
   const [liked, setLiked] = useState(initialLiked);
   const isMine = user && user.id === post.user_id;
 
-  async function toggleLike() {
+  // ⚠️ FeedPage 가 이 카드를 <Link> 로 감싸므로 카드 전체가 앵커입니다.
+  //    버튼 클릭이 앵커로 버블링되면 ♥ 나 삭제를 눌러도 상세 페이지로 이동해 버립니다.
+  //    preventDefault(링크 이동 취소) + stopPropagation(Link 의 onClick 차단) 둘 다 필요합니다.
+  async function toggleLike(e) {
+    e.preventDefault();
+    e.stopPropagation();
     if (!user) return;
     try {
       if (liked) {
@@ -22,6 +27,13 @@ function PostCard({ post, user, count = 0, initialLiked = false, onDelete }) {
     }
   }
 
+  // toggleLike 와 같은 이유로 앵커 전파를 막습니다 (삭제 후 상세 페이지로 튀지 않도록).
+  function handleDelete(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    onDelete(post.id);
+  }
+
   return (
     <article className="card">
       <div className="card-head">
@@ -34,7 +46,7 @@ function PostCard({ post, user, count = 0, initialLiked = false, onDelete }) {
       )}
       <button className="like" onClick={toggleLike}>♥ {count}</button>
       {isMine && (
-        <button className="card-del" onClick={() => onDelete(post.id)}>삭제</button>
+        <button className="card-del" onClick={handleDelete}>삭제</button>
       )}
     </article>
   );
