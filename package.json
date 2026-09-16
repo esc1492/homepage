@@ -16,9 +16,5 @@
   "bugs": {
     "url": "https://github.com/esc1492/homepage/issues"
   },
-  "homepage": "https://github.com/esc1492/homepage#readme",
-  "dependencies": {
-    "@supabase/ssr": "^0.12.4",
-    "@supabase/supabase-js": "^2.112.3"
-  }
+  "homepage": "https://github.com/esc1492/homepage#readme"
 }

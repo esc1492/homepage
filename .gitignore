@@ -9,3 +9,6 @@ memory/
 .env.local
 .env.*.local
 node_modules/
+
+# 생성물 — fetch.py 가 만들며 소비하는 코드가 없습니다 (레거시 파이프라인, 2026-09-16 추적 해제)
+data.json

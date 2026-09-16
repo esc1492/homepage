@@ -39,7 +39,8 @@ No test framework, no linter, no build system — **예외 2곳**: `moment/`(앨
 ```
 fetch.py (stdlib only) → data.json
 ```
-- **주의**: `index.html`이 더 이상 `data.json`을 소비하지 않음 (주식/뉴스 카드 제거). 보관/재개발용.
+- **주의**: `index.html`이 더 이상 `data.json`을 소비하지 않음 (주식/뉴스 카드 제거). `fetch.py`는 보관/재개발용.
+- `data.json`은 **커밋하지 않음** (2026-09-16 추적 해제, `.gitignore` 등록) — 생성물인데 읽는 코드가 없습니다.
 - `fetch.py` uses `urllib`, `json`, `re`, `html` — no pip
 - Stocks: Naver Finance API `https://m.stock.naver.com/api/stock/{ticker}/basic`
 - News: Hankyung RSS (`economy`, `international`, `it`, `society`)
@@ -99,7 +100,7 @@ python3 server.py              # starts on :8080
 
 ## Config files
 - `.streamlit/config.toml` — headless mode, XSRF off
-- `.devcontainer/devcontainer.json` — Codespaces, defaults to Tetris on port 8501
+- `.devcontainer/devcontainer.json` — Codespaces, 홈페이지 정적 서버(`python3 server.py`)를 :8080 에서 실행
 - `.env.local` (gitignored) — `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (Next.js 마이그레이션 예약용, 정적 사이트 미사용)
 
 ## Memory

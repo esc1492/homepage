@@ -32,10 +32,12 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
 fetch.py (Python 3, no deps) → data.json
 ```
 
-> **⚠️ 주의**: 주식/뉴스 카드가 제거되면서 `index.html`은 더 이상 `data.json`을 소비하지 않습니다 (2026-08-27 기준). `fetch.py`·`data.json`은 보관/재개발용입니다.
+> **⚠️ 주의**: 주식/뉴스 카드가 제거되면서 `index.html`은 더 이상 `data.json`을 소비하지 않습니다 (2026-08-27 기준). `fetch.py`는 보관/재개발용입니다.
+>
+> **`data.json`은 커밋하지 않습니다** (2026-09-16 추적 해제, `.gitignore` 등록). 생성물인데 읽는 코드가 없어 저장소만 무겁게 했습니다. 재개발 시 `python3 fetch.py`로 다시 만들면 됩니다.
 
 - `fetch.py` uses only `urllib`, `json`, `re`, `html` from stdlib — no pip install needed
-- Run: `python3 fetch.py` (updates data.json with stocks + RSS news)
+- Run: `python3 fetch.py` (작업 트리에 data.json 생성 — 커밋되지 않음)
 - Stocks come from Naver Finance API: `https://m.stock.naver.com/api/stock/{ticker}/basic`
 - News comes from Hankyung RSS: `https://www.hankyung.com/feed/{category}`
   - Categories: `economy`, `international`, `it`, `society`
@@ -75,7 +77,7 @@ Login modal authenticates via Supabase Auth (email/password):
 - Login: `signInWithPassword({ email, password })` → `onAuthStateChange`/`getSession`가 `applyAuthState(session)` 실행 → `isAuthed` + `localStorage.loggedIn` 설정. 새 탭은 챗봇 메뉴 경유 로그인(`pendingLink`)일 때만 열림
 - Logout: `signOut()` + `applyAuthState(null)`가 `isAuthed`/`localStorage.loggedIn` 해제
 
-Note: `package.json` Supabase deps (`@supabase/supabase-js`, `@supabase/ssr`) and `.env.local` (`NEXT_PUBLIC_*`) are currently unused by the static site (CDN + inline config) — reserved for a planned Next.js migration.
+Note: 루트 `package.json`은 이제 **의존성이 없습니다**. `@supabase/supabase-js`·`@supabase/ssr`은 루트에서 import 하는 곳이 한 곳도 없어 제거했습니다 (2026-09-16) — 홈페이지는 CDN을 쓰고, 앨범·테트리스는 각자 자체 의존성을 가집니다. `.env.local`(`NEXT_PUBLIC_*`)은 여전히 미사용이며 보관 중입니다.
 
 ## Todo Lists
 
