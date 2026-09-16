@@ -17,9 +17,13 @@ streamlit run chatbot_app.py
 
 cd moment && npm run build    # 앨범 재빌드 → repo 루트 album/ 갱신
 cd moment && npm run dev      # 앨범 개발 서버
+
+cd tetris-src && npm run build # 테트리스 재빌드 → repo 루트 tetris/ 갱신
+cd tetris-src && npm test      # 게임 로직 단위 테스트 (node --test, 21개)
+cd tetris-src && npm run dev   # 테트리스 개발 서버 (http://localhost:3000/tetris)
 ```
 
-No test framework, no linter, no build system — **단 하나의 예외**: `moment/`(앨범)는 Vite + React 프로젝트로 자체 `npm run build`가 있고, 그 산출물 `album/`이 커밋됩니다. 나머지 repo는 여전히 빌드가 없습니다.
+No test framework, no linter, no build system — **예외 2곳**: `moment/`(앨범, Vite)와 `tetris-src/`(테트리스, Next.js 정적 export + `node --test`). 두 프로젝트 모두 산출물(`album/`·`tetris/`)이 커밋되므로 소스를 고치면 재빌드해야 합니다. 나머지 repo는 여전히 빌드가 없습니다.
 
 ## Architecture
 
@@ -77,12 +81,13 @@ Available sounds: `break.mp3`, `change.mp3`, `drop.mp3`, `swipe.mp3`
 | File | What |
 |------|------|
 | `index.html` | Main start page (~1273 lines, vanilla) |
-| `tetris_streamlit.py` | Tetris game |
+| `tetris_streamlit.py` | Tetris game — **보관용**. 실제 서빙은 `tetris-src/` → `tetris/` (`/tetris`) |
 | `arkanoid_streamlit.py` | Arkanoid game |
 | `chatbot_app.py` | Chatbot using Anthropic SDK + web_search tool |
 | `ocr_app.py` | OCR 텍스트 추출 (Naver Clova OCR + 번역) |
 | `voca/` | 영단어 학습 (Google Sheets + DeepSeek) |
 | `moment/` → `album/` | 앨범 — 사진 게시판 SPA. 소스는 `moment/`, 서빙되는 빌드 산출물은 `album/` (`/album` 경로) |
+| `tetris-src/` → `tetris/` | 테트리스 — Next.js 정적 export. 소스는 `tetris-src/`, 서빙되는 빌드 산출물은 `tetris/` (`/tetris` 경로) |
 
 ## Server
 

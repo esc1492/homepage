@@ -1,0 +1,193 @@
+/*
+ * 원본 tetris_streamlit.py 의 <style> 블록을 옮긴 것입니다.
+ * Streamlit 크롬(#MainMenu, stToolbar 등)을 숨기던 규칙은 iframe 이 사라졌으므로 삭제했습니다.
+ */
+
+:root {
+  --bg: #111111;
+  --board-bg: #0d0d0d;
+  --panel: #1e1e1e;
+  --panel-border: #333333;
+  --board-border: #444444;
+  --btn: #2a2a2a;
+  --btn-hover: #3a3a3a;
+  --btn-border: #555555;
+  --text: #eeeeee;
+  --text-strong: #ffffff;
+  --text-dim: #888888;
+  --text-faint: #555555;
+  --focus: #29b6f6;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+button {
+  font-family: inherit;
+}
+
+.app {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.board-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+canvas.board {
+  border: 2px solid var(--board-border);
+  border-radius: 6px;
+  background: var(--board-bg);
+  display: block;
+  touch-action: none; /* 보드 위 스와이프로 페이지가 스크롤되지 않도록 */
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 110px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.panel-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.panel-value {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text-strong);
+}
+
+canvas.next {
+  display: block;
+  background: var(--board-bg);
+  border-radius: 4px;
+}
+
+.btn-start {
+  width: 100%;
+  padding: 9px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 6px;
+  border: 1px solid var(--btn-border);
+  background: var(--btn);
+  color: var(--text-strong);
+}
+
+.btn-start:hover {
+  background: var(--btn-hover);
+}
+
+.btn-sound {
+  width: 100%;
+  padding: 5px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  border: 1px solid var(--btn-border);
+  background: var(--panel);
+  color: #aaaaaa;
+  margin-bottom: 4px;
+}
+
+.btn-sound[aria-pressed='false'] {
+  color: var(--text-faint);
+}
+
+.controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ctrl-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.ctrl-btn {
+  width: 64px;
+  height: 56px;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid var(--btn-border);
+  background: var(--panel);
+  color: var(--text-strong);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ctrl-btn:active {
+  background: var(--btn-hover);
+  transform: scale(0.94);
+}
+
+.ctrl-btn.wide {
+  width: 140px;
+  font-size: 13px;
+}
+
+.key-hint {
+  font-size: 10px;
+  color: var(--text-faint);
+  text-align: center;
+  line-height: 1.7;
+  margin-top: 2px;
+}
+
+/* 원본에는 없던 키보드 포커스 표시 — 버튼만 있는 화면이라 필요합니다. */
+.ctrl-btn:focus-visible,
+.btn-start:focus-visible,
+.btn-sound:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ctrl-btn:active {
+    transform: none;
+  }
+}

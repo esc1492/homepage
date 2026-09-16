@@ -13,14 +13,18 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
 
 바로가기 '앨범' 항목으로 **모먼트(사진 게시판)** 를 같은 사이트의 `/album` 경로에서 엽니다 (`moment/` 소스 + `album/` 빌드 산출물).
 
+바로가기 '게임 → TETRIS' 항목으로 **테트리스** 를 같은 사이트의 `/tetris` 경로에서 엽니다 (`tetris-src/` 소스 + `tetris/` 빌드 산출물). Streamlit 판(`tetris_streamlit.py`)을 Next.js 로 옮긴 것입니다.
+
 ## Deployment
 
 - Hosted on Vercel (project `homepage`, team `dwkim`) — static file deploy, no build step
 - `vercel.json` sets `outputDirectory: "."` so `index.html` (및 repo 루트의 정적 파일)이 그대로 서빙됨
 - `vercel.json`의 `rewrites`가 `/album`·`/album/*`을 `/album/index`로 보내 SPA 딥링크 새로고침을 처리
   - ⚠️ **destination에 `.html`을 쓰면 동작하지 않습니다.** `cleanUrls: true`가 확장자를 제거하므로 `/album/index.html`은 매칭되지 않고 404가 됩니다 (2026-09-12 첫 배포에서 실제 발생 → `/album/index`로 수정)
-- `.vercelignore`가 `moment/`를 제외 — 서빙되는 것은 빌드 산출물 `album/`뿐
-- Production URL: https://homepage-dwkim.vercel.app (앨범: `/album`)
+  - `/tetris`·`/tetris/*`도 같은 규칙으로 `/tetris/index`로 보냅니다
+  - `rewrites`는 파일시스템 조회 **이후**에 적용되므로 `/tetris/_next/...` 같은 실제 자산은 가로채이지 않습니다
+- `.vercelignore`가 `moment/`·`tetris-src/`를 제외 — 서빙되는 것은 빌드 산출물 `album/`·`tetris/`뿐
+- Production URL: https://homepage-dwkim.vercel.app (앨범: `/album`, 테트리스: `/tetris`)
 
 ## Data Pipeline (레거시 — 현재 프론트에서 미사용)
 
@@ -97,6 +101,57 @@ cd moment && npm run build     # → repo 루트 album/ 갱신 (vite.config.js�
 
 `moment/vite.config.js`에 `base: "/album/"`, `build.outDir: "../album"`, `emptyOutDir: true`가 설정되어 있습니다.
 **`album/`을 커밋하지 않으면 배포본이 소스와 어긋납니다.** Supabase 키를 회전하면 `moment/.env.local` 수정 후 재빌드해야 합니다 (키가 번들에 인라인됨 — Vercel 환경변수 불필요).
+
+## 테트리스 — `/tetris`
+
+Streamlit 앱(`tetris_streamlit.py`)을 Next.js 정적 export 로 옮긴 것입니다.
+
+- **소스**: `tetris-src/` (Next.js 16 + React 19, `output: 'export'`)
+- **서빙**: `tetris/` — 빌드 산출물. Vercel은 빌드하지 않으므로 **이 폴더가 실제 배포본**
+- **경로**: `https://homepage-dwkim.vercel.app/tetris` (홈페이지 바로가기 '게임 → TETRIS' 타일 → 새 탭)
+- **인증·백엔드 없음** — 완전한 클라이언트 사이드 게임
+
+### ⚠️ 소스 폴더명이 `tetris-src` 인 이유
+
+`next.config.mjs`의 `basePath: '/tetris'` 와 **서빙 폴더명이 반드시 일치**해야 합니다.
+Next.js는 자산을 `/tetris/_next/...` 로 참조하므로, 산출물이 `tetris/` 가 아니면 전부 404가 됩니다.
+소스와 산출물을 같은 폴더에 둘 수 없어(빌드 시 덮어씀) `moment/` → `album/` 과 같은 방식으로 이름을 분리했습니다.
+
+### 구조
+
+| 경로 | 역할 |
+| --- | --- |
+| `game/constants.js` | 보드 크기·색·테트로미노·속도 공식 |
+| `game/reducer.js` | **순수 게임 로직** (React 미import — 그대로 테스트 가능) |
+| `game/reducer.test.js` | 단위 테스트 21개 (`node --test`) |
+| `game/render.js` | Canvas 그리기 (`(ctx, state)` 순수 함수) + DPR 보정 |
+| `hooks/` | `useGameLoop`(rAF) · `useKeyboard` · `useSwipe` · `useAudio` |
+| `components/TetrisGame.jsx` | 오케스트레이터 |
+
+### 설계 요점
+
+- **상태**: `useReducer` 가 단일 진실 공급원. 하강 간격은 `max(80, 800-(level-1)*70)` ms 라 최대 초당 12.5회만 dispatch 됩니다. 60fps는 **그리기에만** 해당하며 rAF 루프가 ref로 명령형 호출합니다(React 렌더 우회).
+- **`setInterval` 대신 rAF**: 백그라운드 탭에서 자동 정지, 드리프트 없음. 단 `ts - lastT` 가 커지면 하강이 폭주하므로 `MAX_FRAME_DELTA_MS = 200` 으로 자릅니다.
+- **오디오**: 테마곡은 96kbps·2.1MB로 재인코딩해 `public/audio/` 에 두고 `preload="none"` + '시작' 클릭 시 로드. 효과음 4개는 합계 30KB.
+
+### ⚠️ 변환 시 걸린 함정 (재발 방지)
+
+1. **SSR**: `document`·`canvas.getContext`·`new Audio()`·`requestAnimationFrame` 은 서버에 없습니다. `'use client'` + 반드시 `useEffect` 안에서.
+2. **React의 passive 터치 리스너**: React 17+ 는 `touchstart`/`touchmove`/`wheel` 을 루트에 passive로 등록하므로 `onTouchStart` 안의 `preventDefault()` 가 먹지 않습니다. 스와이프·조작 버튼은 **네이티브 리스너(`{passive:false}`)** 로 붙여야 하며, 아니면 한 번 눌러 두 번 동작합니다.
+3. **basePath는 문자열 URL에 자동 적용되지 않습니다**: `new Audio('/audio/x.mp3')` 는 404. `process.env.NEXT_PUBLIC_BASE_PATH` 를 붙여야 합니다.
+4. **StrictMode 이중 마운트**: 개발 모드에서 effect가 두 번 실행되어 rAF 루프·Audio 객체가 2개 생깁니다. cleanup에서 `cancelAnimationFrame` 필수.
+5. `rewrites` destination에 **`.html` 금지** (위 Deployment 절 참조).
+
+### ⚠️ 빌드 산출물을 커밋하므로 소스 수정 시 재빌드 필수
+
+```sh
+cd tetris-src && npm test      # 순수 로직 단위 테스트
+cd tetris-src && npm run build # → repo 루트 tetris/ 갱신 (next build && cp -R out ../tetris)
+```
+
+**`tetris/`을 커밋하지 않으면 배포본이 소스와 어긋납니다.**
+
+`tetris_streamlit.py` 는 **보관용으로 남겨둡니다**(`arkanoid_streamlit.py`·`family-todos.gs` 와 같은 선례). Streamlit Cloud 앱은 별도로 살아 있습니다.
 
 ## VOCA (Google Sheets Editor - Streamlit)
 
@@ -180,4 +235,6 @@ Drop:
 ## No Tests / No Lint / No CI Tests
 
 This is a personal start page. No test framework, no linter config, no build system. Edit and open in browser directly.
+
+**예외 2곳** — `moment/`(앨범, Vite 빌드)와 `tetris-src/`(테트리스, Next.js 빌드 + `node --test` 단위 테스트 21개). 두 프로젝트 모두 **산출물을 커밋**하므로 소스를 고치면 재빌드해야 합니다. 나머지 repo는 여전히 빌드도 테스트도 없습니다.
 

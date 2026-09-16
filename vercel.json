@@ -7,6 +7,8 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/album", "destination": "/album/index" },
-    { "source": "/album/:path*", "destination": "/album/index" }
+    { "source": "/album/:path*", "destination": "/album/index" },
+    { "source": "/tetris", "destination": "/tetris/index" },
+    { "source": "/tetris/:path*", "destination": "/tetris/index" }
   ]
 }

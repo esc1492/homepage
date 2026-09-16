@@ -1,0 +1,7 @@
+# 빌드 산출물 — 커밋되는 것은 repo 루트의 tetris/ 입니다 (npm run build 가 복사)
+.next
+out
+
+node_modules
+.DS_Store
+*.log

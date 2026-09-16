@@ -13,6 +13,9 @@ server.py
 *.md
 moment/
 
+# Next.js 소스 — 재빌드 산출물 tetris/ 만 서빙합니다 (album/ 과 같은 구조)
+tetris-src/
+
 # OS/환경 파일
 .DS_Store
 .env
