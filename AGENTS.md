@@ -55,7 +55,7 @@ Tickers are defined only in `fetch.py` — `tickers = [...]`. (`index.html`의 `
 - 로그인 상태: `onAuthStateChange`/`getSession` → `applyAuthState` → `isAuthed`
 
 ### Album SPA (`moment/` → `album/`)
-- **유일하게 빌드가 있는 부분.** Vite + React 19 + react-router 7 + @supabase/supabase-js v2
+- **빌드가 있는 두 곳 중 하나** (다른 하나는 테트리스 `tetris-src/`). Vite + React 19 + react-router 7 + @supabase/supabase-js v2
 - `moment/vite.config.js`: `base: "/album/"`, `build.outDir: "../album"`, `emptyOutDir: true`
 - 소스 수정 후 **반드시** `cd moment && npm run build` → `album/` 재생성 → 커밋 (Vercel은 빌드하지 않음)
 - 홈페이지와 **같은 Supabase 프로젝트**를 쓰며, 같은 origin이라 로그인 세션이 자동 공유됨
