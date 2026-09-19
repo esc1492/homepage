@@ -42,7 +42,8 @@ export const ITEM_TYPES = {
   P: { color: '#FFD700', letter: 'P' },
 };
 
-// 가중치 합 100. 누적 순서가 뽑힐 타입을 정하므로 테스트로 순서를 고정합니다.
+// 가중치 합 95. 누적 순서가 뽑힐 타입을 정하므로 테스트로 순서를 고정합니다.
+// (world.js 의 dropItem 은 이 목록을 훑으며 누적합을 빼므로, 합이 얼마든 마지막 항목까지 간다.)
 export const ITEM_WEIGHTS = [
   { type: 'D', w: 30 },
   { type: 'E', w: 15 },

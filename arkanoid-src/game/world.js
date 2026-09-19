@@ -177,7 +177,7 @@ export function resolveTransition(world, events) {
   resetBall(world);
 }
 
-export function dropItem(world, brick, events) {
+export function dropItem(world, brick) {
   // 화면에 아이템은 하나뿐입니다.
   if (world.items.length > 0) return;
   if (brick.maxHp !== 1) return; // 실버(2HP)·골드(99HP)는 떨어뜨리지 않습니다

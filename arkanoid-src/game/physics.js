@@ -141,7 +141,7 @@ export function stepLasers(world, events) {
             b.visible = false;
             world.score += 10 * world.round;
             events.push(EV.brickBroken);
-            dropItem(world, b, events);
+            dropItem(world, b);
           }
         } else {
           events.push(EV.wallHit);
@@ -214,7 +214,7 @@ function resolveBrickHit(world, b, events) {
         brick.visible = false;
         world.score += 10 * world.round;
         events.push(EV.brickBroken);
-        dropItem(world, brick, events);
+        dropItem(world, brick);
       } else {
         events.push(EV.wallHit);
       }

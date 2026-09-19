@@ -104,22 +104,22 @@ test('launchBall 은 ready 에서만 동작하고 위쪽으로 발사한다', ()
 test('dropItem: 주사위와 가드를 구분한다 (상수 rng 주입)', () => {
   // 항상 드롭하는 rng 라도 실버·골드는 떨어뜨리지 않습니다.
   const always = createWorld({ rng: () => 0 });
-  dropItem(always, makeBrick(3, 0, 2, 2, '#9E9E9E'), []);
-  dropItem(always, makeBrick(0, 1, 99, 99, '#B8860B', { destructible: false }), []);
+  dropItem(always, makeBrick(3, 0, 2, 2, '#9E9E9E'));
+  dropItem(always, makeBrick(0, 1, 99, 99, '#B8860B', { destructible: false }));
   assert.equal(always.items.length, 0, '실버·골드는 드롭하지 않습니다');
 
   // 1-HP 는 같은 rng 에서 드롭합니다.
-  dropItem(always, oneHpBrick(), []);
+  dropItem(always, oneHpBrick());
   assert.equal(always.items.length, 1);
 
   // 화면에 하나 있으면 더 안 나옵니다.
-  dropItem(always, oneHpBrick(), []);
+  dropItem(always, oneHpBrick());
   assert.equal(always.items.length, 1);
 
   // 확률 게이트 — 0.99 는 ITEM_DROP_CHANCE 를 넘습니다.
   const never = createWorld({ rng: () => 0.99 });
   assert.ok(0.99 > ITEM_DROP_CHANCE);
-  dropItem(never, oneHpBrick(), []);
+  dropItem(never, oneHpBrick());
   assert.equal(never.items.length, 0);
 });
 
@@ -137,7 +137,7 @@ test('dropItem: 가중치 경계값이 아이템 종류를 정한다', () => {
 
   for (const [roll, expected] of cases) {
     const w = createWorld({ rng: rngSeq([0, roll]) });
-    dropItem(w, oneHpBrick(), []);
+    dropItem(w, oneHpBrick());
     assert.equal(w.items.length, 1, `roll ${roll}`);
     assert.equal(w.items[0].type, expected, `roll ${roll}`);
   }
@@ -153,14 +153,14 @@ test('마지막 레벨은 첫 1-HP 브릭에서 B 포탈을 확정 지급한다'
   const w = createWorld({ rng: () => 0.99 });
   w.round = LEVEL_COUNT;
 
-  dropItem(w, oneHpBrick(), []);
+  dropItem(w, oneHpBrick());
   assert.equal(w.items.length, 1);
   assert.equal(w.items[0].type, 'B');
   assert.equal(w.portalGranted, true);
 
   // 보장은 한 번뿐 — 이후에는 평소 확률로 돌아갑니다.
   w.items = [];
-  dropItem(w, oneHpBrick(), []);
+  dropItem(w, oneHpBrick());
   assert.equal(w.items.length, 0);
 });
 
@@ -169,11 +169,11 @@ test('포탈 보장은 화면에 아이템이 있으면 소비되지 않고 남�
   w.round = LEVEL_COUNT;
   w.items = [{ x: 0 }];
 
-  dropItem(w, oneHpBrick(), []);
+  dropItem(w, oneHpBrick());
   assert.equal(w.portalGranted, false, '게이트에 막혔으니 보장이 남아야 합니다');
 
   w.items = [];
-  dropItem(w, oneHpBrick(), []);
+  dropItem(w, oneHpBrick());
   assert.equal(w.items[0].type, 'B');
 });
 

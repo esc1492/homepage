@@ -3,16 +3,7 @@
 //
 // 원본은 전역 `bx` 를 썼지만 여기서는 ctx 를 인자로 받습니다.
 
-import {
-  BEAD_R,
-  BRICK_COLORS,
-  CEILING_Y,
-  H,
-  PADDLE_H,
-  PADDLE_W,
-  W,
-  WALL_LEFT,
-} from './constants.js';
+import { BEAD_R, H, PADDLE_H, PADDLE_W, W, WALL_LEFT } from './constants.js';
 
 /**
  * 논리 크기(cssW×cssH)로 CSS 박스를 잡고 백킹 스토어만 DPR 배수로 키웁니다.
@@ -555,5 +546,3 @@ export function drawScene(ctx, world, assets = {}) {
     drawOverlay(ctx, 'YOU WIN!', '최종 점수: ' + world.score);
   }
 }
-
-export { BRICK_COLORS, CEILING_Y };
