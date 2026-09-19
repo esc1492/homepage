@@ -1,0 +1,148 @@
+/* 원본 arkanoid_streamlit.py 의 <style> 블록(36–80행)에서 Streamlit 크롬 숨김 규칙만
+   걷어낸 것입니다. 아래 '터치' 주석이 붙은 규칙들은 iframe 밖으로 나오면서 새로 필요해진 것입니다. */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  /* 터치: 원본은 Streamlit iframe 안이라 페이지 스크롤 문제가 없었습니다. 이제 게임이
+     최상위 문서를 차지하므로 당겨서 새로고침과 고무줄 스크롤을 여기서 막습니다.
+     ⚠️ overflow: hidden 은 쓰지 않습니다 — 세로가 짧은 화면에서 조작 버튼에 닿을 수 없게
+     됩니다. 캔버스 위 스크롤은 touch-action: none 이 막고 나머지 영역은 스크롤을 허용합니다. */
+  overscroll-behavior: none;
+}
+
+body {
+  background: #111;
+  color: #eee;
+  font-family: monospace;
+  display: flex;
+  justify-content: center;
+  padding: 20px 0 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.game-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+canvas.board {
+  border: 2px solid #444;
+  border-radius: 6px;
+  background: #0a0a12;
+  display: block;
+  max-width: 100%;
+  height: auto;
+  /* 터치: 스크롤·확대 차단의 핵심입니다. preventDefault 가 아니라 이 속성이 막습니다. */
+  touch-action: none;
+  overscroll-behavior: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ctrl-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.ctrl-btn {
+  width: 64px;
+  height: 56px;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid #555;
+  background: #1e1e1e;
+  color: #fff;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  /* 더블탭 확대를 막되 스크롤은 허용합니다 (캔버스와 달리 여기는 페이지 조작 영역). */
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ctrl-btn:active {
+  background: #3a3a3a;
+  transform: scale(0.94);
+}
+
+.ctrl-btn.wide {
+  width: 140px;
+  font-size: 13px;
+}
+
+.key-hint {
+  font-size: 10px;
+  color: #555;
+  text-align: center;
+  line-height: 1.7;
+  margin-top: 2px;
+}
+
+@media (max-width: 540px) {
+  body {
+    padding: 4px 4px 0;
+    overflow-x: hidden;
+  }
+
+  .game-area {
+    gap: 20px;
+  }
+
+  .controls .ctrl-btn {
+    width: 48px;
+    height: 38px;
+    font-size: 14px;
+  }
+
+  .controls .ctrl-btn.wide {
+    width: 80px;
+    font-size: 11px;
+  }
+
+  .controls {
+    gap: 2px;
+    margin-top: 5px;
+  }
+
+  .ctrl-row {
+    gap: 4px;
+  }
+
+  .key-hint {
+    display: none;
+  }
+
+  canvas.board {
+    max-width: 100%;
+    height: auto;
+  }
+}

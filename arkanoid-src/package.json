@@ -1,0 +1,16 @@
+{
+  "name": "arkanoid-src",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build && rm -rf ../arkanoid && cp -R out ../arkanoid",
+    "test": "node --test \"game/*.test.js\""
+  },
+  "dependencies": {
+    "next": "16.3.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  }
+}

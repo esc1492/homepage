@@ -21,9 +21,13 @@ cd moment && npm run dev      # 앨범 개발 서버
 cd tetris-src && npm run build # 테트리스 재빌드 → repo 루트 tetris/ 갱신
 cd tetris-src && npm test      # 게임 로직 단위 테스트 (node --test, 21개)
 cd tetris-src && npm run dev   # 테트리스 개발 서버 (http://localhost:3000/tetris)
+
+cd arkanoid-src && npm run build # 알카노이드 재빌드 → repo 루트 arkanoid/ 갱신
+cd arkanoid-src && npm test      # 게임 로직 단위 테스트 (node --test, 47개)
+cd arkanoid-src && npm run dev   # 알카노이드 개발 서버 (http://localhost:3000/arkanoid)
 ```
 
-No test framework, no linter, no build system — **예외 2곳**: `moment/`(앨범, Vite)와 `tetris-src/`(테트리스, Next.js 정적 export + `node --test`). 두 프로젝트 모두 산출물(`album/`·`tetris/`)이 커밋되므로 소스를 고치면 재빌드해야 합니다. 나머지 repo는 여전히 빌드가 없습니다.
+No test framework, no linter, no build system — **예외 3곳**: `moment/`(앨범, Vite), `tetris-src/`(테트리스, Next.js 정적 export + `node --test`), `arkanoid-src/`(알카노이드, 같음). 세 프로젝트 모두 산출물(`album/`·`tetris/`·`arkanoid/`)이 커밋되므로 소스를 고치면 재빌드해야 합니다. 나머지 repo는 여전히 빌드가 없습니다.
 
 ## Architecture
 
@@ -56,7 +60,7 @@ Tickers are defined only in `fetch.py` — `tickers = [...]`. (`index.html`의 `
 - 로그인 상태: `onAuthStateChange`/`getSession` → `applyAuthState` → `isAuthed`
 
 ### Album SPA (`moment/` → `album/`)
-- **빌드가 있는 두 곳 중 하나** (다른 하나는 테트리스 `tetris-src/`). Vite + React 19 + react-router 7 + @supabase/supabase-js v2
+- **빌드가 있는 세 곳 중 하나** (나머지는 `tetris-src/`·`arkanoid-src/`). Vite + React 19 + react-router 7 + @supabase/supabase-js v2
 - `moment/vite.config.js`: `base: "/album/"`, `build.outDir: "../album"`, `emptyOutDir: true`
 - 소스 수정 후 **반드시** `cd moment && npm run build` → `album/` 재생성 → 커밋 (Vercel은 빌드하지 않음)
 - 홈페이지와 **같은 Supabase 프로젝트**를 쓰며, 같은 origin이라 로그인 세션이 자동 공유됨
@@ -83,12 +87,13 @@ Available sounds: `break.mp3`, `change.mp3`, `drop.mp3`, `swipe.mp3`
 |------|------|
 | `index.html` | Main start page (~1273 lines, vanilla) |
 | `tetris_streamlit.py` | Tetris game — **보관용**. 실제 서빙은 `tetris-src/` → `tetris/` (`/tetris`) |
-| `arkanoid_streamlit.py` | Arkanoid game |
+| `arkanoid_streamlit.py` | Arkanoid game — **보관용**. 실제 서빙은 `arkanoid-src/` → `arkanoid/` (`/arkanoid`) |
 | `chatbot_app.py` | Chatbot using Anthropic SDK + web_search tool |
 | `ocr_app.py` | OCR 텍스트 추출 (Naver Clova OCR + 번역) |
 | `voca/` | 영단어 학습 (Google Sheets + DeepSeek) |
 | `moment/` → `album/` | 앨범 — 사진 게시판 SPA. 소스는 `moment/`, 서빙되는 빌드 산출물은 `album/` (`/album` 경로) |
 | `tetris-src/` → `tetris/` | 테트리스 — Next.js 정적 export. 소스는 `tetris-src/`, 서빙되는 빌드 산출물은 `tetris/` (`/tetris` 경로) |
+| `arkanoid-src/` → `arkanoid/` | 알카노이드 — Next.js 정적 export. 소스는 `arkanoid-src/`, 서빙되는 빌드 산출물은 `arkanoid/` (`/arkanoid` 경로) |
 
 ## Server
 
