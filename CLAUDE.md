@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Always use polite/formal Korean (존댓말, 하십시오체) when responding to the user.
 - Never use 반말 (informal speech). This rule persists across all sessions and context resets.
+- **사용자를 부를 때는 "동완님"을 씁니다.** "선생님" 등 다른 호칭은 어색해하십니다 (2026-09-21 요청).
 
 ## Project Overview
 
