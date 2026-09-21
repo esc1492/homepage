@@ -88,12 +88,23 @@ Available sounds: `break.mp3`, `change.mp3`, `drop.mp3`, `swipe.mp3`
 | `index.html` | Main start page (~1273 lines, vanilla) |
 | `tetris_streamlit.py` | Tetris game — **보관용**. 실제 서빙은 `tetris-src/` → `tetris/` (`/tetris`) |
 | `arkanoid_streamlit.py` | Arkanoid game — **보관용**. 실제 서빙은 `arkanoid-src/` → `arkanoid/` (`/arkanoid`) |
-| `chatbot_app.py` | Chatbot using Anthropic SDK + web_search tool |
+| `chatbot_app.py` | 챗봇 — **보관용**. 실제 서빙은 `api/chat.js` + `chat/` (`/chat` 경로) |
 | `ocr_app.py` | OCR 텍스트 추출 (Naver Clova OCR + 번역) |
 | `voca/` | 영단어 학습 (Google Sheets + DeepSeek) |
 | `moment/` → `album/` | 앨범 — 사진 게시판 SPA. 소스는 `moment/`, 서빙되는 빌드 산출물은 `album/` (`/album` 경로) |
 | `tetris-src/` → `tetris/` | 테트리스 — Next.js 정적 export. 소스는 `tetris-src/`, 서빙되는 빌드 산출물은 `tetris/` (`/tetris` 경로) |
 | `arkanoid-src/` → `arkanoid/` | 알카노이드 — Next.js 정적 export. 소스는 `arkanoid-src/`, 서빙되는 빌드 산출물은 `arkanoid/` (`/arkanoid` 경로) |
+| `api/chat.js` + `chat/` | 챗봇(미키) — Vercel 함수 + 정적 UI (`/chat` 경로) |
+
+## Vercel Functions
+
+`api/chat.js` 는 이 저장소의 **유일한 서버 함수**입니다 (2026-09-21 추가).
+
+- `vercel.json` 이 `framework: null` + `outputDirectory: "."` 인 정적 배포지만, **`api/` 디렉터리는 함께 빌드됩니다** (로컬 `vercel dev` 로 확인). 정적 사이트와 충돌하지 않습니다.
+- 라우팅: `api/chat.js` → `/api/chat`. 파일마다 별도 함수가 됩니다.
+- 형식: `export default { async fetch(request) {...} }` (Vercel 의 `framework=other` 규약).
+- `.vercelignore` 의 `*.py` 는 **하위 모든 깊이에 적용**되므로 파이썬으로 함수를 쓰면 조용히 누락됩니다. JS 는 해당 없음.
+- 문서 참고: <https://vercel.com/docs/functions/runtimes/python/api-directory>
 
 ## Server
 

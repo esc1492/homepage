@@ -9,10 +9,21 @@
 const SUPABASE_URL = "https://oggzgullnohqehthewuw.supabase.co";
 const SUPABASE_KEY = "sb_publishable_XVSK5Evl0W64_7h-XLZ1cQ_rnzo3qMC";
 
-const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
+// 실제 제공자는 DeepSeek 의 Anthropic 호환 엔드포인트입니다 (2026-09-21 확인).
+// 기존 Streamlit 판도 ANTHROPIC_BASE_URL 환경변수로 바꿀 수 있었으므로 그 방식을 유지합니다.
+const ANTHROPIC_BASE_URL =
+  process.env.ANTHROPIC_BASE_URL || "https://api.deepseek.com/anthropic";
+const ANTHROPIC_URL = `${ANTHROPIC_BASE_URL}/v1/messages`;
+
+// DeepSeek 은 이 헤더를 무시하지만, Anthropic 규격을 그대로 두어 제공자를 바꿔도 동작하게 합니다.
 const ANTHROPIC_VERSION = "2023-06-01";
-const MODEL = "claude-sonnet-4-20250514";
+
+// DeepSeek 은 Claude 모델명을 자동 매핑합니다 (claude-sonnet* → deepseek-flash).
+// 기존 챗봇과 동일한 값을 유지합니다.
+const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
 const MAX_TOKENS = 4096;
+
+// DeepSeek 은 Anthropic 의 서버 도구를 실제로 실행합니다 (web_search_20250305 확인됨).
 const WEB_TOOL = { type: "web_search_20250305", name: "web_search" };
 
 // SOUL.md 와 동기화를 유지합니다. (.vercelignore 의 `*.md` 때문에 SOUL.md 는 배포에

@@ -207,7 +207,7 @@
     row.appendChild(body);
     threadEl.appendChild(row);
     threadEl.scrollTop = threadEl.scrollHeight;
-    return body;
+    return row;
   }
 
   function showGate(){
@@ -233,10 +233,11 @@
     if (sending) return;
     setSending(true);
 
-    bubble('user', text);
+    var userRow = bubble('user', text);
     history.push({ role: 'user', content: text });
 
-    var body = bubble('assistant', '');
+    var assistantRow = bubble('assistant', '');
+    var body = assistantRow.querySelector('.text');
 
     try {
       var res = await fetch('/api/chat', {
@@ -249,7 +250,9 @@
       });
 
       if (res.status === 401){
-        body.parentElement.remove();
+        // 화면과 이력을 함께 되돌립니다. 한쪽만 지우면 어긋납니다.
+        assistantRow.remove();
+        userRow.remove();
         history.pop();
         showGate();
         return;
