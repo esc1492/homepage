@@ -247,7 +247,10 @@ Streamlit 판(`chatbot_app.py`)을 Vercel 로 옮긴 것입니다 (2026-09-21). 
 - **서버**: `api/chat.js` — 이 저장소의 **유일한 Vercel Function**. `export default { async fetch(request) }`
 - **UI**: `chat/index.html` — 순수 HTML/CSS/JS. 빌드 도구 없음 → **재빌드 불필요**
 - **경로**: `https://homepage-dwkim.vercel.app/chat` (홈페이지 바로가기 '챗봇' 타일 → 새 탭)
-- `chatbot_app.py` 는 **보관용**으로 남겨둡니다
+- `chatbot_app.py` 는 **보관용**으로 남겨둡니다 (테트리스·알카노이드의 `*_streamlit.py` 와 같은 선례)
+- **Streamlit Cloud 앱은 2026-09-21 삭제했습니다** — 이전의 원래 동기 중 하나가 "인증 없이 누구나 쓸 수 있음"이었는데, 앱이 살아 있으면 그 구멍이 남으므로 보관용 코드만 남기고 앱은 폐기했습니다
+  - ⚠️ 남은 Streamlit 앱은 **학습(VOCA)·OCR 둘**입니다. 이 둘은 아직 사용 중이고 홈페이지 메뉴가 가리키고 있으므로 **이전이 끝나기 전에 끄면 기능이 죽습니다**
+  - 테트리스·알카노이드의 Streamlit 앱이 별도로 살아 있는지는 저장소에 URL이 남아 있지 않아 확인할 수 없습니다 (Streamlit Cloud 대시보드에서 확인)
 
 ### ⚠️ 실제 제공자는 DeepSeek 입니다 (Anthropic 이 아닙니다)
 

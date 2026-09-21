@@ -88,7 +88,7 @@ Available sounds: `break.mp3`, `change.mp3`, `drop.mp3`, `swipe.mp3`
 | `index.html` | Main start page (~1273 lines, vanilla) |
 | `tetris_streamlit.py` | Tetris game — **보관용**. 실제 서빙은 `tetris-src/` → `tetris/` (`/tetris`) |
 | `arkanoid_streamlit.py` | Arkanoid game — **보관용**. 실제 서빙은 `arkanoid-src/` → `arkanoid/` (`/arkanoid`) |
-| `chatbot_app.py` | 챗봇 — **보관용**. 실제 서빙은 `api/chat.js` + `chat/` (`/chat` 경로) |
+| `chatbot_app.py` | 챗봇 — **보관용**. 실제 서빙은 `api/chat.js` + `chat/` (`/chat` 경로). Streamlit Cloud 앱은 2026-09-21 삭제 |
 | `ocr_app.py` | OCR 텍스트 추출 (Naver Clova OCR + 번역) |
 | `voca/` | 영단어 학습 (Google Sheets + DeepSeek) |
 | `moment/` → `album/` | 앨범 — 사진 게시판 SPA. 소스는 `moment/`, 서빙되는 빌드 산출물은 `album/` (`/album` 경로) |
