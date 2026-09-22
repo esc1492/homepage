@@ -5,9 +5,13 @@ __pycache__/
 .serena/
 .mcp.json
 memory/
+# 환경변수 — `.env` 뒤에 무엇이 붙든 막습니다.
+# 좁은 패턴(`.env`·`.env.local`·`.env.*.local`)은 `.env.local.bak`·`.env.production`·
+# `.env.save` 같은 사본을 통과시킵니다. 2026-09-22 에 `.env.local.bak` 이 그대로
+# 통과하는 것을 확인하고 넓혔습니다. `.env.example` 같은 템플릿을 커밋하려면
+# `!.env.example` 로 예외를 두십시오.
 .env
-.env.local
-.env.*.local
+.env.*
 node_modules/
 
 # 생성물 — fetch.py 가 만들며 소비하는 코드가 없습니다 (레거시 파이프라인, 2026-09-16 추적 해제)
