@@ -89,7 +89,7 @@ Available sounds: `break.mp3`, `change.mp3`, `drop.mp3`, `swipe.mp3`
 | `tetris_streamlit.py` | Tetris game — **보관용**. 실제 서빙은 `tetris-src/` → `tetris/` (`/tetris`) |
 | `arkanoid_streamlit.py` | Arkanoid game — **보관용**. 실제 서빙은 `arkanoid-src/` → `arkanoid/` (`/arkanoid`) |
 | `chatbot_app.py` | 챗봇 — **보관용**. 실제 서빙은 `api/chat.js` + `chat/` (`/chat` 경로). Streamlit Cloud 앱은 2026-09-21 삭제 |
-| `ocr_app.py` | OCR 텍스트 추출 — **보관용**. 실제 서빙은 `api/ocr.js` + `ocr/` (`/ocr` 경로). Streamlit Cloud 앱은 2026-09-22 기준 아직 살아 있음 |
+| `ocr_app.py` | OCR 텍스트 추출 — **보관용**. 실제 서빙은 `api/ocr.js` + `ocr/` (`/ocr` 경로). Streamlit Cloud 앱은 2026-09-22 삭제 |
 | `voca/` | 영단어 학습 (Google Sheets + DeepSeek) |
 | `moment/` → `album/` | 앨범 — 사진 게시판 SPA. 소스는 `moment/`, 서빙되는 빌드 산출물은 `album/` (`/album` 경로) |
 | `tetris-src/` → `tetris/` | 테트리스 — Next.js 정적 export. 소스는 `tetris-src/`, 서빙되는 빌드 산출물은 `tetris/` (`/tetris` 경로) |
