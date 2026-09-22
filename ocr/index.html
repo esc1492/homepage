@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OCR 텍스트 추출</title>
+<style>
+  :root {
+    --color-canvas-parchment: #f7f7f4;
+    --color-inkwell: #262510;
+    --color-muted-stone: #7a7974;
+    --color-pebble-gray: #e6e5e0;
+    --color-highlight-beige: #cdcdc9;
+    --radius-cards: 4px;
+
+    --font-primary: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-primary);
+    background: var(--color-canvas-parchment);
+    color: var(--color-inkwell);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .app {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 16px 40px;
+  }
+
+  header {
+    padding: 22px 0 14px;
+    border-bottom: 1px solid var(--color-pebble-gray);
+  }
+
+  header h1 { font-size: 20px; font-weight: 600; }
+  header p { font-size: 12px; color: var(--color-muted-stone); margin-top: 2px; }
+
+  .hidden { display: none !important; }
+
+  /* ── 로그인 게이트 ─────────────────────────────── */
+  #gate {
+    text-align: center;
+    padding: 70px 20px;
+  }
+
+  #gate .icon { font-size: 34px; }
+  #gate h2 { font-size: 16px; font-weight: 600; margin: 12px 0 6px; }
+  #gate p { font-size: 13px; color: var(--color-muted-stone); }
+
+  #gate a {
+    display: inline-block;
+    margin-top: 18px;
+    padding: 9px 18px;
+    background: var(--color-inkwell);
+    color: var(--color-canvas-parchment);
+    border-radius: var(--radius-cards);
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  /* ── 파일 선택 ─────────────────────────────────── */
+  #drop {
+    margin-top: 20px;
+    border: 1px dashed var(--color-highlight-beige);
+    border-radius: var(--radius-cards);
+    background: #fff;
+    padding: 26px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+
+  #drop:hover, #drop.over {
+    border-color: var(--color-inkwell);
+    background: #fcfcfa;
+  }
+
+  #drop .icon { font-size: 24px; }
+  #drop .hint { margin-top: 6px; }
+  #drop .types { font-size: 12px; color: var(--color-muted-stone); margin-top: 2px; }
+
+  #fileInfo {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 13px;
+  }
+
+  #fileInfo .name {
+    font-weight: 600;
+    word-break: break-all;
+  }
+
+  #fileInfo .size { color: var(--color-muted-stone); }
+
+  button {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 16px;
+    border: 1px solid var(--color-highlight-beige);
+    border-radius: var(--radius-cards);
+    background: #fff;
+    color: var(--color-inkwell);
+    cursor: pointer;
+  }
+
+  button:hover:not(:disabled) { border-color: var(--color-inkwell); }
+  button:disabled { opacity: 0.4; cursor: default; }
+
+  button.primary {
+    background: var(--color-inkwell);
+    color: var(--color-canvas-parchment);
+    border-color: var(--color-inkwell);
+  }
+
+  button.primary:hover:not(:disabled) { opacity: 0.88; }
+
+  /* ── 본문 2열 ──────────────────────────────────── */
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 18px;
+    align-items: start;
+  }
+
+  .pane {
+    background: #fff;
+    border: 1px solid var(--color-pebble-gray);
+    border-radius: var(--radius-cards);
+    padding: 14px;
+  }
+
+  .pane h2 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-muted-stone);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 10px;
+  }
+
+  #preview { max-width: 100%; display: block; border-radius: var(--radius-cards); }
+
+  #pdfFrame {
+    width: 100%;
+    height: 460px;
+    border: none;
+    border-radius: var(--radius-cards);
+  }
+
+  #runBtn { width: 100%; }
+
+  #result { margin-top: 14px; }
+
+  #text {
+    width: 100%;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    background: var(--color-canvas-parchment);
+    border: 1px solid var(--color-pebble-gray);
+    border-radius: var(--radius-cards);
+    padding: 10px 12px;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+
+  #actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  #actions button { flex: 1; }
+
+  #status {
+    margin-top: 12px;
+    font-size: 13px;
+    padding: 9px 12px;
+    border-radius: var(--radius-cards);
+    border: 1px solid var(--color-pebble-gray);
+    background: #fff;
+    white-space: pre-wrap;
+  }
+
+  #status.error {
+    border-color: #e0b4b4;
+    background: #fdf6f6;
+  }
+
+  #spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 6px;
+    border: 2px solid var(--color-highlight-beige);
+    border-top-color: var(--color-inkwell);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: -1px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 768px) {
+    .columns { grid-template-columns: 1fr; }
+    #pdfFrame { height: 360px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>🔍 OCR 텍스트 추출</h1>
+    <p>이미지나 PDF 에서 텍스트를 뽑아냅니다.</p>
+  </header>
+
+  <div id="gate" class="hidden">
+    <div class="icon">🔒</div>
+    <h2>로그인이 필요합니다</h2>
+    <p>OCR 은 시작 페이지에 로그인한 뒤에 사용하실 수 있습니다.</p>
+    <a href="/">시작 페이지로 돌아가기</a>
+  </div>
+
+  <main id="main" class="hidden">
+    <div id="drop">
+      <div class="icon">📄</div>
+      <div class="hint">파일을 끌어다 놓거나 눌러서 선택하세요</div>
+      <div class="types">JPG · PNG · PDF</div>
+    </div>
+    <input type="file" id="file" accept="image/jpeg,image/png,application/pdf" hidden>
+
+    <div id="fileInfo" class="hidden">
+      <span class="name"></span>
+      <span class="size"></span>
+      <button type="button" id="changeBtn">다른 파일</button>
+    </div>
+
+    <div id="columns" class="columns hidden">
+      <div class="pane">
+        <h2>미리보기</h2>
+        <img id="preview" alt="미리보기" class="hidden">
+        <iframe id="pdfFrame" title="PDF 미리보기" class="hidden"></iframe>
+      </div>
+
+      <div class="pane">
+        <h2>추출 결과</h2>
+        <button type="button" id="runBtn" class="primary">🔍 텍스트 추출</button>
+
+        <div id="status" class="hidden"></div>
+
+        <div id="result" class="hidden">
+          <div id="text"></div>
+          <div id="actions">
+            <button type="button" id="copyBtn">복사</button>
+            <button type="button" id="saveBtn">⬇️ 다운로드</button>
+            <button type="button" id="transBtn">🌐 번역</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var SUPABASE_URL = 'https://oggzgullnohqehthewuw.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_XVSK5Evl0W64_7h-XLZ1cQ_rnzo3qMC';
+
+  // 기존 Streamlit 판은 원본 해상도를 그대로 보냈습니다. 12MP 사진이면 PNG 로
+  // 20~30MB 라 CLOVA 한도(50MB)에 근접하고 모바일에서 업로드가 버겁습니다.
+  // 긴 변을 이 크기로 줄입니다 — 정확도는 거의 유지되고 전송량은 1/10 이 됩니다.
+  var MAX_SIDE = 2000;
+  var JPEG_QUALITY = 0.9;
+
+  // CLOVA 한도(이미지 1장 50MB). 브라우저에서 먼저 걸러 헛된 업로드를 막습니다.
+  var MAX_BYTES = 50 * 1024 * 1024;
+
+  var sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  var accessToken = null;
+  var sourceBlob = null;    // 전송할 바이트 (이미지는 축소본, PDF 는 원본)
+  var sourceType = null;    // 'image' | 'pdf'
+  var sourceName = '';
+  var previewUrl = null;    // 해제 대상 object URL
+  var ocrText = '';         // 추출한 원문
+  var translatedText = null;
+  var busy = false;
+
+  var gateEl = document.getElementById('gate');
+  var mainEl = document.getElementById('main');
+  var dropEl = document.getElementById('drop');
+  var fileEl = document.getElementById('file');
+  var fileInfoEl = document.getElementById('fileInfo');
+  var nameEl = fileInfoEl.querySelector('.name');
+  var sizeEl = fileInfoEl.querySelector('.size');
+  var columnsEl = document.getElementById('columns');
+  var previewEl = document.getElementById('preview');
+  var pdfFrameEl = document.getElementById('pdfFrame');
+  var runBtn = document.getElementById('runBtn');
+  var statusEl = document.getElementById('status');
+  var resultEl = document.getElementById('result');
+  var textEl = document.getElementById('text');
+  var copyBtn = document.getElementById('copyBtn');
+  var saveBtn = document.getElementById('saveBtn');
+  var transBtn = document.getElementById('transBtn');
+
+  function showGate(){
+    gateEl.classList.remove('hidden');
+    mainEl.classList.add('hidden');
+  }
+
+  function showApp(){
+    gateEl.classList.add('hidden');
+    mainEl.classList.remove('hidden');
+  }
+
+  function setStatus(message, isError){
+    if (!message){
+      statusEl.classList.add('hidden');
+      statusEl.textContent = '';
+      return;
+    }
+    statusEl.textContent = message;
+    statusEl.classList.toggle('error', !!isError);
+    statusEl.classList.remove('hidden');
+  }
+
+  /** 처리 중에는 버튼을 잠그고 스피너를 보여줍니다. */
+  function setBusy(on, message){
+    busy = on;
+    runBtn.disabled = on;
+
+    if (!on) return;
+
+    statusEl.textContent = '';
+    statusEl.classList.remove('error', 'hidden');
+
+    var spinner = document.createElement('span');
+    spinner.id = 'spinner';
+    statusEl.appendChild(spinner);
+    statusEl.appendChild(document.createTextNode(message || '처리 중입니다...'));
+  }
+
+  function formatSize(bytes){
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+    return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+  }
+
+  /** 확장자까지 보고 형식을 판단합니다 — 드롭한 파일은 type 이 비어 있을 수 있습니다. */
+  function classify(file){
+    if (file.type === 'application/pdf') return 'pdf';
+    if (file.type === 'image/jpeg' || file.type === 'image/png') return 'image';
+
+    var name = (file.name || '').toLowerCase();
+    if (/\.(jpe?g|png)$/.test(name)) return 'image';
+    if (/\.pdf$/.test(name)) return 'pdf';
+    return null;
+  }
+
+  function loadImage(url){
+    return new Promise(function(resolve, reject){
+      var img = new Image();
+      img.onload = function(){ resolve(img); };
+      img.onerror = function(){ reject(new Error('이미지를 읽지 못했습니다.')); };
+      img.src = url;
+    });
+  }
+
+  /**
+   * 이미지를 긴 변 MAX_SIDE 로 줄여 JPEG 로 다시 굽습니다.
+   * <img> 를 거치므로 EXIF 회전이 자동 반영됩니다 (Streamlit 판의
+   * ImageOps.exif_transpose 에 해당). 세로로 찍은 사진이 눕지 않습니다.
+   */
+  async function shrinkImage(file){
+    var url = URL.createObjectURL(file);
+    try {
+      var img = await loadImage(url);
+      var longest = Math.max(img.naturalWidth, img.naturalHeight);
+      var scale = Math.min(1, MAX_SIDE / longest);
+      var width = Math.max(1, Math.round(img.naturalWidth * scale));
+      var height = Math.max(1, Math.round(img.naturalHeight * scale));
+
+      var canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+
+      var ctx = canvas.getContext('2d');
+      // 투명한 PNG 를 JPEG 로 구우면 배경이 검게 남습니다. 흰색으로 깔아둡니다.
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+
+      var blob = await new Promise(function(resolve){
+        canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY);
+      });
+      if (!blob) throw new Error('이미지를 변환하지 못했습니다.');
+      return blob;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  function releasePreview(){
+    if (previewUrl){
+      URL.revokeObjectURL(previewUrl);
+      previewUrl = null;
+    }
+  }
+
+  function clearResult(){
+    ocrText = '';
+    translatedText = null;
+    resultEl.classList.add('hidden');
+    textEl.textContent = '';
+    setStatus('');
+  }
+
+  function clearFile(){
+    releasePreview();
+    sourceBlob = null;
+    sourceType = null;
+    sourceName = '';
+    fileEl.value = '';
+    fileInfoEl.classList.add('hidden');
+    columnsEl.classList.add('hidden');
+    previewEl.classList.add('hidden');
+    pdfFrameEl.classList.add('hidden');
+    previewEl.removeAttribute('src');
+    pdfFrameEl.removeAttribute('src');
+    dropEl.classList.remove('hidden');
+    clearResult();
+  }
+
+  async function acceptFile(file){
+    if (!file) return;
+
+    var type = classify(file);
+    if (!type){
+      clearFile();
+      setStatus('JPG · PNG · PDF 파일만 처리할 수 있습니다.', true);
+      return;
+    }
+
+    setStatus('파일을 준비하고 있습니다...');
+
+    try {
+      if (type === 'image'){
+        sourceBlob = await shrinkImage(file);
+      } else {
+        sourceBlob = file;
+      }
+    } catch (err){
+      clearFile();
+      setStatus(err.message, true);
+      return;
+    }
+
+    if (sourceBlob.size > MAX_BYTES){
+      clearFile();
+      setStatus('파일이 너무 큽니다. 50MB 이하만 처리할 수 있습니다.', true);
+      return;
+    }
+
+    sourceType = type;
+    sourceName = file.name || (type === 'pdf' ? 'document.pdf' : 'image.jpg');
+
+    releasePreview();
+    previewUrl = URL.createObjectURL(sourceBlob);
+
+    if (type === 'pdf'){
+      pdfFrameEl.src = previewUrl;
+      pdfFrameEl.classList.remove('hidden');
+    } else {
+      previewEl.src = previewUrl;
+      previewEl.classList.remove('hidden');
+    }
+
+    nameEl.textContent = sourceName;
+    sizeEl.textContent = formatSize(sourceBlob.size);
+    fileInfoEl.classList.remove('hidden');
+    dropEl.classList.add('hidden');
+    columnsEl.classList.remove('hidden');
+
+    clearResult();
+  }
+
+  async function extract(){
+    if (!sourceBlob || busy) return;
+    setBusy(true, sourceType === 'pdf' ? 'PDF 를 처리하고 있습니다...' : 'OCR 처리 중입니다...');
+
+    try {
+      var res = await fetch('/api/ocr', {
+        method: 'POST',
+        headers: {
+          'content-type': sourceBlob.type || (sourceType === 'pdf' ? 'application/pdf' : 'image/jpeg'),
+          'Authorization': 'Bearer ' + accessToken,
+          'x-file-name': encodeURIComponent(sourceName)
+        },
+        body: sourceBlob
+      });
+
+      if (res.status === 401){
+        setBusy(false);
+        showGate();
+        return;
+      }
+
+      var data = null;
+      try { data = await res.json(); } catch (err){}
+
+      if (data && data.error){
+        setBusy(false);
+        setStatus(data.error, true);
+        return;
+      }
+
+      if (!res.ok){
+        setBusy(false);
+        setStatus('오류가 발생했습니다. (HTTP ' + res.status + ')', true);
+        return;
+      }
+
+      ocrText = data.text || '';
+      translatedText = null;
+
+      if (!ocrText){
+        setBusy(false);
+        setStatus('인식된 텍스트가 없습니다.', true);
+        return;
+      }
+
+      setBusy(false);
+      setStatus('');
+      render();
+    } catch (err){
+      setBusy(false);
+      setStatus('오류가 발생했습니다: ' + err.message, true);
+    }
+  }
+
+  function render(){
+    var showingTranslation = translatedText !== null;
+    textEl.textContent = showingTranslation ? translatedText : ocrText;
+    transBtn.textContent = showingTranslation ? '🔤 원문' : '🌐 번역';
+    resultEl.classList.remove('hidden');
+  }
+
+  async function toggleTranslate(){
+    if (busy) return;
+
+    // 이미 번역본을 보여주고 있으면 원문으로 되돌립니다 (Streamlit 판의 토글과 같습니다).
+    if (translatedText !== null){
+      translatedText = null;
+      render();
+      return;
+    }
+
+    setBusy(true, '번역 중입니다...');
+
+    try {
+      var res = await fetch('/api/ocr?translate=1', {
+        method: 'POST',
+        headers: {
+          'content-type': 'text/plain; charset=utf-8',
+          'Authorization': 'Bearer ' + accessToken
+        },
+        body: ocrText
+      });
+
+      if (res.status === 401){
+        setBusy(false);
+        showGate();
+        return;
+      }
+
+      var data = null;
+      try { data = await res.json(); } catch (err){}
+
+      if (data && data.error){
+        setBusy(false);
+        setStatus(data.error, true);
+        return;
+      }
+
+      if (!res.ok || !data){
+        setBusy(false);
+        setStatus('번역에 실패했습니다. (HTTP ' + res.status + ')', true);
+        return;
+      }
+
+      translatedText = data.text || '';
+      setBusy(false);
+      setStatus('');
+      render();
+    } catch (err){
+      setBusy(false);
+      setStatus('번역 오류: ' + err.message, true);
+    }
+  }
+
+  // ── 이벤트 ────────────────────────────────────────
+  dropEl.addEventListener('click', function(){ fileEl.click(); });
+
+  fileEl.addEventListener('change', function(){
+    var file = fileEl.files && fileEl.files[0];
+    if (file) acceptFile(file);
+  });
+
+  ['dragenter', 'dragover'].forEach(function(name){
+    dropEl.addEventListener(name, function(e){
+      e.preventDefault();
+      dropEl.classList.add('over');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(function(name){
+    dropEl.addEventListener(name, function(e){
+      e.preventDefault();
+      dropEl.classList.remove('over');
+    });
+  });
+
+  dropEl.addEventListener('drop', function(e){
+    var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file) acceptFile(file);
+  });
+
+  document.getElementById('changeBtn').addEventListener('click', clearFile);
+  runBtn.addEventListener('click', extract);
+  transBtn.addEventListener('click', toggleTranslate);
+
+  copyBtn.addEventListener('click', async function(){
+    var text = translatedText !== null ? translatedText : ocrText;
+    try {
+      await navigator.clipboard.writeText(text);
+      copyBtn.textContent = '복사됨';
+      setTimeout(function(){ copyBtn.textContent = '복사'; }, 1200);
+    } catch (err){
+      setStatus('클립보드에 복사하지 못했습니다. 텍스트를 직접 선택해 주세요.', true);
+    }
+  });
+
+  saveBtn.addEventListener('click', function(){
+    var text = translatedText !== null ? translatedText : ocrText;
+    var base = sourceName.replace(/\.[^.]+$/, '') || 'ocr';
+    var url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = base + '.txt';
+    link.click();
+
+    URL.revokeObjectURL(url);
+  });
+
+  // 홈페이지와 같은 Supabase 세션을 그대로 씁니다 (같은 origin).
+  sbClient.auth.getSession().then(function(res){
+    var session = res.data && res.data.session;
+    if (session){
+      accessToken = session.access_token;
+      showApp();
+    } else {
+      showGate();
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -13,6 +13,8 @@
     { "source": "/arkanoid", "destination": "/arkanoid/index" },
     { "source": "/arkanoid/:path*", "destination": "/arkanoid/index" },
     { "source": "/chat", "destination": "/chat/index" },
-    { "source": "/chat/:path*", "destination": "/chat/index" }
+    { "source": "/chat/:path*", "destination": "/chat/index" },
+    { "source": "/ocr", "destination": "/ocr/index" },
+    { "source": "/ocr/:path*", "destination": "/ocr/index" }
   ]
 }
