@@ -1,7 +1,8 @@
-# Vercel 배포에서 제외 — 정적 홈페이지(index.html)만 서빙
-# Streamlit 앱들은 별도 스트리밃 클라우드(.streamlit.app)에서 운용
+# Vercel 배포에서 제외 — 정적 홈페이지(index.html)와 각 앱의 정적 UI 를 서빙
+# Streamlit Cloud 앱은 전부 폐기했습니다 (챗봇 2026-09-21 · OCR 2026-09-22 · VOCA 2026-09-23)
 
 # Python / Streamlit 소스는 Vercel에 배포하지 않음
+# voca/ 도 이 규칙으로 *.py 가 빠지고 voca/index.html 만 서빙됩니다
 *.py
 requirements.txt
 start.sh

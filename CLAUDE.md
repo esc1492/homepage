@@ -20,6 +20,8 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
 
 바로가기 '챗봇' 항목으로 **미키 챗봇** 을 같은 사이트의 `/chat` 경로에서 엽니다 (`api/chat.js` 서버 함수 + `chat/` 정적 UI). Streamlit 판(`chatbot_app.py`)을 Vercel 로 옮긴 것입니다.
 
+바로가기 '학습 → 영단어' 항목으로 **VOCA(영단어 학습)** 를 같은 사이트의 `/voca` 경로에서 엽니다 (`api/voca.js` 서버 함수 + `voca/index.html` 정적 UI). Streamlit 판(`voca/app.py`)을 Vercel 로 옮긴 것입니다.
+
 ## Deployment
 
 - Hosted on Vercel (project `homepage`, team `dwkim`) — static file deploy, no build step
@@ -31,10 +33,13 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
   - `/arkanoid`·`/arkanoid/*`도 같습니다
   - `/chat`·`/chat/*`도 같습니다
   - `/ocr`·`/ocr/*`도 같습니다
+  - `/voca`·`/voca/*`도 같습니다
   - `rewrites`는 파일시스템 조회 **이후**에 적용되므로 `/tetris/_next/...` 같은 실제 자산은 가로채이지 않습니다
+    - 이 성질 때문에 **없는 경로도 200 이 나옵니다** — `/voca/app.py` 는 404 가 아니라 `/voca/index` 로 폴백한 HTML(200)입니다. 배포에 실렸는지 확인할 때 상태 코드만 보면 오판합니다. 본문·`content-length` 를 확실히 없는 경로와 대조하십시오 (2026-09-23 실제로 오판할 뻔했습니다)
 - `.vercelignore`가 `moment/`·`tetris-src/`·`arkanoid-src/`를 제외 — 서빙되는 것은 빌드 산출물 `album/`·`tetris/`·`arkanoid/`뿐
   - ⚠️ `.vercelignore`는 gitignore 문법이라 패턴이 **하위 모든 깊이에 적용**됩니다. `*.py`가 그 예로, 파이썬으로 서버 함수를 쓰면 `api/foo.py`가 조용히 업로드에서 빠집니다
-- Production URL: https://homepage-dwkim.vercel.app (앨범: `/album`, 테트리스: `/tetris`, 알카노이드: `/arkanoid`, 챗봇: `/chat`, OCR: `/ocr`)
+  - `voca/` 는 제외 목록에 없지만 `*.py`·`.streamlit/`·`.venv/`·`requirements.txt` 가 각각 걸려 **`voca/index.html` 만** 배포됩니다
+- Production URL: https://homepage-dwkim.vercel.app (앨범: `/album`, 테트리스: `/tetris`, 알카노이드: `/arkanoid`, 챗봇: `/chat`, OCR: `/ocr`, 영단어: `/voca`)
 
 ## Data Pipeline (레거시 — 현재 프론트에서 미사용)
 
@@ -245,12 +250,13 @@ cd arkanoid-src && npm run build # → repo 루트 arkanoid/ 갱신 (next build 
 
 Streamlit 판(`chatbot_app.py`)을 Vercel 로 옮긴 것입니다 (2026-09-21). Streamlit 은 상시 구동 서버라 Vercel 에 올릴 수 없어 **UI 층을 다시 만들었습니다.**
 
-- **서버**: `api/chat.js` — 이 저장소의 **유일한 Vercel Function**. `export default { async fetch(request) }`
+- **서버**: `api/chat.js` — `export default { async fetch(request) }`
 - **UI**: `chat/index.html` — 순수 HTML/CSS/JS. 빌드 도구 없음 → **재빌드 불필요**
 - **경로**: `https://homepage-dwkim.vercel.app/chat` (홈페이지 바로가기 '챗봇' 타일 → 새 탭)
 - `chatbot_app.py` 는 **보관용**으로 남겨둡니다 (테트리스·알카노이드의 `*_streamlit.py` 와 같은 선례)
 - **Streamlit Cloud 앱은 2026-09-21 삭제했습니다** — 이전의 원래 동기 중 하나가 "인증 없이 누구나 쓸 수 있음"이었는데, 앱이 살아 있으면 그 구멍이 남으므로 보관용 코드만 남기고 앱은 폐기했습니다
-  - ⚠️ 남은 Streamlit 앱은 **학습(VOCA) 하나**입니다 (OCR 은 2026-09-22 `/ocr` 로 이전). 아직 사용 중이고 홈페이지 메뉴가 가리키고 있으므로 **이전이 끝나기 전에 끄면 기능이 죽습니다**
+  - ✅ 저장소가 관리하던 Streamlit Cloud 앱은 **전부 폐기했습니다** — 챗봇(2026-09-21) · OCR(2026-09-22) · 학습/VOCA(2026-09-23). 셋 다 `/chat`·`/ocr`·`/voca` 로 이전해 Vercel 이 서빙합니다
+  - ⚠️ **폐기 순서를 지키십시오: 이전 → 배포 → 프로덕션 검증 → 그 다음 앱 삭제.** 먼저 끄면 기능이 죽습니다. 삭제 여부는 **curl 로 판별되지 않습니다**(살아 있는 앱과 삭제된 앱이 똑같이 303) — 브라우저로 `share.streamlit.io/errors/not_found` 를 확인해야 합니다 (2026-09-22·23 두 번 모두)
   - 테트리스·알카노이드의 Streamlit 앱이 별도로 살아 있는지는 저장소에 URL이 남아 있지 않아 확인할 수 없습니다 (Streamlit Cloud 대시보드에서 확인)
 
 ### ⚠️ 실제 제공자는 DeepSeek 입니다 (Anthropic 이 아닙니다)
@@ -293,7 +299,7 @@ Streamlit 판(`chatbot_app.py`)을 Vercel 로 옮긴 것입니다 (2026-09-21). 
 
 1. **정적 배포에 함수를 얹을 수 있습니다.** `framework: null` + `buildCommand: null` + `outputDirectory: "."` 조합에서도 `api/` 는 함께 빌드됩니다. `vercel dev` 로 배포 없이 확인할 수 있습니다
 2. `rewrites` destination 에 **`.html` 금지** (위 Deployment 절 참조). `/chat` 은 `/chat/index` 로 보냅니다
-3. **로그인 게이트가 두 곳에 있습니다.** `index.html` 의 `data-link` 와, 같은 파일에서 URL 문자열을 비교하는 게이트(`url==='/chat'`)입니다. 한쪽만 고치면 게이트가 조용히 죽어 로그인 모달이 뜨지 않습니다. 이 게이트는 **UX 용이며 실제 보안 경계는 함수의 401** 입니다
+3. **로그인 게이트가 두 곳에 있습니다.** `index.html` 의 `data-link` 와, 같은 파일에서 URL 문자열을 비교하는 게이트입니다 (현재 `url==='/chat'||url==='/ocr'||url==='/voca'`). 한쪽만 고치면 게이트가 조용히 죽어 로그인 모달이 뜨지 않습니다. 이 게이트는 **UX 용이며 실제 보안 경계는 함수의 401** 입니다
 
 ## OCR — `/ocr`
 
@@ -360,56 +366,97 @@ POST /api/ocr?translate=1  Content-Type: text/plain
 
 1. **`.vercelignore` 의 `*.py` 때문에 파이썬 함수는 조용히 배포에서 빠집니다.** `api/ocr.py` 를 만들면 404 가 납니다. 그래서 **JS 로 썼습니다** — 예외 규칙(`!api/ocr.py`)을 뚫는 방법도 있지만 다음 사람이 또 밟습니다
 2. `rewrites` destination 에 **`.html` 금지** (위 Deployment 절 참조). `/ocr` 은 `/ocr/index` 로 보냅니다
-3. **로그인 게이트가 두 곳에 있습니다.** `index.html` 의 `data-link` 와, 같은 파일에서 URL 문자열을 비교하는 게이트(`url==='/chat'||url==='/ocr'`)입니다. 한쪽만 고치면 게이트가 조용히 죽어 로그인 모달이 뜨지 않습니다. 이 게이트는 **UX 용이며 실제 보안 경계는 함수의 401** 입니다
+3. **로그인 게이트가 두 곳에 있습니다.** `index.html` 의 `data-link` 와, 같은 파일에서 URL 문자열을 비교하는 게이트입니다 (현재 `url==='/chat'||url==='/ocr'||url==='/voca'`). 한쪽만 고치면 게이트가 조용히 죽어 로그인 모달이 뜨지 않습니다. 이 게이트는 **UX 용이며 실제 보안 경계는 함수의 401** 입니다
 4. 파일명은 `X-File-Name` 헤더로 보내므로 **`encodeURIComponent` 로 인코딩**해야 합니다. 헤더에 비ASCII 를 그대로 넣으면 예외가 납니다
 
 ### 보관용 `requirements.txt` 는 지우지 마십시오
 
 루트 `requirements.txt`(streamlit·pymupdf·deep-translator·anthropic)는 보관용 `ocr_app.py`·`chatbot_app.py` 가 의존합니다. `pymupdf`·`deep-translator` 를 빼면 보관본이 재현 불가가 됩니다.
 
-## VOCA (Google Sheets Editor - Streamlit)
+## VOCA (영단어) — `/voca`
 
-**`voca/`** — Streamlit 앱. Google Sheets 데이터를 읽고/쓰고/행을 추가할 수 있음.
+Streamlit 판(`voca/app.py` 412줄 + `auth.py` + `sheets.py`)을 Vercel 로 옮긴 것입니다 (2026-09-23). Streamlit 은 상시 구동 서버라 Vercel 에 올릴 수 없어 **UI 층을 다시 만들었습니다.**
 
-**로컬 실행** — 가상환경은 **`voca/.venv`** 하나만 씁니다. (`voca/venv`를 새로 만들지 마십시오 — 과거에 둘이 공존해 혼란을 빚었습니다.)
+- **서버**: `api/voca.js` — `export default { async fetch(request) }`
+- **UI**: `voca/index.html` — 순수 HTML/CSS/JS. 빌드 도구 없음 → **재빌드 불필요**
+- **경로**: `https://homepage-dwkim.vercel.app/voca` (홈페이지 바로가기 '학습 → 영단어' 타일 → 새 탭)
+- `voca/*.py` 는 **보관용**으로 남겨둡니다 (테트리스·알카노이드·챗봇·OCR 의 `*_streamlit.py` 와 같은 선례)
+- **Streamlit Cloud 앱은 2026-09-23 삭제했습니다** (이전·배포·프로덕션 검증 뒤에 폐기 — 챗봇·OCR 과 같은 순서). 이제 `https://homepage-3yhnryaak9uzgxrkmedepf.streamlit.app` 은 `share.streamlit.io/errors/not_found` 로 넘어갑니다
+
+### ⚠️ 다른 앱과 달리 "쓰기" 앱입니다 — 인증이 곧 보안 경계
+
+OCR 은 읽기 전용이라 최악이 비용이었지만, VOCA 는 동완님의 **실제 구글 시트를 수정·삭제**합니다. 그래서 겹을 둘 더 두었습니다.
+
+- **이메일 허용목록**(`VOCA_ALLOWED_EMAILS`) — 서비스 계정에 시트 쓰기 권한이 있으므로, Supabase 토큰만 확인하면 **앨범 회원가입으로 만들어진 다른 계정**도 시트를 읽고 고칠 수 있습니다 (2026-09-23 기준 계정 2개). 허용목록이 비면 **전부 거부**합니다 (fail-closed)
+- **스프레드시트 ID 허용목록**(`VOCA_SHEET_IDS`) — 없으면 이 함수가 "서비스 계정이 닿을 수 있는 아무 시트나 조작하는 프록시"가 됩니다
+
+### 인터페이스
+
+```text
+GET  /api/voca?sheet=<url>            → { sheets: [...] }
+GET  /api/voca?sheet=<url>&ws=<name>  → { values: [[...]] }    (0행 = 헤더)
+POST /api/voca?sheet=<url>&ws=<name>  → { applied: {...} }     본문 = { ops: [...] }
+POST /api/voca?extract=1              → { words: [...] }       본문 = 텍스트
+```
+
+`ops` 는 넷입니다 — `createSheet`(title·headers, 이름이 중복이면 409) · `update`(cells `[{row, col, value}]`, 1-based) · `delete`(rows, 순서 무관) · `append`(rows). 서버가 **고정 순서**로 적용합니다: `createSheet` → `delete`(내림차순) → `update` → `append`. 원본의 탭별 처리 순서와 같습니다 (탭 2 는 삭제 먼저, 추가 나중).
+
+### 원본에서 바꾼 것
+
+| | Streamlit 판 | 이전 후 | 이유 |
+| --- | --- | --- | --- |
+| 인증 | 없음 | 토큰 + 이메일 허용목록 | 시트 쓰기 권한이 걸려 있습니다 |
+| 시트 범위 | URL 입력 그대로 | ID 허용목록 검증 | 임의 시트 조작 프록시 차단 |
+| 쓰기 호출 | 변경 셀마다 `update_cell` (30셀=30회) | `values.batchUpdate` 등 1회 | Sheets 한도는 분당 쓰기 60회 |
+| 구글 인증 | gspread + google-auth (파이썬) | `node:crypto` 로 JWT 직접 서명 | `*.py` 때문에 파이썬 함수가 배포에서 빠집니다. **새 의존성 0** |
+| scope | `spreadsheets` + `drive.readonly` | `spreadsheets` 만 | Drive API 를 쓰지 않습니다 (`open_by_key`·`worksheets()` 는 Sheets API v4) |
+| 탭 2 기존 행 | 편집 가능해 보이나 저장되지 않고 버려짐 | **읽기 전용** + 안내 문구 | 데이터 손실로 보이는 것을 막습니다 |
+| 탭 2 빈 행 | 전부 빈 행도 추가 | 걸러냄 | 탭 4 와 같은 규칙 |
+| CSV | 저장 전 편집이 반영 안 된 값 | 화면에 보이는 값 | 내려받기가 보이는 것과 같아야 합니다 |
+| 워크시트 선택 | 목록 + '직접 입력' 모드 | 목록만 | 원본에서도 없는 이름은 오류만 냈습니다 |
+
+### 그대로 옮긴 것
+
+- **셀 diff** — 바뀐 셀만 씁니다. 빈 셀과 빈 셀은 "변경 없음"으로 봅니다
+- **삭제 인덱스** — 1-based 시트 행 번호이고 **큰 행부터** 지웁니다 (작은 행을 먼저 지우면 뒤가 밀려 엉뚱한 행이 지워집니다)
+- **`valueInputOption`** — 셀 수정·헤더 쓰기는 gspread `update(raw=True)` 이므로 `RAW`, 행 추가는 `sheets.py` 가 `USER_ENTERED` 를 명시하므로 `USER_ENTERED`. `RAW` 는 `3/4` 를 문자열로, `USER_ENTERED` 는 날짜로 해석합니다
+- **`append` 에 `insertDataOption` 을 보내지 않음** — 원본(gspread `append_row`)도 안 보내 API 기본값 `OVERWRITE` 로 동작했습니다
+- **탭 3(학습)은 시트에 아무것도 쓰지 않습니다** — 가리기와 체크박스는 화면 상태입니다
+- **단어 추출 프롬프트는 `app.py` 것을 그대로** 옮겼습니다. 응답에 `thinking` 블록이 먼저 오므로 `text` 블록만 뽑습니다 (실측 확인)
+
+### 환경변수
+
+| 이름 | 필수 | 설명 |
+| --- | --- | --- |
+| `VOCA_SA_B64` | **필수** | 서비스 계정 JSON 의 **base64 한 줄**. 로컬은 `.env.local`, 배포는 Vercel 환경변수 |
+| `VOCA_SHEET_IDS` | **필수** | 허용 스프레드시트 ID (쉼표 구분) |
+| `VOCA_ALLOWED_EMAILS` | **필수** | 허용 이메일 (쉼표 구분). **미설정 시 전부 거부** |
+| `ANTHROPIC_API_KEY` | 재사용 | 챗봇이 이미 쓰는 값 — 추출에 새 시크릿이 필요 없습니다 |
+
+- base64 는 **따옴표가 필요 없어** `.env.local` 에 한 줄로 그대로 들어갑니다 — 2026-09-22 의 "따옴표째 Vercel 에 등록" 사고를 구조적으로 막습니다
+- Vercel 한도는 **프로젝트 전체 64KB** 입니다 (키가 약 3.2KB 이므로 여유가 큽니다)
+
+### ⚠️ 함정 (재발 방지)
+
+1. **`.vercelignore` 의 `*.py` 때문에 파이썬 함수는 조용히 배포에서 빠집니다** — OCR 과 같은 이유로 JS 로 썼습니다
+2. `rewrites` destination 에 **`.html` 금지**. `/voca` 는 `/voca/index` 로 보냅니다
+3. **로그인 게이트가 두 곳에 있습니다.** `index.html` 의 `data-link` 와, 같은 파일에서 URL 문자열을 비교하는 게이트(`url==='/chat'||url==='/ocr'||url==='/voca'`)입니다. 한쪽만 고치면 게이트가 조용히 죽습니다. 이 게이트는 **UX 용이며 실제 보안 경계는 함수의 401/403** 입니다
+4. **없는 경로가 200 으로 보입니다** (위 Deployment 절) — 배포 포함 여부는 상태 코드가 아니라 본문으로 확인하십시오
+
+### 보관용 Streamlit 판 (`voca/`)
+
+`voca/app.py`·`auth.py`·`sheets.py` 는 **보관용**입니다. 로컬 실행:
 
 ```sh
 cd voca && .venv/bin/streamlit run app.py
 ```
 
-`.venv`가 없으면: `cd voca && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`
+가상환경은 **`voca/.venv`** 하나만 씁니다 (`voca/venv` 를 새로 만들지 마십시오 — 과거에 둘이 공존해 혼란을 빚었습니다). 없으면 `cd voca && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`.
 
-### Auth: Google Service Account (OAuth 없음)
-
-사용자 로그인 절차 없이 서비스 계정으로 자동 인증.
-
-### Service Account 설정 방법
-
-1. **GCP Console** (`console.cloud.google.com/apis/credentials`) → 사용자 인증 정보 만들기 → 서비스 계정
-2. 서비스 계정 생성 후 **키 탭 → 키 추가 → 새 키 만들기 → JSON** 다운로드
-3. 다운로드한 JSON을 **Google Sheet**와 공유 (시트 우상단 공유 → 서비스 계정 이메일을 편집자로 추가)
-4. **Streamlit Cloud** (`share.streamlit.io`) → 앱 → Settings → Secrets 에 아래 형식으로 등록:
-
-```toml
-p1 = "base64-chunk-1"
-p2 = "base64-chunk-2"
-...
-p40 = "base64-chunk-40"
-```
-
-base64 인코딩 방법:
-```bash
-base64 -i /path/to/service-account.json | python3 -c "import sys; b=sys.stdin.read().strip(); [print(f'p{i+1} = \"{b[i:i+80]}\"') for i in range(0, len(b), 80)]"
-```
-
-위 명령어로 생성된 p1~p40 키를 그대로 복사해서 Streamlit Cloud Secrets에 붙여넣기.
-
-### 주의사항
-
-- `private_key` 줄바꿈 문제를 피하기 위해 **꼭 base64 인코딩**해서 사용할 것
-- TOML 멀티라인 문자열(`'''`, `"""`) 대신 **짧은 여러 개의 키**로 나누는 것이 안정적
-- `.streamlit/secrets.toml`은 `.gitignore`에 등록되어 있음
-- `secrets_cloud.toml` 같은 임시 파일은 사용 후 반드시 삭제
+- **서비스 계정 키의 로컬 사본은 `voca/.streamlit/secrets.toml` 의 `p1`~`p40`(base64 80자 청크)과 `.env.local` 의 `VOCA_SA_B64` 입니다.** 둘 다 gitignore 되어 있고 원본은 GCP Console 에 있습니다. `VOCA_SA_B64` 는 **`p1`~`p40` 을 그대로 이어 붙인 값**이라 재발급 없이 복원됩니다 (2026-09-23 확인)
+  - 청크를 다시 만들려면: `base64 -i service-account.json | python3 -c "import sys; b=sys.stdin.read().strip(); [print(f'p{i+1} = \"{b[i:i+80]}\"') for i in range(0, len(b), 80)]"`
+- 서비스 계정은 시트와 공유되어 있어야 합니다 (시트 우상단 공유 → 서비스 계정 이메일을 편집자로 추가)
+- `private_key` 줄바꿈 문제를 피하려고 base64 를 씁니다. TOML 멀티라인 문자열보다 짧은 여러 키가 안정적입니다
 
 ## Browser Automation
 
@@ -460,7 +507,9 @@ This is a personal start page. No test framework, no linter config, no build sys
 
 **예외 3곳** — `moment/`(앨범, Vite 빌드), `tetris-src/`(테트리스, Next.js 빌드 + `node --test` 단위 테스트 21개), `arkanoid-src/`(알카노이드, Next.js 빌드 + `node --test` 단위 테스트 47개). 세 프로젝트 모두 **산출물을 커밋**하므로 소스를 고치면 재빌드해야 합니다. 나머지 repo는 여전히 빌드도 테스트도 없습니다.
 
-`chat/`(`/chat` 챗봇)과 `ocr/`(`/ocr`)는 **빌드도 테스트도 없습니다** — 정적 HTML 이라 재빌드할 것이 없고, 서버 쪽은 `api/chat.js`·`api/ocr.js` 각 한 파일입니다. 검증은 로컬 `vercel dev` 로 합니다 (Vercel CLI 필요).
+`chat/`(`/chat`)·`ocr/`(`/ocr`)·`voca/`(`/voca`)는 **빌드도 테스트도 없습니다** — 정적 HTML 이라 재빌드할 것이 없고, 서버 쪽은 `api/chat.js`·`api/ocr.js`·`api/voca.js` 각 한 파일입니다. 검증은 로컬 `vercel dev` 로 합니다 (Vercel CLI 필요).
 
-단, `api/ocr.js` 의 **줄 묶기 휴리스틱·CLOVA 요청 조립·언어 판정은 옮긴 로직**이라 조용히 틀리면 잘못된 텍스트를 내놓습니다. 이 셋은 `globalThis.fetch` 를 가로채는 일회성 하네스로 검증했습니다 (2026-09-22, 23개 통과). 다시 손댈 때는 저장소에 테스트 파일을 두지 말고 같은 방식으로 임시 검증하십시오 — 이 repo 의 관례가 아닙니다.
+단, **옮긴 로직은 조용히 틀리면 그럴듯한 잘못된 결과를 내놓습니다** — `api/ocr.js` 의 줄 묶기 휴리스틱·CLOVA 요청 조립·언어 판정(2026-09-22, 23개), `api/voca.js` 의 셀 diff·삭제 순서·`valueInputOption` 구분·허용목록(2026-09-23, 63개). 저장소에 테스트 파일을 두지 말고 **`globalThis.fetch` 를 가로채는 일회성 하네스**로 검증한 뒤 지우십시오 — 이 repo 의 관례가 아닙니다.
+
+`api/voca.js` 는 실호출 검증이 특히 중요합니다. **서비스 계정이 실제 시트를 수정·삭제**하므로 검증은 **테스트 워크시트에서만** 하고 반드시 지우십시오 (2026-09-23 에 `_voca_이전검증` 을 만들어 쓰고 삭제했습니다). 실호출 하네스는 Supabase 토큰 검증만 스텁으로 바꾸고 Google·DeepSeek 은 진짜로 부르면 됩니다.
 

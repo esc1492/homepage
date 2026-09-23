@@ -90,20 +90,22 @@ Available sounds: `break.mp3`, `change.mp3`, `drop.mp3`, `swipe.mp3`
 | `arkanoid_streamlit.py` | Arkanoid game — **보관용**. 실제 서빙은 `arkanoid-src/` → `arkanoid/` (`/arkanoid`) |
 | `chatbot_app.py` | 챗봇 — **보관용**. 실제 서빙은 `api/chat.js` + `chat/` (`/chat` 경로). Streamlit Cloud 앱은 2026-09-21 삭제 |
 | `ocr_app.py` | OCR 텍스트 추출 — **보관용**. 실제 서빙은 `api/ocr.js` + `ocr/` (`/ocr` 경로). Streamlit Cloud 앱은 2026-09-22 삭제 |
-| `voca/` | 영단어 학습 (Google Sheets + DeepSeek) |
+| `voca/*.py` | 영단어 학습 — **보관용**. 실제 서빙은 `api/voca.js` + `voca/index.html` (`/voca` 경로). Streamlit Cloud 앱은 2026-09-23 삭제 |
 | `moment/` → `album/` | 앨범 — 사진 게시판 SPA. 소스는 `moment/`, 서빙되는 빌드 산출물은 `album/` (`/album` 경로) |
 | `tetris-src/` → `tetris/` | 테트리스 — Next.js 정적 export. 소스는 `tetris-src/`, 서빙되는 빌드 산출물은 `tetris/` (`/tetris` 경로) |
 | `arkanoid-src/` → `arkanoid/` | 알카노이드 — Next.js 정적 export. 소스는 `arkanoid-src/`, 서빙되는 빌드 산출물은 `arkanoid/` (`/arkanoid` 경로) |
 | `api/chat.js` + `chat/` | 챗봇(미키) — Vercel 함수 + 정적 UI (`/chat` 경로) |
 | `api/ocr.js` + `ocr/` | OCR 텍스트 추출 (Naver Clova OCR + 번역) — Vercel 함수 + 정적 UI (`/ocr` 경로) |
+| `api/voca.js` + `voca/index.html` | 영단어 학습 (Google Sheets 편집 + DeepSeek 단어 추출) — Vercel 함수 + 정적 UI (`/voca` 경로) |
 
 ## Vercel Functions
 
-서버 함수는 **둘**입니다 — `api/chat.js`(2026-09-21 추가), `api/ocr.js`(2026-09-22 추가).
+서버 함수는 **셋**입니다 — `api/chat.js`(2026-09-21 추가), `api/ocr.js`(2026-09-22 추가), `api/voca.js`(2026-09-23 추가).
 
 - `vercel.json` 이 `framework: null` + `outputDirectory: "."` 인 정적 배포지만, **`api/` 디렉터리는 함께 빌드됩니다** (로컬 `vercel dev` 로 확인). 정적 사이트와 충돌하지 않습니다.
-- 라우팅: `api/chat.js` → `/api/chat`, `api/ocr.js` → `/api/ocr`. 파일마다 별도 함수가 됩니다.
-- 두 함수 모두 **Supabase 토큰을 검증**합니다 (`Authorization: Bearer` → `GET {SUPABASE_URL}/auth/v1/user`). 별도 시크릿이 필요 없습니다.
+- 라우팅: `api/chat.js` → `/api/chat`, `api/ocr.js` → `/api/ocr`, `api/voca.js` → `/api/voca`. 파일마다 별도 함수가 됩니다.
+- 셋 다 **Supabase 토큰을 검증**합니다 (`Authorization: Bearer` → `GET {SUPABASE_URL}/auth/v1/user`). 별도 시크릿이 필요 없습니다.
+- **`api/voca.js` 만 한 겹 더 조입니다** — 서비스 계정에 구글 시트 **쓰기** 권한이 있어, 토큰만 확인하면 다른 계정도 시트를 고칠 수 있습니다. 그래서 이메일 허용목록(`VOCA_ALLOWED_EMAILS`, 미설정 시 전부 거부)과 스프레드시트 ID 허용목록(`VOCA_SHEET_IDS`)을 둡니다.
 - 형식: `export default { async fetch(request) {...} }` (Vercel 의 `framework=other` 규약).
 - `.vercelignore` 의 `*.py` 는 **하위 모든 깊이에 적용**되므로 파이썬으로 함수를 쓰면 조용히 누락됩니다. JS 는 해당 없음.
 - 문서 참고: <https://vercel.com/docs/functions/runtimes/python/api-directory>
