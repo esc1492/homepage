@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>영단어 학습</title>
+<style>
+  :root {
+    --color-canvas-parchment: #f7f7f4;
+    --color-inkwell: #262510;
+    --color-muted-stone: #7a7974;
+    --color-pebble-gray: #e6e5e0;
+    --color-highlight-beige: #cdcdc9;
+    --color-danger: #c94a3a;
+    --color-success: #34785c;
+    --radius-cards: 4px;
+
+    --font-primary: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-primary);
+    background: var(--color-canvas-parchment);
+    color: var(--color-inkwell);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .app {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 16px 40px;
+  }
+
+  header {
+    padding: 22px 0 14px;
+    border-bottom: 1px solid var(--color-pebble-gray);
+  }
+
+  header h1 { font-size: 20px; font-weight: 600; }
+  header p { font-size: 12px; color: var(--color-muted-stone); margin-top: 2px; }
+
+  .hidden { display: none !important; }
+
+  /* ── 로그인 게이트 ─────────────────────────────── */
+  #gate { text-align: center; padding: 70px 20px; }
+  #gate .icon { font-size: 34px; }
+  #gate h2 { font-size: 16px; font-weight: 600; margin: 12px 0 6px; }
+  #gate p { font-size: 13px; color: var(--color-muted-stone); }
+  #gate a {
+    display: inline-block;
+    margin-top: 18px;
+    padding: 9px 18px;
+    background: var(--color-inkwell);
+    color: var(--color-canvas-parchment);
+    border-radius: var(--radius-cards);
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  /* ── 공통 요소 ─────────────────────────────────── */
+  button {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 8px 14px;
+    border: 1px solid var(--color-highlight-beige);
+    border-radius: var(--radius-cards);
+    background: #fff;
+    color: var(--color-inkwell);
+    cursor: pointer;
+  }
+
+  button:hover:not(:disabled) { border-color: var(--color-inkwell); }
+  button:disabled { opacity: 0.4; cursor: default; }
+
+  button.primary {
+    background: var(--color-inkwell);
+    color: var(--color-canvas-parchment);
+    border-color: var(--color-inkwell);
+  }
+
+  button.primary:hover:not(:disabled) { opacity: 0.88; }
+
+  button.tiny { padding: 2px 8px; font-size: 12px; line-height: 1.5; }
+
+  input[type=text], select, textarea {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 6px 8px;
+    border: 1px solid var(--color-pebble-gray);
+    border-radius: var(--radius-cards);
+    background: #fff;
+    color: var(--color-inkwell);
+    width: 100%;
+  }
+
+  input[type=text]:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--color-inkwell);
+  }
+
+  label.check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* ── 시트 설정 바 ──────────────────────────────── */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-top: 18px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid var(--color-pebble-gray);
+    border-radius: var(--radius-cards);
+  }
+
+  .field { flex: 1 1 240px; min-width: 0; }
+  .field.narrow { flex: 0 1 180px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-muted-stone);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 4px;
+  }
+
+  /* ── 탭 ────────────────────────────────────────── */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    margin-top: 18px;
+    border-bottom: 1px solid var(--color-pebble-gray);
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    padding: 8px 14px;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: var(--radius-cards) var(--radius-cards) 0 0;
+    background: none;
+    font-size: 14px;
+    color: var(--color-muted-stone);
+    cursor: pointer;
+  }
+
+  .tab:hover { color: var(--color-inkwell); }
+
+  .tab.active {
+    background: #fff;
+    border-color: var(--color-pebble-gray);
+    color: var(--color-inkwell);
+    font-weight: 600;
+    margin-bottom: -1px;
+  }
+
+  .pane { padding-top: 16px; }
+  .pane h2 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .pane .desc { font-size: 12px; color: var(--color-muted-stone); margin-bottom: 12px; }
+
+  /* ── 표 ────────────────────────────────────────── */
+  .scroll {
+    overflow-x: auto;
+    border: 1px solid var(--color-pebble-gray);
+    border-radius: var(--radius-cards);
+    background: #fff;
+  }
+
+  table.grid {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 320px;
+  }
+
+  table.grid th, table.grid td {
+    border-bottom: 1px solid var(--color-pebble-gray);
+    border-right: 1px solid var(--color-pebble-gray);
+    padding: 0;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  table.grid th:last-child, table.grid td:last-child { border-right: none; }
+  table.grid tr:last-child td { border-bottom: none; }
+
+  table.grid th {
+    background: var(--color-canvas-parchment);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-muted-stone);
+    padding: 7px 10px;
+    white-space: nowrap;
+  }
+
+  table.grid td.idx {
+    background: var(--color-canvas-parchment);
+    font-size: 11px;
+    color: var(--color-muted-stone);
+    text-align: right;
+    padding: 6px 8px;
+    white-space: nowrap;
+    width: 1%;
+  }
+
+  table.grid td.text {
+    padding: 6px 10px;
+    font-size: 13px;
+    word-break: break-word;
+    min-width: 120px;
+  }
+
+  table.grid td.text.masked { color: var(--color-highlight-beige); }
+
+  table.grid input.cell {
+    border: none;
+    border-radius: 0;
+    padding: 6px 10px;
+    font-size: 13px;
+    background: transparent;
+    min-width: 120px;
+  }
+
+  table.grid input.cell:focus {
+    background: #fffdf5;
+    box-shadow: inset 0 0 0 2px var(--color-inkwell);
+  }
+
+  table.grid td.tick {
+    width: 1%;
+    text-align: center;
+    padding: 6px 10px;
+  }
+
+  table.grid td.tick input { cursor: pointer; }
+
+  table.grid tr.marked td { background: #fdf6f6; }
+
+  table.grid tr.newrow td { background: #f6faf7; }
+
+  /* ── 동작 줄 ───────────────────────────────────── */
+  .actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .actions .grow { flex: 1; }
+
+  .note {
+    font-size: 12px;
+    color: var(--color-muted-stone);
+  }
+
+  #status {
+    margin-top: 14px;
+    font-size: 13px;
+    padding: 9px 12px;
+    border-radius: var(--radius-cards);
+    border: 1px solid var(--color-pebble-gray);
+    background: #fff;
+    white-space: pre-wrap;
+  }
+
+  #status.error { border-color: #e0b4b4; background: #fdf6f6; color: var(--color-danger); }
+  #status.ok { border-color: #b8d8c6; background: #f4faf6; color: var(--color-success); }
+
+  #spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 6px;
+    border: 2px solid var(--color-highlight-beige);
+    border-top-color: var(--color-inkwell);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: -1px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #studyBar {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .empty {
+    padding: 26px 14px;
+    text-align: center;
+    color: var(--color-muted-stone);
+    font-size: 13px;
+  }
+
+  /* ── 좁은 화면 ─────────────────────────────────── */
+  @media (max-width: 768px) {
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .field, .field.narrow { flex: 1 1 auto; }
+    /* iOS 는 16px 미만 입력에서 자동 확대합니다. */
+    input[type=text], select, textarea, table.grid input.cell { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>📖 English Vocabulary Study</h1>
+    <p>Google Sheets 의 영단어를 편집하고 학습합니다.</p>
+  </header>
+
+  <div id="gate" class="hidden">
+    <div class="icon">🔒</div>
+    <h2>로그인이 필요합니다</h2>
+    <p>영단어 학습은 시작 페이지에 로그인한 뒤에 사용하실 수 있습니다.</p>
+    <a href="/">시작 페이지로 돌아가기</a>
+  </div>
+
+  <main id="main" class="hidden">
+    <div class="toolbar">
+      <div class="field">
+        <label for="sheetUrl">Google Sheets URL</label>
+        <input type="text" id="sheetUrl" spellcheck="false">
+      </div>
+      <div class="field narrow">
+        <label for="wsSelect">워크시트</label>
+        <select id="wsSelect"></select>
+      </div>
+      <button type="button" id="reloadBtn">🔄 새로고침</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="field narrow">
+        <label for="newWsName">새 워크시트 이름</label>
+        <input type="text" id="newWsName" placeholder="시트2" spellcheck="false">
+      </div>
+      <button type="button" id="createWsBtn">➕ 새 시트 생성</button>
+      <span class="note" id="wsList"></span>
+    </div>
+
+    <div class="tabs">
+      <button type="button" class="tab active" data-tab="edit">📝 편집</button>
+      <button type="button" class="tab" data-tab="append">➕ 행 추가</button>
+      <button type="button" class="tab" data-tab="study">📚 학습</button>
+      <button type="button" class="tab" data-tab="import">🤖 텍스트 가져오기</button>
+    </div>
+
+    <!-- ── 편집 ───────────────────────────────────── -->
+    <section class="pane" id="pane-edit">
+      <h2>시트 편집</h2>
+      <p class="desc" id="editSummary">시트 데이터를 불러오는 중입니다...</p>
+      <div class="scroll" id="editScroll"></div>
+      <div class="actions">
+        <button type="button" id="csvBtn">⬇️ CSV 다운로드</button>
+        <span class="grow"></span>
+        <button type="button" id="saveEditBtn" class="primary">💾 저장</button>
+      </div>
+      <p class="note" style="margin-top:8px">바꾼 셀만 골라서 저장합니다.</p>
+    </section>
+
+    <!-- ── 행 추가 ────────────────────────────────── -->
+    <section class="pane hidden" id="pane-append">
+      <h2>행 추가 / 삭제</h2>
+      <p class="desc">기존 행은 읽기만 됩니다. 셀을 고치려면 '편집' 탭을 쓰십시오.</p>
+      <div class="scroll" id="appendScroll"></div>
+      <div class="actions">
+        <button type="button" id="addRowBtn">➕ 행 추가</button>
+        <span class="grow"></span>
+        <button type="button" id="saveAppendBtn" class="primary">💾 저장</button>
+      </div>
+      <p class="note" style="margin-top:8px">
+        체크한 기존 행은 지워지고, 아래에 추가한 행은 시트 끝에 붙습니다.
+      </p>
+    </section>
+
+    <!-- ── 학습 ───────────────────────────────────── -->
+    <section class="pane hidden" id="pane-study">
+      <h2>단어 학습</h2>
+      <p class="desc">행을 체크한 뒤 열을 가리면 뜻을 가리고 확인할 수 있습니다.</p>
+      <div id="studyBar">
+        <label class="check"><input type="checkbox" id="hideFirst"> <span id="hideFirstLabel">가리기</span></label>
+        <label class="check"><input type="checkbox" id="hideSecond"> 한글 가리기</label>
+        <button type="button" id="selectAllBtn" class="tiny">✅ 전체 선택</button>
+      </div>
+      <div class="scroll" id="studyScroll"></div>
+      <p class="note" style="margin-top:8px">이 탭에서는 시트에 아무것도 쓰지 않습니다.</p>
+    </section>
+
+    <!-- ── 텍스트 가져오기 ────────────────────────── -->
+    <section class="pane hidden" id="pane-import">
+      <h2>OCR 텍스트에서 영단어 추출</h2>
+      <p class="desc">텍스트를 붙여넣으면 학습할 만한 단어와 숙어를 뽑아 한국어 뜻과 함께 보여줍니다.</p>
+      <textarea id="ocrText" rows="8" placeholder="OCR 로 추출한 영어 텍스트를 여기에 붙여넣으세요..."></textarea>
+      <div class="actions">
+        <button type="button" id="extractBtn" class="primary">🤖 단어 추출</button>
+      </div>
+
+      <div id="vocabBlock" class="hidden">
+        <h2 style="margin-top:22px" id="vocabTitle">추출된 단어</h2>
+        <p class="desc">필요에 따라 고치거나 지운 뒤 새 워크시트로 저장하십시오.</p>
+        <div class="scroll" id="vocabScroll"></div>
+        <div class="actions">
+          <button type="button" id="addWordBtn">➕ 단어 추가</button>
+        </div>
+        <div class="actions">
+          <div class="field narrow">
+            <label for="vocabWsName">워크시트 이름</label>
+            <input type="text" id="vocabWsName" placeholder="예: Chapter 1 단어" spellcheck="false">
+          </div>
+          <button type="button" id="saveVocabBtn" class="primary">💾 새 워크시트에 저장</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="status" class="hidden"></div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var SUPABASE_URL = 'https://oggzgullnohqehthewuw.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_XVSK5Evl0W64_7h-XLZ1cQ_rnzo3qMC';
+
+  // 원본 Streamlit 판의 사이드바 기본값과 같습니다.
+  var DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1ZWF6z7gYS88_ru6b9aBkbopEsDSbIbm3sE1Kx9mTL98/edit?usp=sharing';
+
+  var sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  var accessToken = null;
+  var busy = false;
+  var sheetUrl = DEFAULT_SHEET_URL;
+  var worksheets = [];
+  var currentWs = '';
+
+  // 읽어온 시트 — 화면 전체의 단일 진실 공급원입니다.
+  // { header: [...], rows: [[...]] }
+  var snapshot = { header: [], rows: [] };
+
+  var deletedRows = {};   // 탭 2: 체크해서 지울 1-based 시트 행 번호
+  var addedRows = [];     // 탭 2: 추가할 행 (문자열 배열)
+  var checkedRows = {};   // 탭 3: 학습 선택
+  var vocab = [];         // 탭 4: 추출된 단어
+
+  var gateEl = document.getElementById('gate');
+  var mainEl = document.getElementById('main');
+  var statusEl = document.getElementById('status');
+  var sheetUrlEl = document.getElementById('sheetUrl');
+  var wsSelectEl = document.getElementById('wsSelect');
+  var wsListEl = document.getElementById('wsList');
+  var newWsNameEl = document.getElementById('newWsName');
+  var editSummaryEl = document.getElementById('editSummary');
+  var editScrollEl = document.getElementById('editScroll');
+  var appendScrollEl = document.getElementById('appendScroll');
+  var studyScrollEl = document.getElementById('studyScroll');
+  var hideFirstEl = document.getElementById('hideFirst');
+  var hideSecondEl = document.getElementById('hideSecond');
+  var selectAllBtn = document.getElementById('selectAllBtn');
+  var ocrTextEl = document.getElementById('ocrText');
+  var vocabBlockEl = document.getElementById('vocabBlock');
+  var vocabTitleEl = document.getElementById('vocabTitle');
+  var vocabScrollEl = document.getElementById('vocabScroll');
+  var vocabWsNameEl = document.getElementById('vocabWsName');
+
+  // ── 공통 ─────────────────────────────────────────
+  function el(tag, className, text){
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined && text !== null) node.textContent = text;
+    return node;
+  }
+
+  function showGate(){
+    gateEl.classList.remove('hidden');
+    mainEl.classList.add('hidden');
+  }
+
+  function showApp(){
+    gateEl.classList.add('hidden');
+    mainEl.classList.remove('hidden');
+  }
+
+  function setStatus(message, kind){
+    statusEl.textContent = '';
+    statusEl.className = (!message ? 'hidden' : (kind || ''));
+    if (!message) return;
+    statusEl.textContent = message;
+  }
+
+  var busyLabel = '';
+
+  function setBusy(on, message){
+    busy = on;
+    document.querySelectorAll('main button').forEach(function(btn){ btn.disabled = on; });
+    wsSelectEl.disabled = on || !worksheets.length;
+
+    if (!on){
+      // 작업이 자기 안내를 남기지 않았다면 로딩 문구를 지웁니다.
+      if (statusEl.textContent === busyLabel) setStatus('');
+      busyLabel = '';
+      return;
+    }
+
+    busyLabel = message || '처리 중입니다...';
+    statusEl.className = '';
+    statusEl.textContent = '';
+    var spinner = el('span');
+    spinner.id = 'spinner';
+    statusEl.appendChild(spinner);
+    statusEl.appendChild(document.createTextNode(busyLabel));
+  }
+
+  /** 401 이면 로그인 게이트로 돌립니다. */
+  function authError(){
+    var err = new Error('로그인이 필요합니다.');
+    err.auth = true;
+    return err;
+  }
+
+  async function api(method, query, body, contentType){
+    if (!accessToken) throw authError();
+
+    var headers = { 'Authorization': 'Bearer ' + accessToken };
+    if (body !== undefined) headers['content-type'] = contentType || 'application/json';
+
+    var res = await fetch('/api/voca' + query, { method: method, headers: headers, body: body });
+    if (res.status === 401) { showGate(); throw authError(); }
+
+    var data = null;
+    try { data = await res.json(); } catch (err){}
+
+    if (!res.ok){
+      throw new Error((data && data.error) || ('오류가 발생했습니다. (HTTP ' + res.status + ')'));
+    }
+    return data || {};
+  }
+
+  /** Sheets 는 들쭉날쭉한 행을 돌려줍니다 — 헤더 폭에 맞춰 채우고 자릅니다. */
+  function fitRow(row, width){
+    var out = (row || []).slice(0, width);
+    while (out.length < width) out.push('');
+    return out;
+  }
+
+  async function run(label, fn){
+    if (busy) return;
+    setBusy(true, label);
+    try {
+      await fn();
+    } catch (err){
+      setBusy(false);
+      if (!err.auth) setStatus(err.message, 'error');
+      return;
+    }
+    setBusy(false);
+  }
+
+  // ── 읽기 ─────────────────────────────────────────
+  async function loadWorksheets(){
+    var data = await api('GET', '?sheet=' + encodeURIComponent(sheetUrl));
+    worksheets = data.sheets || [];
+
+    if (!worksheets.length){
+      currentWs = '';
+    } else if (worksheets.indexOf(currentWs) < 0){
+      currentWs = worksheets[0];
+    }
+
+    renderWorksheetOptions();
+  }
+
+  function renderWorksheetOptions(){
+    wsSelectEl.textContent = '';
+    worksheets.forEach(function(name){
+      var option = el('option', null, name);
+      option.value = name;
+      wsSelectEl.appendChild(option);
+    });
+    wsSelectEl.value = currentWs;
+    wsSelectEl.disabled = busy || !worksheets.length;
+    wsListEl.textContent = worksheets.length ? ('현재 시트: ' + worksheets.join(', ')) : '워크시트가 없습니다.';
+  }
+
+  async function loadSheet(){
+    deletedRows = {};
+    addedRows = [];
+    checkedRows = {};
+
+    if (!currentWs){
+      snapshot = { header: [], rows: [] };
+      renderAll();
+      return;
+    }
+
+    var query = '?sheet=' + encodeURIComponent(sheetUrl) + '&ws=' + encodeURIComponent(currentWs);
+    var data = await api('GET', query);
+    var values = data.values || [];
+    var header = values[0] || [];
+    var width = header.length;
+
+    snapshot = {
+      header: header,
+      rows: values.slice(1).map(function(row){ return fitRow(row, width); })
+    };
+
+    renderAll();
+  }
+
+  // ── 탭 1: 편집 ───────────────────────────────────
+  function renderEdit(){
+    var width = snapshot.header.length;
+    editScrollEl.textContent = '';
+
+    if (!width){
+      editScrollEl.appendChild(el('div', 'empty', '시트를 불러올 수 없습니다.'));
+      editSummaryEl.textContent = '';
+      return;
+    }
+
+    editSummaryEl.textContent = snapshot.rows.length + '행 × ' + width + '열';
+
+    var table = el('table', 'grid');
+    var thead = el('thead');
+    var headRow = el('tr');
+    headRow.appendChild(el('th', null, '#'));
+    snapshot.header.forEach(function(name, index){
+      headRow.appendChild(el('th', null, name || ('열 ' + (index + 1))));
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    var tbody = el('tbody');
+    snapshot.rows.forEach(function(row, rowIndex){
+      var tr = el('tr');
+      tr.appendChild(el('td', 'idx', String(rowIndex + 2)));
+      row.forEach(function(value){
+        var td = el('td');
+        var input = el('input', 'cell');
+        input.type = 'text';
+        input.value = value;
+        input.spellcheck = false;
+        input.dataset.row = String(rowIndex);
+        td.appendChild(input);
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    editScrollEl.appendChild(table);
+  }
+
+  /** 바꾼 셀만 골라 1-based 시트 좌표로 만듭니다 (원본의 셀 diff 와 같습니다). */
+  function collectCellEdits(){
+    var cells = [];
+    editScrollEl.querySelectorAll('input.cell').forEach(function(input){
+      var rowIndex = Number(input.dataset.row);
+      var colIndex = Number(input.parentNode.cellIndex) - 1;   // 맨 앞은 행 번호 열
+      var before = snapshot.rows[rowIndex][colIndex] || '';
+      if (before === input.value) return;
+      cells.push({ row: rowIndex + 2, col: colIndex + 1, value: input.value });
+    });
+    return cells;
+  }
+
+  async function saveEdit(){
+    var cells = collectCellEdits();
+    if (!cells.length){ setStatus('바뀐 셀이 없습니다.'); return; }
+
+    var query = '?sheet=' + encodeURIComponent(sheetUrl) + '&ws=' + encodeURIComponent(currentWs);
+    var data = await api('POST', query, JSON.stringify({ ops: [{ op: 'update', cells: cells }] }));
+    var applied = (data.applied && data.applied.updated) || cells.length;
+
+    await loadSheet();
+    setStatus(applied + '개 셀을 저장했습니다.', 'ok');
+  }
+
+  function downloadCsv(){
+    if (!snapshot.header.length) return;
+
+    // 화면에 보이는 값을 그대로 내보냅니다 (저장 전 편집도 포함됩니다).
+    var lines = [snapshot.header.map(csvCell).join(',')];
+    editScrollEl.querySelectorAll('tbody tr').forEach(function(tr){
+      var values = [];
+      tr.querySelectorAll('input.cell').forEach(function(input){ values.push(csvCell(input.value)); });
+      lines.push(values.join(','));
+    });
+
+    // 원본과 같게 BOM 을 붙입니다 (엑셀에서 한글이 깨지지 않도록).
+    var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = (currentWs || 'voca') + '.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function csvCell(value){
+    var text = value == null ? '' : String(value);
+    return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+  }
+
+  // ── 탭 2: 행 추가 / 삭제 ─────────────────────────
+  function syncAddedFromDom(){
+    var inputs = appendScrollEl.querySelectorAll('input.newcell');
+    inputs.forEach(function(input){
+      addedRows[Number(input.dataset.row)][Number(input.dataset.col)] = input.value;
+    });
+  }
+
+  function renderAppend(){
+    var width = snapshot.header.length;
+    appendScrollEl.textContent = '';
+
+    if (!width){
+      appendScrollEl.appendChild(el('div', 'empty', '시트를 불러올 수 없습니다.'));
+      return;
+    }
+
+    var table = el('table', 'grid');
+    var thead = el('thead');
+    var headRow = el('tr');
+    headRow.appendChild(el('th', null, '지움'));
+    headRow.appendChild(el('th', null, '#'));
+    snapshot.header.forEach(function(name, index){
+      headRow.appendChild(el('th', null, name || ('열 ' + (index + 1))));
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    var tbody = el('tbody');
+
+    snapshot.rows.forEach(function(row, rowIndex){
+      var sheetRow = rowIndex + 2;
+      var tr = el('tr');
+      if (deletedRows[sheetRow]) tr.className = 'marked';
+
+      var tick = el('td', 'tick');
+      var box = el('input');
+      box.type = 'checkbox';
+      box.checked = !!deletedRows[sheetRow];
+      box.addEventListener('change', function(){
+        if (box.checked) deletedRows[sheetRow] = true;
+        else delete deletedRows[sheetRow];
+        tr.className = box.checked ? 'marked' : '';
+      });
+      tick.appendChild(box);
+      tr.appendChild(tick);
+
+      tr.appendChild(el('td', 'idx', String(sheetRow)));
+      row.forEach(function(value){ tr.appendChild(el('td', 'text', value)); });
+      tbody.appendChild(tr);
+    });
+
+    addedRows.forEach(function(row, addedIndex){
+      var tr = el('tr', 'newrow');
+      tr.appendChild(el('td', 'tick'));
+
+      var idxCell = el('td', 'idx');
+      var removeBtn = el('button', 'tiny', '제거');
+      removeBtn.type = 'button';
+      removeBtn.addEventListener('click', function(){
+        syncAddedFromDom();
+        addedRows.splice(addedIndex, 1);
+        setStatus('');
+        renderAppend();
+      });
+      idxCell.appendChild(removeBtn);
+      tr.appendChild(idxCell);
+
+      row.forEach(function(value, colIndex){
+        var td = el('td');
+        var input = el('input', 'cell newcell');
+        input.type = 'text';
+        input.value = value;
+        input.spellcheck = false;
+        input.dataset.row = String(addedIndex);
+        input.dataset.col = String(colIndex);
+        td.appendChild(input);
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    appendScrollEl.appendChild(table);
+  }
+
+  async function saveAppend(){
+    syncAddedFromDom();
+
+    var ops = [];
+    var rowsToDelete = Object.keys(deletedRows).map(Number);
+    if (rowsToDelete.length) ops.push({ op: 'delete', ws: currentWs, rows: rowsToDelete });
+
+    // 원본은 열 수를 기존 헤더에 맞춰 보냈습니다. 전부 빈 행은 보내지 않습니다.
+    var rowsToAdd = addedRows
+      .map(function(row){ return fitRow(row, snapshot.header.length); })
+      .filter(function(row){ return row.some(function(value){ return String(value).trim() !== ''; }); });
+    if (rowsToAdd.length) ops.push({ op: 'append', ws: currentWs, rows: rowsToAdd });
+
+    if (!ops.length){ setStatus('바뀐 행이 없습니다.'); return; }
+
+    var query = '?sheet=' + encodeURIComponent(sheetUrl) + '&ws=' + encodeURIComponent(currentWs);
+    var data = await api('POST', query, JSON.stringify({ ops: ops }));
+    var applied = data.applied || {};
+
+    await loadSheet();
+    setStatus((applied.deleted || 0) + '개 행을 지우고 ' + (applied.appended || 0) + '개 행을 추가했습니다.', 'ok');
+  }
+
+  // ── 탭 3: 학습 ───────────────────────────────────
+  function renderStudy(){
+    var width = snapshot.header.length;
+    studyScrollEl.textContent = '';
+
+    document.getElementById('hideFirstLabel').textContent =
+      (snapshot.header[0] || '첫 열') + ' 가리기';
+
+    if (!width){
+      studyScrollEl.appendChild(el('div', 'empty', '시트를 불러올 수 없습니다.'));
+      return;
+    }
+
+    var table = el('table', 'grid');
+    var thead = el('thead');
+    var headRow = el('tr');
+    headRow.appendChild(el('th', null, ' '));
+    snapshot.header.forEach(function(name, index){
+      headRow.appendChild(el('th', null, name || ('열 ' + (index + 1))));
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    var tbody = el('tbody');
+    snapshot.rows.forEach(function(row, rowIndex){
+      var tr = el('tr');
+
+      var tick = el('td', 'tick');
+      var box = el('input');
+      box.type = 'checkbox';
+      box.checked = !!checkedRows[rowIndex];
+      box.addEventListener('change', function(){
+        if (box.checked) checkedRows[rowIndex] = true;
+        else delete checkedRows[rowIndex];
+        renderStudyRows();
+      });
+      tick.appendChild(box);
+      tr.appendChild(tick);
+
+      row.forEach(function(value, colIndex){
+        var hidden = (colIndex === 0 && hideFirstEl.checked)
+                  || (colIndex === 1 && hideSecondEl.checked);
+        // 가리기는 **화면에서만** 감춥니다. 시트 값은 그대로입니다.
+        var shown = hidden && checkedRows[rowIndex] ? '' : value;
+        tr.appendChild(el('td', (hidden && checkedRows[rowIndex]) ? 'text masked' : 'text', shown));
+      });
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    studyScrollEl.appendChild(table);
+    updateSelectAllLabel();
+  }
+
+  /** 체크 상태만 바뀔 때 표 전체를 다시 그리지 않도록 값 칸만 갱신합니다. */
+  function renderStudyRows(){
+    var rows = studyScrollEl.querySelectorAll('tbody tr');
+    rows.forEach(function(tr, rowIndex){
+      // '전체 선택/해제'는 checkedRows 만 바꾸므로 체크박스도 여기서 맞춰 줍니다.
+      var box = tr.querySelector('td.tick input');
+      if (box) box.checked = !!checkedRows[rowIndex];
+
+      var cells = tr.querySelectorAll('td.text');
+      cells.forEach(function(cell, colIndex){
+        var hidden = (colIndex === 0 && hideFirstEl.checked)
+                  || (colIndex === 1 && hideSecondEl.checked);
+        var selected = !!checkedRows[rowIndex];
+        cell.textContent = (hidden && selected) ? '' : (snapshot.rows[rowIndex][colIndex] || '');
+        cell.className = (hidden && selected) ? 'text masked' : 'text';
+      });
+    });
+    updateSelectAllLabel();
+  }
+
+  function selectedCount(){
+    return Object.keys(checkedRows).length;
+  }
+
+  function updateSelectAllLabel(){
+    var all = snapshot.rows.length > 0 && selectedCount() === snapshot.rows.length;
+    selectAllBtn.textContent = all ? '⬜ 전체 해제' : '✅ 전체 선택';
+  }
+
+  function renderAll(){
+    renderEdit();
+    renderAppend();
+    renderStudy();
+  }
+
+  // ── 탭 4: 텍스트 가져오기 ────────────────────────
+  function renderVocab(){
+    vocabScrollEl.textContent = '';
+
+    if (!vocab.length){
+      vocabBlockEl.classList.add('hidden');
+      return;
+    }
+
+    vocabTitleEl.textContent = '추출된 단어 (' + vocab.length + '개)';
+    vocabBlockEl.classList.remove('hidden');
+
+    var table = el('table', 'grid');
+    var thead = el('thead');
+    var headRow = el('tr');
+    headRow.appendChild(el('th', null, 'English'));
+    headRow.appendChild(el('th', null, '한국어'));
+    headRow.appendChild(el('th', null, ''));
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    var tbody = el('tbody');
+    vocab.forEach(function(item, index){
+      var tr = el('tr');
+
+      [['english', item.english], ['korean', item.korean]].forEach(function(pair){
+        var td = el('td');
+        var input = el('input', 'cell vocabcell');
+        input.type = 'text';
+        input.value = pair[1] || '';
+        input.spellcheck = false;
+        input.dataset.row = String(index);
+        input.dataset.field = pair[0];
+        input.addEventListener('input', function(){
+          vocab[index][pair[0]] = input.value;
+        });
+        td.appendChild(input);
+        tr.appendChild(td);
+      });
+
+      var actionCell = el('td', 'tick');
+      var removeBtn = el('button', 'tiny', '삭제');
+      removeBtn.type = 'button';
+      removeBtn.addEventListener('click', function(){
+        vocab.splice(index, 1);
+        renderVocab();
+      });
+      actionCell.appendChild(removeBtn);
+      tr.appendChild(actionCell);
+
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    vocabScrollEl.appendChild(table);
+  }
+
+  async function extractWords(){
+    var text = ocrTextEl.value.trim();
+    if (!text){ setStatus('텍스트를 입력해 주십시오.', 'error'); return; }
+
+    var data = await api('POST', '?extract=1', text, 'text/plain; charset=utf-8');
+    vocab = data.words || [];
+    renderVocab();
+
+    setStatus(vocab.length
+      ? vocab.length + '개 단어를 추출했습니다.'
+      : '추출된 단어가 없습니다. 학습할 만한 영어 단어가 있는지 확인해 주십시오.',
+      vocab.length ? 'ok' : '');
+  }
+
+  async function saveVocab(){
+    var title = vocabWsNameEl.value.trim();
+    if (!title){ setStatus('워크시트 이름을 입력해 주십시오.', 'error'); return; }
+
+    var rows = vocab
+      .map(function(item){ return [item.english || '', item.korean || '']; })
+      .filter(function(row){ return row[0].trim() !== '' || row[1].trim() !== ''; });
+
+    if (!rows.length){ setStatus('저장할 단어가 없습니다.', 'error'); return; }
+
+    var ops = [
+      { op: 'createSheet', title: title, headers: ['English', 'Korean'] },
+      { op: 'append', ws: title, rows: rows }
+    ];
+
+    var data = await api('POST', '?sheet=' + encodeURIComponent(sheetUrl), JSON.stringify({ ops: ops }));
+    var applied = data.applied || {};
+
+    // 새 시트로 옮겨갑니다 (원본의 _switch_to_sheet 와 같습니다).
+    currentWs = title;
+    await loadWorksheets();
+    await loadSheet();
+
+    vocab = [];
+    vocabWsNameEl.value = '';
+    ocrTextEl.value = '';
+    renderVocab();
+    setStatus("'" + title + "' 시트에 " + (applied.appended || rows.length) + "개 단어를 저장했습니다.", 'ok');
+  }
+
+  // ── 이벤트 ───────────────────────────────────────
+  document.querySelectorAll('.tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('.tab').forEach(function(other){ other.classList.remove('active'); });
+      tab.classList.add('active');
+      ['edit', 'append', 'study', 'import'].forEach(function(name){
+        document.getElementById('pane-' + name).classList.toggle('hidden', name !== tab.dataset.tab);
+      });
+      setStatus('');
+    });
+  });
+
+  sheetUrlEl.value = DEFAULT_SHEET_URL;
+
+  sheetUrlEl.addEventListener('change', function(){
+    sheetUrl = sheetUrlEl.value.trim();
+    if (!sheetUrl) sheetUrl = DEFAULT_SHEET_URL;
+    sheetUrlEl.value = sheetUrl;
+    currentWs = '';
+    run('시트를 불러오는 중입니다...', async function(){
+      await loadWorksheets();
+      await loadSheet();
+    });
+  });
+
+  wsSelectEl.addEventListener('change', function(){
+    currentWs = wsSelectEl.value;
+    run('시트 데이터를 불러오는 중입니다...', loadSheet);
+  });
+
+  document.getElementById('reloadBtn').addEventListener('click', function(){
+    run('시트를 불러오는 중입니다...', async function(){
+      await loadWorksheets();
+      await loadSheet();
+    });
+  });
+
+  document.getElementById('createWsBtn').addEventListener('click', function(){
+    var title = newWsNameEl.value.trim();
+    if (!title){ setStatus('새 시트 이름을 입력해 주십시오.', 'error'); return; }
+
+    run('시트를 만드는 중입니다...', async function(){
+      await api('POST', '?sheet=' + encodeURIComponent(sheetUrl),
+        JSON.stringify({ ops: [{ op: 'createSheet', title: title, headers: snapshot.header }] }));
+      newWsNameEl.value = '';
+      currentWs = title;
+      await loadWorksheets();
+      await loadSheet();
+      setStatus("'" + title + "' 시트를 만들었습니다.", 'ok');
+    });
+  });
+
+  document.getElementById('saveEditBtn').addEventListener('click', function(){
+    run('저장하는 중입니다...', saveEdit);
+  });
+
+  document.getElementById('csvBtn').addEventListener('click', downloadCsv);
+
+  document.getElementById('addRowBtn').addEventListener('click', function(){
+    syncAddedFromDom();
+    addedRows.push(new Array(snapshot.header.length).fill(''));
+    renderAppend();
+  });
+
+  document.getElementById('saveAppendBtn').addEventListener('click', function(){
+    run('저장하는 중입니다...', saveAppend);
+  });
+
+  hideFirstEl.addEventListener('change', renderStudyRows);
+  hideSecondEl.addEventListener('change', renderStudyRows);
+
+  selectAllBtn.addEventListener('click', function(){
+    if (snapshot.rows.length && selectedCount() === snapshot.rows.length){
+      checkedRows = {};
+    } else {
+      checkedRows = {};
+      snapshot.rows.forEach(function(_, index){ checkedRows[index] = true; });
+    }
+    renderStudyRows();
+  });
+
+  document.getElementById('extractBtn').addEventListener('click', function(){
+    run('단어를 뽑고 있습니다...', extractWords);
+  });
+
+  document.getElementById('addWordBtn').addEventListener('click', function(){
+    vocab.push({ english: '', korean: '' });
+    renderVocab();
+  });
+
+  document.getElementById('saveVocabBtn').addEventListener('click', function(){
+    run('새 워크시트에 저장하는 중입니다...', saveVocab);
+  });
+
+  // 홈페이지와 같은 Supabase 세션을 그대로 씁니다 (같은 origin).
+  sbClient.auth.getSession().then(function(res){
+    var session = res.data && res.data.session;
+    if (!session){ showGate(); return; }
+
+    accessToken = session.access_token;
+    showApp();
+    run('시트를 불러오는 중입니다...', async function(){
+      await loadWorksheets();
+      await loadSheet();
+    });
+  });
+})();
+</script>
+</body>
+</html>
