@@ -20,6 +20,8 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
 
 바로가기 '챗봇' 항목으로 **미키 챗봇** 을 같은 사이트의 `/chat` 경로에서 엽니다 (`api/chat.js` 서버 함수 + `chat/` 정적 UI). Streamlit 판(`chatbot_app.py`)을 Vercel 로 옮긴 것입니다.
 
+바로가기 'OCR' 항목으로 **이미지·PDF 텍스트 추출**을 같은 사이트의 `/ocr` 경로에서 엽니다 (`api/ocr.js` 서버 함수 + `ocr/` 정적 UI). Streamlit 판(`ocr_app.py`)을 Vercel 로 옮긴 것입니다.
+
 바로가기 '학습 → 영단어' 항목으로 **VOCA(영단어 학습)** 를 같은 사이트의 `/voca` 경로에서 엽니다 (`api/voca.js` 서버 함수 + `voca/index.html` 정적 UI). Streamlit 판(`voca/app.py`)을 Vercel 로 옮긴 것입니다.
 
 ## Deployment
