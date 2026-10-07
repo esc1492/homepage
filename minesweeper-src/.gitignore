@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+.DS_Store
+*.log
+
+# `next dev` 가 자동 생성합니다 (CLAUDE.md 는 @AGENTS.md 포인터). 지워도 다시 생기므로
+# 제외해 두고, 테트리스 소스(tetris-src/)와 같은 파일 구성을 유지합니다.
+AGENTS.md
+CLAUDE.md

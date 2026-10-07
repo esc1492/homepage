@@ -12,6 +12,8 @@
     { "source": "/tetris/:path*", "destination": "/tetris/index" },
     { "source": "/arkanoid", "destination": "/arkanoid/index" },
     { "source": "/arkanoid/:path*", "destination": "/arkanoid/index" },
+    { "source": "/minesweeper", "destination": "/minesweeper/index" },
+    { "source": "/minesweeper/:path*", "destination": "/minesweeper/index" },
     { "source": "/chat", "destination": "/chat/index" },
     { "source": "/chat/:path*", "destination": "/chat/index" },
     { "source": "/ocr", "destination": "/ocr/index" },

@@ -1,0 +1,333 @@
+/* 윈도우 95 클래식 지뢰찾기 스킨. 회색(#c0c0c0) 바탕 + 베벨(raised/sunken) 입체감.
+   밝은 베벨 #ffffff, 어두운 베벨 #808080 — 순서만 뒤집어 raised/sunken 을 만듭니다. */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  overscroll-behavior: none;
+}
+
+body {
+  background: #008080; /* Win95 바탕화면 */
+  color: #000;
+  font-family: Tahoma, 'MS Sans Serif', sans-serif;
+  display: flex;
+  justify-content: center;
+  padding: 20px 8px 40px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  max-width: 100%;
+}
+
+/* === 창 프레임 === */
+.window {
+  background: #c0c0c0;
+  border: 3px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  padding: 3px;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #fff;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 3px 4px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.titlebar .ticon {
+  display: flex;
+}
+
+.titlebar .ticon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.titlebar .tbtns {
+  margin-left: auto;
+  display: flex;
+  gap: 2px;
+}
+
+.tbtn {
+  width: 24px;
+  height: 22px;
+  background: #c0c0c0;
+  color: #000;
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
+.tbtn:active {
+  border-color: #808080 #ffffff #ffffff #808080;
+}
+
+/* === 메뉴 (Game / Help) === */
+.menubar {
+  display: flex;
+  position: relative;
+  background: #c0c0c0;
+  padding: 2px 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.menu-btn {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 4px 10px;
+  cursor: pointer;
+  color: #000;
+}
+
+.menu-btn.open,
+.menu-btn:hover {
+  background: #000080;
+  color: #fff;
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+  min-width: 200px;
+  z-index: 10;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+  padding: 2px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: #000;
+}
+
+.menu-item:hover {
+  background: #000080;
+  color: #fff;
+}
+
+.menu-check {
+  width: 18px;
+}
+
+.menu-sep {
+  border-top: 1px solid #808080;
+  border-bottom: 1px solid #ffffff;
+  margin: 3px 2px;
+}
+
+/* === 함몰 패널 (HUD·보드) === */
+.sunken {
+  border: 3px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+}
+
+.hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px;
+  margin: 6px;
+}
+
+/* 빨간 LED 카운터 */
+.led {
+  background: #000;
+  color: #ff0000;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 22px;
+  letter-spacing: 2px;
+  padding: 2px 4px;
+  min-width: 66px;
+  text-align: center;
+  text-shadow: 0 0 6px rgba(255, 0, 0, 0.8);
+  border: 2px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+}
+
+.face {
+  width: 44px;
+  height: 44px;
+  font-size: 24px;
+  cursor: pointer;
+  background: #c0c0c0;
+  border: 3px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+  padding: 0;
+}
+
+.face:active {
+  border-color: #808080 #ffffff #ffffff #808080;
+}
+
+/* === 보드 === */
+.board-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 6px;
+  padding: 6px;
+  /* DOM 버튼이라 페이지 스크롤을 막지 않습니다.
+     길게 누르기 중 선택·호출만 막습니다. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.board {
+  display: grid;
+  gap: 0;
+}
+
+.cell {
+  width: 32px;
+  height: 32px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 17px;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  /* 닫힌 칸 = 볼록(raised) */
+  background: #bdbdbd;
+  border: 3px solid;
+  border-color: #ffffff #7b7b7b #7b7b7b #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+  padding: 0;
+}
+
+.cell.open {
+  /* 열린 칸 = 평평 + 얇은 테두리 */
+  border: 1px solid #7b7b7b;
+  cursor: default;
+}
+
+.cell svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.cell.exploded {
+  background: #ff0000;
+}
+
+/* 클래식 숫자 색상 */
+.cell.n1 { color: #0000ff; }
+.cell.n2 { color: #007b00; }
+.cell.n3 { color: #ff0000; }
+.cell.n4 { color: #00007b; }
+.cell.n5 { color: #7b0000; }
+.cell.n6 { color: #007b7b; }
+.cell.n7 { color: #000000; }
+.cell.n8 { color: #7b7b7b; }
+
+.win95-btn {
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  background: #c0c0c0;
+  color: #000;
+  border: 3px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+  touch-action: manipulation;
+}
+
+.win95-btn:active {
+  border-color: #808080 #ffffff #ffffff #808080;
+}
+
+/* === 도움말 대화상자 === */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 16px;
+}
+
+.dialog {
+  width: 320px;
+  max-width: 100%;
+  background: #c0c0c0;
+  border: 3px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  padding: 3px;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
+}
+
+.dialog-body {
+  padding: 12px;
+  font-size: 13px;
+  color: #000;
+  line-height: 1.8;
+}
+
+.dialog-body .ok-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+@media (max-width: 540px) {
+  body {
+    padding: 8px 4px 32px;
+  }
+
+  .cell {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+}
