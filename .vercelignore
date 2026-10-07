@@ -20,9 +20,11 @@ venv/
 *.md
 moment/
 
-# Next.js 소스 — 재빌드 산출물 tetris/ · arkanoid/ 만 서빙합니다 (album/ 과 같은 구조)
+# Next.js 소스 — 재빌드 산출물 tetris/ · arkanoid/ · minesweeper/ 만 서빙합니다 (album/ 과 같은 구조)
+# minesweeper-src/ 를 빠뜨리면 소스가 /minesweeper-src/... 로 그대로 서빙됩니다 (2026-10-08 확인)
 tetris-src/
 arkanoid-src/
+minesweeper-src/
 
 # OS/환경 파일
 .DS_Store

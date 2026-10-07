@@ -18,6 +18,8 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
 
 바로가기 '게임 → ARKANOID' 항목으로 **알카노이드** 를 같은 사이트의 `/arkanoid` 경로에서 엽니다 (`arkanoid-src/` 소스 + `arkanoid/` 빌드 산출물).
 
+바로가기 '게임 → MINESWEEPER' 항목으로 **지뢰찾기** 를 같은 사이트의 `/minesweeper` 경로에서 엽니다 (`minesweeper-src/` 소스 + `minesweeper/` 빌드 산출물).
+
 바로가기 '챗봇' 항목으로 **미키 챗봇** 을 같은 사이트의 `/chat` 경로에서 엽니다 (`api/chat.js` 서버 함수 + `chat/` 정적 UI). Streamlit 판(`chatbot_app.py`)을 Vercel 로 옮긴 것입니다.
 
 바로가기 'OCR' 항목으로 **이미지·PDF 텍스트 추출**을 같은 사이트의 `/ocr` 경로에서 엽니다 (`api/ocr.js` 서버 함수 + `ocr/` 정적 UI). Streamlit 판(`ocr_app.py`)을 Vercel 로 옮긴 것입니다.
@@ -33,15 +35,17 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
   - ⚠️ **destination에 `.html`을 쓰면 동작하지 않습니다.** `cleanUrls: true`가 확장자를 제거하므로 `/album/index.html`은 매칭되지 않고 404가 됩니다 (2026-09-12 첫 배포에서 실제 발생 → `/album/index`로 수정)
   - `/tetris`·`/tetris/*`도 같은 규칙으로 `/tetris/index`로 보냅니다
   - `/arkanoid`·`/arkanoid/*`도 같습니다
+  - `/minesweeper`·`/minesweeper/*`도 같습니다
   - `/chat`·`/chat/*`도 같습니다
   - `/ocr`·`/ocr/*`도 같습니다
   - `/voca`·`/voca/*`도 같습니다
   - `rewrites`는 파일시스템 조회 **이후**에 적용되므로 `/tetris/_next/...` 같은 실제 자산은 가로채이지 않습니다
     - 이 성질 때문에 **없는 경로도 200 이 나옵니다** — `/voca/app.py` 는 404 가 아니라 `/voca/index` 로 폴백한 HTML(200)입니다. 배포에 실렸는지 확인할 때 상태 코드만 보면 오판합니다. 본문·`content-length` 를 확실히 없는 경로와 대조하십시오 (2026-09-23 실제로 오판할 뻔했습니다)
-- `.vercelignore`가 `moment/`·`tetris-src/`·`arkanoid-src/`를 제외 — 서빙되는 것은 빌드 산출물 `album/`·`tetris/`·`arkanoid/`뿐
+- `.vercelignore`가 `moment/`·`tetris-src/`·`arkanoid-src/`·`minesweeper-src/`를 제외 — 서빙되는 것은 빌드 산출물 `album/`·`tetris/`·`arkanoid/`·`minesweeper/`뿐
+  - `minesweeper-src/` 는 2026-10-08 에 뒤늦게 추가했습니다 — 빠져 있는 동안 소스가 `/minesweeper-src/...` 로 그대로 서빙되었습니다. **새 Next.js 소스 폴더를 만들면 이 목록에 반드시 넣으십시오**
   - ⚠️ `.vercelignore`는 gitignore 문법이라 패턴이 **하위 모든 깊이에 적용**됩니다. `*.py`가 그 예로, 파이썬으로 서버 함수를 쓰면 `api/foo.py`가 조용히 업로드에서 빠집니다
   - `voca/` 는 제외 목록에 없지만 `*.py`·`.streamlit/`·`.venv/`·`requirements.txt` 가 각각 걸려 **`voca/index.html` 만** 배포됩니다
-- Production URL: https://homepage-dwkim.vercel.app (앨범: `/album`, 테트리스: `/tetris`, 알카노이드: `/arkanoid`, 챗봇: `/chat`, OCR: `/ocr`, 영단어: `/voca`)
+- Production URL: https://homepage-dwkim.vercel.app (앨범: `/album`, 테트리스: `/tetris`, 알카노이드: `/arkanoid`, 지뢰찾기: `/minesweeper`, 챗봇: `/chat`, OCR: `/ocr`, 영단어: `/voca`)
 
 ## Data Pipeline (레거시 — 현재 프론트에서 미사용)
 
@@ -247,6 +251,48 @@ cd arkanoid-src && npm run build # → repo 루트 arkanoid/ 갱신 (next build 
 배경 이미지는 `images/arkanoid.png`(1024×1024, 1.3MB)를 **WebP 131KB 로 재인코딩**해 `public/bg/` 에 둡니다 (테트리스 테마곡을 96kbps 로 재인코딩한 선례와 같습니다). 효과음 4개는 `sound/` 에서 `public/audio/` 로 복사하며, 테트리스와 **같은 파일**(swipe·drop·change·break)입니다.
 
 `arkanoid_streamlit.py` 는 **보관용으로 남겨둡니다** — 포팅 검증의 기준 구현입니다.
+
+## 지뢰찾기 — `/minesweeper`
+
+윈도우 95 클래식 스킨의 지뢰찾기입니다. 순수 클라이언트 사이드라 **백엔드·인증이 없습니다.**
+
+- **소스**: `minesweeper-src/` (Next.js 16 + React 19, `output: 'export'`)
+- **서빙**: `minesweeper/` — 빌드 산출물. Vercel은 빌드하지 않으므로 **이 폴더가 실제 배포본**
+- **경로**: `https://homepage-dwkim.vercel.app/minesweeper` (홈페이지 바로가기 '게임 → MINESWEEPER' 타일 → 새 탭)
+
+### 설계 요점
+
+- **테트리스와 같은 골격** — `game/minesweeper.js` 는 React·DOM 을 import 하지 않는 순수 로직이라 `node --test` 로 그대로 검증됩니다. 상태는 불변 스냅샷이고 `reveal`/`toggleFlag`/`chord` 는 새 객체를 돌려주며, **입력이 무효하면 같은 참조를 그대로 돌려줍니다**(컴포넌트가 `setState` 를 건너뛸 수 있게).
+- 다만 `useReducer` 대신 `useState` + 순수 함수 조합입니다 — 액션이 3개뿐이고 파생 상태가 없어 reducer 의 이점이 없습니다.
+- **턴제라 프레임 루프가 없습니다** — 알카노이드의 ref + rAF 와 달리 React 스케줄러를 그대로 씁니다.
+- **첫 클릭은 절대 안전합니다** — `placeMines` 가 클릭 칸과 그 8이웃에 지뢰를 두지 않습니다. 보드가 빽빽해 제외 구역을 다 비울 수 없으면(고급 30×16·99) 클릭 칸만 비웁니다.
+- **chord** — 열린 숫자칸을 누르면 주변 깃발 수가 숫자와 같을 때 나머지 이웃을 엽니다. 깃발이 잘못 꽂혀 있으면 지뢰를 밟아 패배합니다.
+- **터치에는 우클릭이 없습니다** — **길게 누르기(450ms)** 를 깃발로 씁니다. 발동 직후 따라오는 `click`/`contextmenu` 를 `pressFired` 로 한 번씩 삼킵니다. 없으면 한 번 눌러 깃발과 열기가 같이 동작합니다.
+- **최고기록**은 `localStorage` 키 `minesweeper-best-<난이도>` (홈페이지 `myTodos`·테트리스 `tetrisHighScore` 와 같은 평면 네이밍). `localStorage` 는 브라우저 전용이라 **렌더 중에 읽지 않고 effect 에서** 읽습니다 — 서버 프리렌더에서 불일치가 생깁니다.
+- 타이머는 첫 공개(playing 진입)에 시작해 승패에 멈춥니다.
+
+### 파일 구조
+
+| 경로 | 역할 |
+| --- | --- |
+| `game/minesweeper.js` | 순수 게임 로직 (React·DOM 미import) + RNG 주입 |
+| `game/minesweeper.test.js` | 단위 테스트 17개 (`node --test`) |
+| `components/MinesweeperGame.jsx` | 화면 전체 (Win95 창·메뉴·HUD·보드) |
+| `app/globals.css` | Win95 스킨 |
+| `app/layout.jsx` | `<title>Minesweeper</title>` |
+
+### ⚠️ 빌드 산출물을 커밋하므로 소스 수정 시 재빌드 필수
+
+```sh
+cd minesweeper-src && npm test      # 순수 로직 단위 테스트 17개
+cd minesweeper-src && npm run build # → repo 루트 minesweeper/ 갱신
+```
+
+**`minesweeper/`를 커밋하지 않으면 배포본이 소스와 어긋납니다.**
+
+### ⚠️ `.vercelignore` 에 `minesweeper-src/` 를 빠뜨리지 마십시오
+
+`tetris-src/`·`arkanoid-src/` 와 달리 처음에 제외 목록에 없어 **소스가 그대로 서빙되었습니다** (2026-10-08 확인 — `/minesweeper-src/game/minesweeper.js`·`package.json`·`next.config.mjs`·`app/page.jsx` 가 모두 200). 시크릿은 없었지만 배포 용량이 늘고 관례를 어깁니다.
 
 ## 챗봇 (미키) — `/chat`
 
@@ -508,7 +554,7 @@ Drop:
 
 This is a personal start page. No test framework, no linter config, no build system. Edit and open in browser directly.
 
-**예외 3곳** — `moment/`(앨범, Vite 빌드), `tetris-src/`(테트리스, Next.js 빌드 + `node --test` 단위 테스트 21개), `arkanoid-src/`(알카노이드, Next.js 빌드 + `node --test` 단위 테스트 47개). 세 프로젝트 모두 **산출물을 커밋**하므로 소스를 고치면 재빌드해야 합니다. 나머지 repo는 여전히 빌드도 테스트도 없습니다.
+**예외 4곳** — `moment/`(앨범, Vite 빌드), `tetris-src/`(테트리스, Next.js 빌드 + `node --test` 단위 테스트 21개), `arkanoid-src/`(알카노이드, Next.js 빌드 + `node --test` 단위 테스트 47개), `minesweeper-src/`(지뢰찾기, 같음 + `node --test` 단위 테스트 17개). 네 프로젝트 모두 **산출물을 커밋**하므로 소스를 고치면 재빌드해야 합니다. 나머지 repo는 여전히 빌드도 테스트도 없습니다.
 
 `chat/`(`/chat`)·`ocr/`(`/ocr`)·`voca/`(`/voca`)는 **빌드도 테스트도 없습니다** — 정적 HTML 이라 재빌드할 것이 없고, 서버 쪽은 `api/chat.js`·`api/ocr.js`·`api/voca.js` 각 한 파일입니다. 검증은 로컬 `vercel dev` 로 합니다 (Vercel CLI 필요).
 
