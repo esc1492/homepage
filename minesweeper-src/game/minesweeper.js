@@ -33,7 +33,7 @@ export function newGame(key = 'beginner') {
   };
 }
 
-/** 테스트·디버깅용: 지뢰 위치를 직접 지정해 배치済み 게임을 만듭니다. */
+/** 테스트·디버깅용: 지뢰 위치를 직접 지정해 배치된 게임을 만듭니다. */
 export function makeGameWithMines(rows, cols, mineIndices) {
   const total = rows * cols;
   const game = {
