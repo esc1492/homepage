@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase";
 import { displayName } from "../lib/displayName";
+import { toUploadable } from "../lib/heic";
 
 // 글 목록 불러오기 (최신순)
 export async function fetchPosts() {
@@ -24,12 +25,13 @@ export async function fetchPost(id) {
   return data;
 }
 
-// 사진을 올리고 공개 URL을 돌려줌
+// 사진을 올리고 공개 URL을 돌려줌 (HEIC 는 올리기 전에 JPEG 로 바꿉니다)
 export async function uploadImage(file, userId) {
-  const ext = file.name.split(".").pop();
+  const upload = await toUploadable(file);
+  const ext = upload.name.split(".").pop();
   const path = `${userId}/${Date.now()}.${ext}`;
 
-  const { error } = await supabase.storage.from("photos").upload(path, file);
+  const { error } = await supabase.storage.from("photos").upload(path, upload);
   if (error) throw error;
 
   const { data } = supabase.storage.from("photos").getPublicUrl(path);
