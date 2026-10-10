@@ -41,6 +41,9 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
   - `/voca`·`/voca/*`도 같습니다
   - `rewrites`는 파일시스템 조회 **이후**에 적용되므로 `/tetris/_next/...` 같은 실제 자산은 가로채이지 않습니다
     - 이 성질 때문에 **없는 경로도 200 이 나옵니다** — `/voca/app.py` 는 404 가 아니라 `/voca/index` 로 폴백한 HTML(200)입니다. 배포에 실렸는지 확인할 때 상태 코드만 보면 오판합니다. 본문·`content-length` 를 확실히 없는 경로와 대조하십시오 (2026-09-23 실제로 오판할 뻔했습니다)
+    - `/album/`(슬래시)은 `/album` 으로 **308 리다이렉트**됩니다 (`cleanUrls`). `curl` 은 기본적으로 리다이렉트를 따라가지 않으므로 **`-L` 없이 확인하면 빈 응답을 검사하고 "미반영"으로 오판**합니다 (2026-10-11 실제로 오판했습니다)
+  - ⚠️ **SPA 는 열어둔 탭이 옛 번들을 계속 돌립니다** — SPA 내부 이동은 문서를 다시 받지 않으므로, 배포해도 `/album`·`/tetris`·`/arkanoid`·`/minesweeper` 탭은 **새로고침 전까지 이전 JS 를 실행**합니다. 서버에서 `/album` 을 새로 받아보는 "배포 확인"은 **열어둔 탭과 무관**합니다 — 화면과 배포본이 다르면 새로고침이 먼저입니다 (`cache-control: public, max-age=0, must-revalidate` 이므로 **새로고침 한 번이면 충분**하고 강제 새로고침은 불필요합니다)
+    - 2026-10-11 실제 발생 — 배포 4분 뒤 안드로이드 폰에서 올린 HEIC 가 변환되지 않고 `.heic` 로 저장됐고(옛 번들), 2분 뒤 **같은 폰**에서 올린 건 정상 변환됐습니다. 저장된 확장자가 곧 실행 중이던 코드의 증거입니다
 - `.vercelignore`가 `moment/`·`tetris-src/`·`arkanoid-src/`·`minesweeper-src/`를 제외 — 서빙되는 것은 빌드 산출물 `album/`·`tetris/`·`arkanoid/`·`minesweeper/`뿐
   - `minesweeper-src/` 는 2026-10-08 에 뒤늦게 추가했습니다 — 빠져 있는 동안 소스가 `/minesweeper-src/...` 로 그대로 서빙되었습니다. **새 Next.js 소스 폴더를 만들면 이 목록에 반드시 넣으십시오**
   - ⚠️ `.vercelignore`는 gitignore 문법이라 패턴이 **하위 모든 깊이에 적용**됩니다. `*.py`가 그 예로, 파이썬으로 서버 함수를 쓰면 `api/foo.py`가 조용히 업로드에서 빠집니다
