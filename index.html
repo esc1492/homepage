@@ -960,12 +960,48 @@ function getAirGrade(val,type){
   }
 }
 
+/* === 상단 배너 (낮 3.jpeg · 밤 night.jpg) === */
+// 일출·일몰은 서울 시각 문자열("2026-10-12T06:36")로 오므로 utc_offset_seconds 로 절대 시각(ms)으로 바꿉니다
+var bannerSunrise=[], bannerSunset=[], bannerTimer=null;
+
+function applyBanner(isDay){
+  var el=document.querySelector('.top-banner');
+  if(!el) return;
+  var src=isDay?'images/3.jpeg':'images/night.jpg';
+  if(el.getAttribute('src')!==src) el.setAttribute('src',src);
+}
+
+// 지금이 낮인지와 다음 전환 시각을 함께 돌려줍니다 (자정을 넘겨도 맞도록 날짜 순으로 훑습니다). 예보가 끝나면 null
+function bannerSlot(now){
+  for(var k=0;k<bannerSunrise.length;k++){
+    if(now<bannerSunrise[k]) return {day:false,at:bannerSunrise[k]};
+    if(now<bannerSunset[k]) return {day:true,at:bannerSunset[k]};
+  }
+  return null;
+}
+
+function updateBanner(){
+  clearTimeout(bannerTimer);
+  var now=Date.now();
+  var slot=bannerSlot(now);
+  if(!slot){
+    // 받아둔 예보(7일)를 다 지났습니다 — 탭을 일주일 넘게 열어둔 경우입니다. 다시 받아옵니다
+    if(bannerSunset.length && now>=bannerSunset[bannerSunset.length-1]) loadWeather();
+    return;
+  }
+  applyBanner(slot.day);
+  bannerTimer=setTimeout(updateBanner, Math.max(1000, slot.at-now+1000));
+}
+
+// 날씨 응답 전 첫 판단입니다 (서울 평균 일출 6시·일몰 19시). 응답이 오면 실제 일출·일몰로 정정합니다
+applyBanner(new Date().getHours()>=6 && new Date().getHours()<19);
+
 function loadWeather(){
   document.getElementById('wdesc').textContent='불러오는 중...';
   document.getElementById('wdesc2').textContent='불러오는 중...';
   var icons={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'🌨',80:'🌦',81:'🌧',82:'🌧',95:'⛈',96:'⛈',99:'⛈'};
   var descs={0:'맑음',1:'대체로 맑음',2:'약간 흐림',3:'흐림',45:'안개',48:'안개',51:'가벼운 이슬비',53:'이슬비',55:'짙은 이슬비',61:'약한 비',63:'비',65:'강한 비',71:'약한 눈',73:'눈',75:'강한 눈',80:'소나기',81:'강한 소나기',82:'폭우',95:'뇌우',96:'뇌우(우박)',99:'강한 뇌우'};
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,relative_humidity_2m_max&wind_speed_unit=ms&timezone=Asia%2FSeoul')
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,relative_humidity_2m_max,sunrise,sunset&wind_speed_unit=ms&timezone=Asia%2FSeoul')
   .then(function(r){return r.json();})
   .then(function(d){
     var c=d.current;
@@ -998,6 +1034,10 @@ function loadWeather(){
         weeklyEl.appendChild(item);
       }
     }
+    var bannerOffset=d.utc_offset_seconds*1000;
+    bannerSunrise=d.daily.sunrise.map(function(s){return Date.parse(s+':00Z')-bannerOffset;});
+    bannerSunset=d.daily.sunset.map(function(s){return Date.parse(s+':00Z')-bannerOffset;});
+    updateBanner();
   })
   .catch(function(){
     document.getElementById('wdesc').textContent='날씨 정보를 불러올 수 없습니다';
@@ -1175,11 +1215,25 @@ renderMyTodos();
 document.getElementById('todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addTodo();});
 (function(){
   var decoIndex=0;
+  var AHEAD=3;  // 지금 보이는 장 + 다음 두 장까지만 src 를 채워 둡니다 (약 6초치 여유)
+  // 앨범 사진은 data-src 로만 두었다가 차례가 가까워지면 src 로 옮깁니다 — 한꺼번에 다 받지 않습니다
+  function syncDeco(imgs,i){
+    var n=imgs.length;
+    for(var k=0;k<n;k++){
+      var img=imgs[k], ahead=(k-i+n)%n;
+      if(ahead<AHEAD || ahead===n-1){   // 보이는 장 · 다음 두 장 · 사라지는 중인 장
+        if(!img.getAttribute('src') && img.dataset.src) img.setAttribute('src',img.dataset.src);
+      }else if(img.dataset.src){
+        img.removeAttribute('src');     // 지나간 사진은 놓아줍니다 (다시 차례가 오면 재검증만 하고 304 로 끝납니다)
+      }
+    }
+  }
   setInterval(function(){
     var imgs=document.querySelectorAll('.deco-wrap .deco-image');
     if(imgs.length<2) return;
     imgs[decoIndex % imgs.length].style.opacity='0';
     decoIndex=(decoIndex+1)%imgs.length;
+    syncDeco(imgs,decoIndex);
     imgs[decoIndex].style.opacity='1';
   },3000);
 })();
@@ -1291,7 +1345,7 @@ sbClient.auth.getSession().then(function(res){
     res.data.map(function(r){return r.image_url;}).filter(function(u){return u;}).forEach(function(src){
       var img=document.createElement('img');
       img.className='deco-image';
-      img.src=src;
+      img.dataset.src=src;   // src 는 슬라이드 차례가 가까워질 때 붙습니다 (syncDeco)
       img.alt='';
       img.setAttribute('aria-hidden','true');
       img.style.opacity='0';
