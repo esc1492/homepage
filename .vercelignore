@@ -17,6 +17,9 @@ venv/
 # 로컬/개발용 디렉토리
 .vscode/
 .playwright-mcp/
+# claude-code-playground/ 는 별도 git 저장소를 클론해 둔 것이라 홈페이지와 무관합니다.
+# 넣지 않으면 /claude-code-playground/... 로 그대로 서빙됩니다 (minesweeper-src/ 와 같은 함정)
+claude-code-playground/
 *.md
 moment/
 
