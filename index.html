@@ -1174,12 +1174,13 @@ document.getElementById('my-todo-inp').addEventListener('keydown',function(e){if
 renderMyTodos();
 document.getElementById('todo-inp').addEventListener('keydown',function(e){if(e.key==='Enter')addTodo();});
 (function(){
-  var imgs=document.querySelectorAll('.deco-wrap .deco-image');
-  var i=0;
+  var decoIndex=0;
   setInterval(function(){
-    imgs[i].style.opacity='0';
-    i=1-i;
-    imgs[i].style.opacity='1';
+    var imgs=document.querySelectorAll('.deco-wrap .deco-image');
+    if(imgs.length<2) return;
+    imgs[decoIndex % imgs.length].style.opacity='0';
+    decoIndex=(decoIndex+1)%imgs.length;
+    imgs[decoIndex].style.opacity='1';
   },3000);
 })();
 </script>
@@ -1281,6 +1282,23 @@ sbClient.auth.onAuthStateChange(function(event,session){
 sbClient.auth.getSession().then(function(res){
   applyAuthState(res.data && res.data.session);
 });
+/* === 앨범 사진을 메인 장식 슬라이드에 추가 (1·2.jpeg 뒤에 최신순 20장) === */
+(function(){
+  var wrap=document.querySelector('.deco-wrap');
+  if(!wrap) return;
+  sbClient.from('posts').select('image_url').not('image_url','is',null).order('created_at',{ascending:false}).limit(20).then(function(res){
+    if(res.error||!res.data) return;
+    res.data.map(function(r){return r.image_url;}).filter(function(u){return u;}).forEach(function(src){
+      var img=document.createElement('img');
+      img.className='deco-image';
+      img.src=src;
+      img.alt='';
+      img.setAttribute('aria-hidden','true');
+      img.style.opacity='0';
+      wrap.appendChild(img);
+    });
+  });
+})();
 </script>
 </body>
 </html>
