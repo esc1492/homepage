@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router";
 import { supabase } from "./lib/supabase";
 import Header from "./components/Header";
+import SiteNav from "./components/SiteNav";
 import FeedPage from "./pages/FeedPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import AuthPage from "./pages/AuthPage";
@@ -28,6 +29,7 @@ function App() {
 
   return (
     <div className="app">
+      <SiteNav user={user} />
       <Header user={user} />
       {!user ? (
         <AuthPage />
