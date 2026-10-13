@@ -126,11 +126,12 @@ body {
 }
 
 .nav-door {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 42px;
+  width: 27px;
+  height: 36px;
   cursor: pointer;
   color: var(--color-muted-stone);
   transition: opacity 0.25s;
@@ -142,14 +143,29 @@ body {
 .nav-door.active .door-closed { display: none; }
 .nav-door.active .door-open { display: block; }
 .nav-door.active:hover .door-open { opacity: 1; }
+.nav-door.active:hover::after {
+  content: '창닫기';
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--color-canvas-parchment);
+  background: var(--color-inkwell);
+  padding: 6px 9px;
+  border-radius: 4px;
+  pointer-events: none;
+}
 
 .nav-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
 }
 
 .nav-icon {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -161,6 +177,20 @@ body {
   transition: opacity 0.25s, color 0.25s;
 }
 .nav-icon:hover { opacity: 0.5; }
+.nav-icon[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--color-canvas-parchment);
+  background: var(--color-inkwell);
+  padding: 6px 9px;
+  border-radius: 4px;
+  pointer-events: none;
+}
 .nav-icon.logged-in {
   opacity: 1;
   color: #1a3a8a;
@@ -724,17 +754,19 @@ body {
   </span>
   <span class="nav-right">
   <span class="nav-door" id="doorBtn">
-    <svg class="door-closed" viewBox="0 0 24 24" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="42">
-      <rect x="3" y="3" width="18" height="18" rx="1"/>
-      <circle cx="16" cy="12" r="1.5" fill="currentColor"/>
+    <svg class="door-closed" viewBox="0 0 27 36" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="27" height="36">
+      <rect x="3" y="4.5" width="18" height="27" rx="1.5"/>
+      <path d="M18.5 18 H14.5"/>
+      <circle cx="18.5" cy="18" r="1.2" fill="currentColor" stroke="none"/>
     </svg>
-    <svg class="door-open" viewBox="0 0 24 24" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" width="28" height="42">
-      <rect x="3" y="3" width="18" height="18" rx="1"/>
-      <path d="M4 4 L16 9 L16 19 L4 20" stroke-width="1"/>
-      <circle cx="14" cy="16" r="1.3" fill="currentColor"/>
+    <svg class="door-open" viewBox="0 0 27 36" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="27" height="36">
+      <rect x="3" y="4.5" width="18" height="27" rx="1.5"/>
+      <path d="M3 6 L13.5 9 L13.5 27 L3 30"/>
+      <path d="M11.5 18 H8.5"/>
+      <circle cx="11.5" cy="18" r="1.2" fill="currentColor" stroke="none"/>
     </svg>
   </span>
-  <span class="nav-icon" id="loginBtn">
+  <span class="nav-icon" id="loginBtn" data-tip="로그인">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="42">
       <circle cx="12" cy="8" r="4"/>
       <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>
@@ -1283,6 +1315,7 @@ function handleLogin(){
     }
     localStorage.setItem('loggedIn','1');
     document.getElementById('loginBtn').classList.add('logged-in');
+    document.getElementById('loginBtn').dataset.tip='로그아웃';
     document.getElementById('loginMsg').textContent='';
     var target=pendingLink;
     pendingLink=null;
@@ -1296,6 +1329,7 @@ document.getElementById('loginBtn').addEventListener('click',function(){
     sbClient.auth.signOut().then(function(){
       localStorage.removeItem('loggedIn');
       document.getElementById('loginBtn').classList.remove('logged-in');
+      document.getElementById('loginBtn').dataset.tip='로그인';
     });
     return;
   }
@@ -1324,10 +1358,12 @@ function applyAuthState(session){
     isAuthed=true;
     localStorage.setItem('loggedIn','1');
     document.getElementById('loginBtn').classList.add('logged-in');
+    document.getElementById('loginBtn').dataset.tip='로그아웃';
   }else{
     isAuthed=false;
     localStorage.removeItem('loggedIn');
     document.getElementById('loginBtn').classList.remove('logged-in');
+    document.getElementById('loginBtn').dataset.tip='로그인';
   }
   loadFamilyTodos();
 }
