@@ -49,7 +49,7 @@ function SiteNav({ user }) {
             viewBox="0 0 27 36"
             fill="none"
             stroke="currentColor"
-            strokeWidth="1.75"
+            strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
             width="27"
