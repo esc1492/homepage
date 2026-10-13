@@ -94,6 +94,11 @@ body {
   opacity: 0.25;
 }
 
+.sitenav-icon.logged-in {
+  opacity: 1;
+  color: #1a3a8a;
+}
+
 .app {
   display: flex;
   flex-direction: column;

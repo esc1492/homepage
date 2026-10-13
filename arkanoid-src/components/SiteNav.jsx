@@ -1,6 +1,27 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 function SiteNav() {
+  // 홈페이지와 같은 origin이라 로그인 세션을 공유합니다.
+  // 홈페이지 applyAuthState가 쓰는 loggedIn 플래그를 그대로 읽습니다.
+  const [loggedIn, setLoggedIn] = useState(false);
+  useEffect(() => {
+    const read = () => {
+      try {
+        setLoggedIn(window.localStorage.getItem('loggedIn') === '1');
+      } catch {
+        setLoggedIn(false);
+      }
+    };
+    read();
+    window.addEventListener('storage', read);
+    window.addEventListener('focus', read);
+    return () => {
+      window.removeEventListener('storage', read);
+      window.removeEventListener('focus', read);
+    };
+  }, []);
   // 문 아이콘: history.back() 후 실패 시 / 로 이동
   const goBack = () => {
     if (window.history.length > 1) {
@@ -63,7 +84,11 @@ function SiteNav() {
             <circle cx="11.5" cy="18" r="1.2" fill="currentColor" stroke="none" />
           </svg>
         </span>
-        <span className="sitenav-icon" title="로그인 상태" aria-label="로그인 상태">
+        <span
+          className={loggedIn ? "sitenav-icon logged-in" : "sitenav-icon"}
+          title={loggedIn ? "로그인됨" : "로그인 상태"}
+          aria-label="로그인 상태"
+        >
           <svg
             viewBox="0 0 24 24"
             fill="none"
