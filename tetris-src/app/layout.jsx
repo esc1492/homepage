@@ -1,4 +1,5 @@
 import './globals.css';
+import SiteNav from '../components/SiteNav.jsx';
 
 export const metadata = {
   title: '테트리스',
@@ -16,7 +17,10 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        <SiteNav />
+        {children}
+      </body>
     </html>
   );
 }
