@@ -267,9 +267,13 @@ body {
 @media (max-width: 768px) {
   .nav { padding: 0 14px; }
   .banner-wrap {
-    position: sticky;
-    top: 56px;
+    position: fixed;
+    top: 56px; left: 0; right: 0;
     z-index: 50;
+  }
+  .top-banner {
+    height: min(140px, 30vh);
+    object-fit: cover;
   }
   .triple-line { width: 18px; height: 15px; }
   .triple-line .line { height: 2px; }
@@ -749,6 +753,12 @@ body {
   .layout { grid-template-columns: 1fr; }
   .grid { grid-template-columns: 1fr; }
   .weather-tomorrow-col { border-left: none; padding-left: 0; }
+  .wrap { padding: calc(56px + min(140px, 30vh) + var(--spacing-20)) var(--spacing-12) var(--spacing-20); }
+}
+/* 가로 보기: 화면이 낮아 배너를 고정하지 않고 흘려보냅니다 */
+@media (max-width: 768px) and (orientation: landscape) {
+  .banner-wrap { position: relative; top: auto; left: auto; right: auto; }
+  .top-banner { height: 100%; }
   .wrap { padding: var(--spacing-20) var(--spacing-12); }
 }
 </style>
