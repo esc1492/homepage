@@ -576,3 +576,13 @@ This is a personal start page. No test framework, no linter config, no build sys
 
 `api/voca.js` 는 실호출 검증이 특히 중요합니다. **서비스 계정이 실제 시트를 수정·삭제**하므로 검증은 **테스트 워크시트에서만** 하고 반드시 지우십시오 (2026-09-23 에 `_voca_이전검증` 을 만들어 쓰고 삭제했습니다). 실호출 하네스는 Supabase 토큰 검증만 스텁으로 바꾸고 Google·DeepSeek 은 진짜로 부르면 됩니다.
 
+## Agent skills
+
+### Issue tracker
+
+Issues live in this repo's GitHub Issues (`esc1492/homepage`), managed with the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
