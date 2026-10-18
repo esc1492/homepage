@@ -19,8 +19,9 @@
 
 import { createSign } from "node:crypto";
 
-const SUPABASE_URL = "https://oggzgullnohqehthewuw.supabase.co";
-const SUPABASE_KEY = "sb_publishable_XVSK5Evl0W64_7h-XLZ1cQ_rnzo3qMC";
+import { anthropicConfig } from "../server/config.mjs";
+import { requireAllowedUser } from "../server/auth.mjs";
+import { HttpError, errorJson, json, methodNotAllowed } from "../server/http.mjs";
 
 const SHEETS_API = "https://sheets.googleapis.com/v4/spreadsheets";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -53,58 +54,6 @@ const EXTRACT_SYSTEM = [
 ].join("\n");
 
 export const config = { maxDuration: 60 };
-
-class HttpError extends Error {
-  constructor(status, message) {
-    super(message);
-    this.status = status;
-  }
-}
-
-function json(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-    },
-  });
-}
-
-// ── 인증 ─────────────────────────────────────────────────────────
-// Supabase 에 토큰을 물어 사용자인지 확인한 뒤, 허용된 이메일인지까지 봅니다.
-async function requireOwner(request) {
-  const header = request.headers.get("authorization") || "";
-  if (!header.startsWith("Bearer ")) throw new HttpError(401, "Unauthorized");
-
-  const token = header.slice(7).trim();
-  if (!token) throw new HttpError(401, "Unauthorized");
-
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new HttpError(401, "Unauthorized");
-
-  let user;
-  try {
-    user = await res.json();
-  } catch {
-    throw new HttpError(401, "Unauthorized");
-  }
-
-  const allowed = (process.env.VOCA_ALLOWED_EMAILS || "")
-    .split(",")
-    .map((value) => value.trim().toLowerCase())
-    .filter(Boolean);
-
-  // 허용목록이 비어 있으면 전부 거부합니다 — 환경변수 누락이 "전부 허용"이 되면 안 됩니다.
-  if (!allowed.length) {
-    throw new HttpError(403, "VOCA_ALLOWED_EMAILS 가 설정되지 않아 요청을 거부했습니다.");
-  }
-  if (!allowed.includes(String(user?.email || "").toLowerCase())) {
-    throw new HttpError(403, "허용되지 않은 계정입니다.");
-  }
-}
 
 // ── Google 서비스 계정 ────────────────────────────────────────────
 // 웜 인스턴스가 재사용되므로(Fluid Compute) 토큰을 모듈 수준에 캐시합니다.
@@ -414,17 +363,16 @@ async function extractWords(text) {
   if (!apiKey) throw new HttpError(500, "ANTHROPIC_API_KEY 가 설정되지 않았습니다.");
 
   // 실제 제공자는 DeepSeek 이고 Anthropic 호환 엔드포인트를 씁니다 (api/chat.js 와 같습니다).
-  const base = (process.env.ANTHROPIC_BASE_URL || "https://api.deepseek.com/anthropic").replace(/\/+$/, "");
-  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
+  const { url, version, model, maxTokens } = anthropicConfig();
 
   let res;
   try {
-    res = await fetch(`${base}/v1/messages`, {
+    res = await fetch(url, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+      headers: { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": version },
       body: JSON.stringify({
         model,
-        max_tokens: 4096,
+        max_tokens: maxTokens,
         system: EXTRACT_SYSTEM,
         messages: [
           {
@@ -484,10 +432,10 @@ export default {
       const url = new URL(request.url);
 
       if (request.method !== "GET" && request.method !== "POST") {
-        return json({ error: "Method Not Allowed" }, 405);
+        return methodNotAllowed();
       }
 
-      await requireOwner(request);
+      await requireAllowedUser(request, process.env.VOCA_ALLOWED_EMAILS);
 
       if (request.method === "GET") {
         const id = sheetIdFromUrl(url.searchParams.get("sheet"));
@@ -518,8 +466,7 @@ export default {
       const applied = await applyOps(id, url.searchParams.get("ws") || "", payload?.ops);
       return json({ applied });
     } catch (error) {
-      if (error instanceof HttpError) return json({ error: error.message }, error.status);
-      return json({ error: `${error?.name || "Error"}: ${error?.message || error}` }, 500);
+      return errorJson(error);
     }
   },
 };

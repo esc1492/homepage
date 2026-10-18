@@ -13,8 +13,8 @@
 
 import { randomUUID } from "node:crypto";
 
-const SUPABASE_URL = "https://oggzgullnohqehthewuw.supabase.co";
-const SUPABASE_KEY = "sb_publishable_XVSK5Evl0W64_7h-XLZ1cQ_rnzo3qMC";
+import { requireUser } from "../server/auth.mjs";
+import { errorJson, json, methodNotAllowed } from "../server/http.mjs";
 
 // CLOVA 문서상 한도는 이미지 1장 50MB 입니다. 넘으면 CLOVA 에 보내기 전에 거릅니다.
 const MAX_BYTES = 50 * 1024 * 1024;
@@ -34,30 +34,6 @@ const TRANSLATE_URL = "https://translate.googleapis.com/translate_a/single";
 const TRANSLATE_CHUNK = 1200;
 
 export const config = { maxDuration: 60 };
-
-/** Supabase 에 토큰을 물어 사용자인지 확인합니다. 별도 시크릿이 필요 없습니다. */
-async function isAuthorized(request) {
-  const header = request.headers.get("authorization") || "";
-  if (!header.startsWith("Bearer ")) return false;
-
-  const token = header.slice(7).trim();
-  if (!token) return false;
-
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` },
-  });
-  return res.ok;
-}
-
-function json(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-    },
-  });
-}
 
 /** 파일명은 헤더로 오므로 비ASCII 가 깨지지 않게 인코딩해 보냅니다. */
 function decodeHeader(value) {
@@ -276,17 +252,23 @@ async function handleTranslate(request) {
 export default {
   async fetch(request) {
     if (request.method !== "POST") {
-      return new Response("Method Not Allowed", { status: 405 });
+      return methodNotAllowed();
     }
 
-    if (!(await isAuthorized(request))) {
-      return new Response("Unauthorized", { status: 401 });
+    try {
+      await requireUser(request);
+    } catch (error) {
+      return errorJson(error);
     }
 
-    const isTranslate = new URL(request.url).searchParams.has("translate");
-    const payload = isTranslate ? await handleTranslate(request) : await handleOcr(request);
+    try {
+      const isTranslate = new URL(request.url).searchParams.has("translate");
+      const payload = isTranslate ? await handleTranslate(request) : await handleOcr(request);
 
-    if (payload.error) return json({ error: payload.error }, payload.status || 502);
-    return json({ text: payload.text });
+      if (payload.error) return json({ error: payload.error }, payload.status || 502);
+      return json({ text: payload.text });
+    } catch (error) {
+      return errorJson(error);
+    }
   },
 };

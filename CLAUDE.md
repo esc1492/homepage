@@ -557,6 +557,23 @@ cd voca && .venv/bin/streamlit run app.py
 - 서비스 계정은 시트와 공유되어 있어야 합니다 (시트 우상단 공유 → 서비스 계정 이메일을 편집자로 추가)
 - `private_key` 줄바꿈 문제를 피하려고 base64 를 씁니다. TOML 멀티라인 문자열보다 짧은 여러 키가 안정적입니다
 
+## 서버 공유 seam — `server/`
+
+세 함수(`api/chat.js`·`api/ocr.js`·`api/voca.js`)의 공통 관심사는 `server/`에 있습니다
+(`docs/adr/0005-server-seam.md`, `GLOSSARY.md`).
+
+| module | 역할 |
+| --- | --- |
+| `server/auth.mjs` | `requireUser`(401/502 구분) · `requireAllowedUser`(이메일 허용목록, fail-closed) · `bearerToken` · `parseAllowlist` |
+| `server/http.mjs` | `json` · `methodNotAllowed` · `errorJson` · `HttpError` |
+| `server/config.mjs` | Supabase 상수 · `anthropicConfig()` |
+
+- 오류 응답은 **JSON `{ error }` 하나**입니다. chat 도 더 이상 평문 오류를 보내지 않습니다
+- 인증 실패는 **401(토큰 없음·무효) / 502(Supabase 연결·응답 실패)** 로 구분합니다
+- ⚠️ **`server/`는 `api/` 밖에 둡니다.** Vercel 문서가 공유 유틸리티를 `api/` 밖에 두고 진입점에서
+  import 하라고 안내하며, `api/_lib/` 상대 import가 런타임에 `ERR_MODULE_NOT_FOUND`로 실패한 사례가 있습니다
+- 테스트: `npm test` (`shared/*.test.mjs` + `server/*.test.mjs`)
+
 ## Browser Automation
 
 ### 도구 선택 규칙
@@ -602,13 +619,15 @@ Drop:
 
 ## No Tests / No Lint / No CI Tests
 
-This is a personal start page. No test framework, no linter config, no build system. Edit and open in browser directly.
+This is a personal start page. 정적 페이지에는 테스트 프레임워크·linter·빌드가 없습니다. Edit and open in browser directly.
 
-**예외 4곳** — `moment/`(앨범, Vite 빌드), `tetris-src/`(테트리스, Next.js 빌드 + `node --test` 단위 테스트 21개), `arkanoid-src/`(알카노이드, Next.js 빌드 + `node --test` 단위 테스트 47개), `minesweeper-src/`(지뢰찾기, 같음 + `node --test` 단위 테스트 17개). 네 프로젝트 모두 **산출물을 커밋**하므로 소스를 고치면 재빌드해야 합니다. 나머지 repo는 여전히 빌드도 테스트도 없습니다.
+**빌드가 있는 곳 4곳** — `moment/`(앨범, Vite), `tetris-src/`(테트리스, Next.js), `arkanoid-src/`(알카노이드, Next.js), `minesweeper-src/`(지뢰찾기, Next.js). 네 프로젝트 모두 **산출물을 커밋**하므로 소스를 고치면 재빌드해야 합니다.
 
-`chat/`(`/chat`)·`ocr/`(`/ocr`)·`voca/`(`/voca`)는 **빌드도 테스트도 없습니다** — 정적 HTML 이라 재빌드할 것이 없고, 서버 쪽은 `api/chat.js`·`api/ocr.js`·`api/voca.js` 각 한 파일입니다. 검증은 로컬 `vercel dev` 로 합니다 (Vercel CLI 필요).
+**테스트가 있는 곳** — 루트 `npm test`가 `shared/*.test.mjs`·`server/*.test.mjs`를, 게임 3종이 각자 `npm test`를 돌립니다. `moment/`는 테스트가 없습니다.
 
-단, **옮긴 로직은 조용히 틀리면 그럴듯한 잘못된 결과를 내놓습니다** — `api/ocr.js` 의 줄 묶기 휴리스틱·CLOVA 요청 조립·언어 판정(2026-09-22, 23개), `api/voca.js` 의 셀 diff·삭제 순서·`valueInputOption` 구분·허용목록(2026-09-23, 63개). 저장소에 테스트 파일을 두지 말고 **`globalThis.fetch` 를 가로채는 일회성 하네스**로 검증한 뒤 지우십시오 — 이 repo 의 관례가 아닙니다.
+`chat/`(`/chat`)·`ocr/`(`/ocr`)·`voca/`(`/voca`)는 **빌드도 테스트도 없습니다** — 정적 HTML 이라 재빌드할 것이 없고, 서버 쪽은 `api/chat.js`·`api/ocr.js`·`api/voca.js` 각 한 파일입니다. handler 자체의 검증은 로컬 `vercel dev` 로 합니다 (Vercel CLI 필요).
+
+단, **옮긴 로직은 조용히 틀리면 그럴듯한 잘못된 결과를 내놓습니다** — `api/ocr.js` 의 줄 묶기 휴리스틱·CLOVA 요청 조립·언어 판정(2026-09-22, 23개), `api/voca.js` 의 셀 diff·삭제 순서·`valueInputOption` 구분·허용목록(2026-09-23, 63개). **공유 module(`server/`)은 `server/*.test.mjs`에 영구 테스트를 둡니다.** handler 내부의 upstream 호출처럼 네트워크가 필요한 부분은 **`globalThis.fetch` 를 가로채는 일회성 하네스**로 검증한 뒤 지우십시오.
 
 `api/voca.js` 는 실호출 검증이 특히 중요합니다. **서비스 계정이 실제 시트를 수정·삭제**하므로 검증은 **테스트 워크시트에서만** 하고 반드시 지우십시오 (2026-09-23 에 `_voca_이전검증` 을 만들어 쓰고 삭제했습니다). 실호출 하네스는 Supabase 토큰 검증만 스텁으로 바꾸고 Google·DeepSeek 은 진짜로 부르면 됩니다.
 

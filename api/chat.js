@@ -6,22 +6,12 @@
 //
 // 웹서치 도구·모델·토큰 한도는 기존 값을 그대로 유지합니다.
 
-const SUPABASE_URL = "https://oggzgullnohqehthewuw.supabase.co";
-const SUPABASE_KEY = "sb_publishable_XVSK5Evl0W64_7h-XLZ1cQ_rnzo3qMC";
+import { anthropicConfig } from "../server/config.mjs";
+import { requireUser } from "../server/auth.mjs";
+import { errorJson, json, methodNotAllowed } from "../server/http.mjs";
 
 // 실제 제공자는 DeepSeek 의 Anthropic 호환 엔드포인트입니다 (2026-09-21 확인).
-// 기존 Streamlit 판도 ANTHROPIC_BASE_URL 환경변수로 바꿀 수 있었으므로 그 방식을 유지합니다.
-const ANTHROPIC_BASE_URL =
-  process.env.ANTHROPIC_BASE_URL || "https://api.deepseek.com/anthropic";
-const ANTHROPIC_URL = `${ANTHROPIC_BASE_URL}/v1/messages`;
-
-// DeepSeek 은 이 헤더를 무시하지만, Anthropic 규격을 그대로 두어 제공자를 바꿔도 동작하게 합니다.
-const ANTHROPIC_VERSION = "2023-06-01";
-
-// DeepSeek 은 Claude 모델명을 자동 매핑합니다 (claude-sonnet* → deepseek-flash).
-// 기존 챗봇과 동일한 값을 유지합니다.
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
-const MAX_TOKENS = 4096;
+// base URL·모델·버전·토큰 한도는 server/config.mjs 가 소유합니다.
 
 // DeepSeek 은 Anthropic 의 서버 도구를 실제로 실행합니다 (web_search_20250305 확인됨).
 const WEB_TOOL = { type: "web_search_20250305", name: "web_search" };
@@ -59,20 +49,6 @@ const SYSTEM_PROMPT = `# 🐭 미키 — AI 비서
 
 export const config = { maxDuration: 60 };
 
-/** Supabase 에 토큰을 물어 사용자인지 확인합니다. 별도 시크릿이 필요 없습니다. */
-async function isAuthorized(request) {
-  const header = request.headers.get("authorization") || "";
-  if (!header.startsWith("Bearer ")) return false;
-
-  const token = header.slice(7).trim();
-  if (!token) return false;
-
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` },
-  });
-  return res.ok;
-}
-
 /** Anthropic SSE 이벤트 하나에서 텍스트 델타만 뽑아냅니다. 없으면 빈 문자열. */
 function textFromEvent(rawEvent) {
   for (const line of rawEvent.split("\n")) {
@@ -99,46 +75,56 @@ function textFromEvent(rawEvent) {
 export default {
   async fetch(request) {
     if (request.method !== "POST") {
-      return new Response("Method Not Allowed", { status: 405 });
+      return methodNotAllowed();
     }
 
-    if (!(await isAuthorized(request))) {
-      return new Response("Unauthorized", { status: 401 });
+    try {
+      await requireUser(request);
+    } catch (error) {
+      return errorJson(error);
     }
 
     let messages;
     try {
       ({ messages } = await request.json());
     } catch {
-      return new Response("요청 본문이 올바른 JSON 이 아닙니다.", { status: 400 });
+      return json({ error: "요청 본문이 올바른 JSON 이 아닙니다." }, 400);
     }
 
     if (!Array.isArray(messages) || messages.length === 0) {
-      return new Response("messages 배열이 필요합니다.", { status: 400 });
+      return json({ error: "messages 배열이 필요합니다." }, 400);
     }
 
-    const upstream = await fetch(ANTHROPIC_URL, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": ANTHROPIC_VERSION,
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: SYSTEM_PROMPT,
-        messages,
-        stream: true,
-        tools: [WEB_TOOL],
-      }),
-    });
+    const { url, version, model, maxTokens } = anthropicConfig();
+
+    let upstream;
+    try {
+      upstream = await fetch(url, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": process.env.ANTHROPIC_API_KEY,
+          "anthropic-version": version,
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: maxTokens,
+          system: SYSTEM_PROMPT,
+          messages,
+          stream: true,
+          tools: [WEB_TOOL],
+        }),
+      });
+    } catch {
+      return json({ error: "AI 서버에 연결하지 못했습니다." }, 502);
+    }
 
     if (!upstream.ok) {
       const detail = await upstream.text();
-      return new Response(`Anthropic 오류 (HTTP ${upstream.status}): ${detail.slice(0, 300)}`, {
-        status: 502,
-      });
+      return json(
+        { error: `Anthropic 오류 (HTTP ${upstream.status}): ${detail.slice(0, 300)}` },
+        502,
+      );
     }
 
     // SSE 를 그대로 흘리지 않고 텍스트만 뽑아 평문으로 내보냅니다.

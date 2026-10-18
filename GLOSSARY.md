@@ -28,3 +28,9 @@ Supabase 클라이언트 부트스트랩, 현재 세션, 최신 액세스 토큰
 인증이 필요한 링크를 클릭했을 때 로그인 모달을 여는 UX 장치. 인증 요구는 링크 마크업의
 `data-auth`가 선언하고, 판정은 `window.session.getSession()` 하나만 봅니다.
 보안 경계가 아니라 UX이며, 실제 경계는 API 함수의 401/403입니다.
+
+## 서버 공유 seam (Server seam)
+
+`server/` 아래의 `auth.mjs`·`http.mjs`·`config.mjs`. 세 함수가 복사해 쓰던 Supabase 인증,
+JSON 오류 응답, provider 설정을 소유합니다. 오류는 JSON `{ error }` 하나이고,
+인증 실패는 401(토큰 없음·무효)과 502(인증 서버 장애)로 구분합니다.

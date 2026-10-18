@@ -23,6 +23,8 @@ claude-code-playground/
 # 빌드 보조 스크립트 — 배포본은 이미 빌드된 산출물을 서빙하므로 필요 없습니다.
 # ⚠️ shared/ 는 제외하지 마십시오. 정적 페이지가 /shared/sitenav.* 를 직접 로드합니다.
 scripts/
+# 서버 공유 모듈의 테스트 — 함수 번들에 필요 없습니다. server/*.mjs 본체는 제외하지 마십시오.
+server/*.test.mjs
 *.md
 moment/
 

@@ -259,7 +259,12 @@
       }
 
       if (!res.ok){
-        body.textContent = await res.text();
+        var errText = await res.text();
+        try {
+          var parsed = JSON.parse(errText);
+          if (parsed && parsed.error) errText = parsed.error;
+        } catch (err) {}
+        body.textContent = errText;
         return;
       }
 
