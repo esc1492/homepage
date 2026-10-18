@@ -22,6 +22,16 @@ import { createSign } from "node:crypto";
 import { anthropicConfig } from "../server/config.mjs";
 import { requireAllowedUser } from "../server/auth.mjs";
 import { HttpError, errorJson, json, methodNotAllowed } from "../server/http.mjs";
+import {
+  cleanRows,
+  colLetter,
+  descendingRows,
+  normalizeCells,
+  normalizeRows,
+  orderOps,
+  quoteTitle,
+  sheetIdFromUrl,
+} from "../server/voca-core.mjs";
 
 const SHEETS_API = "https://sheets.googleapis.com/v4/spreadsheets";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -33,9 +43,6 @@ const USER_ENTERED = "USER_ENTERED";
 // 원본 create_worksheet 의 기본값입니다.
 const NEW_SHEET_ROWS = 100;
 const NEW_SHEET_COLS = 26;
-
-// 실수로 큰 쓰기가 실제 시트에 들어가는 것을 막는 상한입니다.
-const MAX_ROWS_PER_OP = 1000;
 
 // app.py 의 시스템 프롬프트를 그대로 옮겼습니다.
 const EXTRACT_SYSTEM = [
@@ -144,12 +151,6 @@ async function sheetsApi(path, init = {}) {
 }
 
 // ── 시트 지정 ─────────────────────────────────────────────────────
-function sheetIdFromUrl(url) {
-  const match = /\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/.exec(String(url || ""));
-  if (!match) throw new HttpError(400, `유효하지 않은 Google Sheets URL 입니다: ${url}`);
-  return match[1];
-}
-
 function assertSheetAllowed(id) {
   const allowed = (process.env.VOCA_SHEET_IDS || "")
     .split(",")
@@ -158,23 +159,6 @@ function assertSheetAllowed(id) {
 
   if (!allowed.length) throw new HttpError(403, "VOCA_SHEET_IDS 가 설정되지 않아 요청을 거부했습니다.");
   if (!allowed.includes(id)) throw new HttpError(403, "허용되지 않은 스프레드시트입니다.");
-}
-
-/** A1 표기에서 시트 이름은 홑따옴표로 감싸고, 안의 홑따옴표는 두 번 씁니다. */
-function quoteTitle(title) {
-  return `'${String(title).replace(/'/g, "''")}'`;
-}
-
-/** 1-based 열 번호 → A1 열 문자. */
-function colLetter(index) {
-  let remaining = Number(index);
-  let out = "";
-  while (remaining > 0) {
-    const rest = (remaining - 1) % 26;
-    out = String.fromCharCode(65 + rest) + out;
-    remaining = Math.floor((remaining - 1) / 26);
-  }
-  return out;
 }
 
 // ── 읽기 ─────────────────────────────────────────────────────────
@@ -243,7 +227,7 @@ async function deleteRows(id, worksheet, rows, meta) {
 
   // 여러 행을 지울 때는 **큰 행부터** 지워야 합니다. 작은 행을 먼저 지우면 뒤 인덱스가 밀려
   // 엉뚱한 행이 지워집니다 (원본도 내림차순으로 정렬해 처리했습니다).
-  const sorted = [...new Set(rows)].sort((a, b) => b - a);
+  const sorted = descendingRows(rows);
   await sheetsApi(`${id}:batchUpdate`, {
     method: "POST",
     body: JSON.stringify({
@@ -267,25 +251,10 @@ async function appendRows(id, worksheet, rows) {
 }
 
 // ── 작업 적용 ─────────────────────────────────────────────────────
-// 순서를 고정합니다 — 원본의 탭별 처리 순서와 같게 맞춥니다.
-//   새 시트 생성 → 삭제(내림차순) → 셀 수정 → 행 추가
-//   (원본 탭 2 는 삭제를 먼저, 추가를 나중에 했습니다.)
-const OP_ORDER = { createSheet: 0, delete: 1, update: 2, append: 3 };
-
-function cleanRows(raw) {
-  if (!Array.isArray(raw) || !raw.length) throw new HttpError(400, "추가할 행이 없습니다.");
-  if (raw.length > MAX_ROWS_PER_OP) {
-    throw new HttpError(400, `한 번에 ${MAX_ROWS_PER_OP}행까지만 저장할 수 있습니다.`);
-  }
-  return raw.map((row) => (Array.isArray(row) ? row.map((cell) => (cell == null ? "" : String(cell))) : []));
-}
-
 async function applyOps(id, defaultWorksheet, ops) {
   if (!Array.isArray(ops) || !ops.length) throw new HttpError(400, "적용할 작업이 없습니다.");
 
-  const ordered = [...ops].sort(
-    (a, b) => (OP_ORDER[a?.op] ?? 9) - (OP_ORDER[b?.op] ?? 9),
-  );
+  const ordered = orderOps(ops);
 
   const applied = { created: 0, updated: 0, deleted: 0, appended: 0 };
   let meta = null;
@@ -313,14 +282,7 @@ async function applyOps(id, defaultWorksheet, ops) {
 
       case "update": {
         if (!worksheet) throw new HttpError(400, "워크시트 이름이 필요합니다.");
-        const cells = (Array.isArray(op.cells) ? op.cells : []).map((cell) => {
-          const row = Number(cell?.row);
-          const col = Number(cell?.col);
-          if (!Number.isInteger(row) || row < 1 || !Number.isInteger(col) || col < 1) {
-            throw new HttpError(400, "셀 좌표는 1 이상의 정수여야 합니다.");
-          }
-          return { row, col, value: cell?.value == null ? "" : String(cell.value) };
-        });
+        const cells = normalizeCells(op.cells);
         if (!cells.length) break;
 
         await updateCells(id, worksheet, cells);
@@ -330,11 +292,8 @@ async function applyOps(id, defaultWorksheet, ops) {
 
       case "delete": {
         if (!worksheet) throw new HttpError(400, "워크시트 이름이 필요합니다.");
-        const rows = (Array.isArray(op.rows) ? op.rows : []).map(Number);
+        const rows = normalizeRows(op.rows);
         if (!rows.length) break;
-        if (rows.some((row) => !Number.isInteger(row) || row < 1)) {
-          throw new HttpError(400, "행 번호는 1 이상의 정수여야 합니다.");
-        }
 
         await deleteRows(id, worksheet, rows, await needMeta());
         applied.deleted += rows.length;

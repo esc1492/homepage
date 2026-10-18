@@ -7,6 +7,7 @@
 // 웹서치 도구·모델·토큰 한도는 기존 값을 그대로 유지합니다.
 
 import { anthropicConfig } from "../server/config.mjs";
+import { textFromEvent } from "../server/chat-core.mjs";
 import { requireUser } from "../server/auth.mjs";
 import { errorJson, json, methodNotAllowed } from "../server/http.mjs";
 
@@ -48,29 +49,6 @@ const SYSTEM_PROMPT = `# 🐭 미키 — AI 비서
 - **실시간 정보 필요 시**: web_search 도구를 적극적으로 활용해서 정확한 정보를 제공해.`;
 
 export const config = { maxDuration: 60 };
-
-/** Anthropic SSE 이벤트 하나에서 텍스트 델타만 뽑아냅니다. 없으면 빈 문자열. */
-function textFromEvent(rawEvent) {
-  for (const line of rawEvent.split("\n")) {
-    if (!line.startsWith("data:")) continue;
-
-    let event;
-    try {
-      event = JSON.parse(line.slice(5).trim());
-    } catch {
-      continue; // 주석·ping 등 JSON 이 아닌 줄
-    }
-
-    if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
-      return event.delta.text || "";
-    }
-    // 웹서치 중 발생하는 오류를 조용히 삼키면 응답이 그냥 잘린 것처럼 보입니다.
-    if (event.type === "error") {
-      return `\n\n(오류가 발생했습니다: ${event.error?.message || "알 수 없음"})`;
-    }
-  }
-  return "";
-}
 
 export default {
   async fetch(request) {

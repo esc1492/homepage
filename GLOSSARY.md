@@ -34,3 +34,9 @@ Supabase 클라이언트 부트스트랩, 현재 세션, 최신 액세스 토큰
 `server/` 아래의 `auth.mjs`·`http.mjs`·`config.mjs`. 세 함수가 복사해 쓰던 Supabase 인증,
 JSON 오류 응답, provider 설정을 소유합니다. 오류는 JSON `{ error }` 하나이고,
 인증 실패는 401(토큰 없음·무효)과 502(인증 서버 장애)로 구분합니다.
+
+## 순수 core (Pure core)
+
+`server/*-core.mjs` — 네트워크·환경변수를 모르는 파싱·검증·조립 로직. handler 는 이 module 을
+호출만 하고, 테스트는 core 의 interface 를 직접 검증합니다. 조용히 틀리면 그럴듯한 오답이
+나오는 휴리스틱(줄 묶기·언어 판정·셀 좌표·삭제 순서)이 여기에 있습니다.

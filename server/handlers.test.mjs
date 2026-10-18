@@ -89,3 +89,25 @@ test("chat: upstream 오류는 JSON {error} 502", async () => {
     },
   );
 });
+
+test("ocr: translate 는 core 를 거쳐 JSON text 를 돌려준다", async () => {
+  await withFetch(
+    async (url) => {
+      if (String(url).includes("/auth/v1/user")) {
+        return new Response(JSON.stringify({ email: "a@x.com" }), { status: 200 });
+      }
+      return new Response(JSON.stringify([[["번역", "hello"]]]), { status: 200 });
+    },
+    async () => {
+      const res = await ocr.fetch(
+        new Request(`${endpoint}/ocr?translate=1`, {
+          method: "POST",
+          headers: { authorization: "Bearer t", "content-type": "text/plain" },
+          body: "hello",
+        }),
+      );
+      assert.equal(res.status, 200);
+      assert.deepEqual(await res.json(), { text: "번역" });
+    },
+  );
+});
