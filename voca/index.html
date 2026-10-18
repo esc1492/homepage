@@ -433,6 +433,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="/shared/session.mjs"></script>
 <script>
 (function(){
   var SUPABASE_URL = 'https://oggzgullnohqehthewuw.supabase.co';
@@ -441,9 +442,6 @@
   // 원본 Streamlit 판의 사이드바 기본값과 같습니다.
   var DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1ZWF6z7gYS88_ru6b9aBkbopEsDSbIbm3sE1Kx9mTL98/edit?usp=sharing';
 
-  var sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  var accessToken = null;
   var busy = false;
   var sheetUrl = DEFAULT_SHEET_URL;
   var worksheets = [];
@@ -534,12 +532,12 @@
   }
 
   async function api(method, query, body, contentType){
-    if (!accessToken) throw authError();
+    if (!window.session.getAccessToken()) throw authError();
 
-    var headers = { 'Authorization': 'Bearer ' + accessToken };
+    var headers = {};
     if (body !== undefined) headers['content-type'] = contentType || 'application/json';
 
-    var res = await fetch('/api/voca' + query, { method: method, headers: headers, body: body });
+    var res = await window.session.authedFetch('/api/voca' + query, { method: method, headers: headers, body: body });
     if (res.status === 401) { showGate(); throw authError(); }
 
     var data = null;
@@ -1110,16 +1108,20 @@
   });
 
   // 홈페이지와 같은 Supabase 세션을 그대로 씁니다 (같은 origin).
-  sbClient.auth.getSession().then(function(res){
-    var session = res.data && res.data.session;
-    if (!session){ showGate(); return; }
+  // module script 는 deferred 라 이 classic script 보다 나중에 실행됩니다 → DOMContentLoaded 에서 시작합니다.
+  window.addEventListener('DOMContentLoaded', function(){
+    window.session.init({ url: SUPABASE_URL, key: SUPABASE_KEY }).then(function(session){
+      if (window.siteNav) window.siteNav.setLoggedIn(!!session);
+      if (!session){ showGate(); return; }
 
-    accessToken = session.access_token;
-    if (window.siteNav) window.siteNav.setLoggedIn(true);
-    showApp();
-    run('시트를 불러오는 중입니다...', async function(){
-      await loadWorksheets();
-      await loadSheet();
+      showApp();
+      run('시트를 불러오는 중입니다...', async function(){
+        await loadWorksheets();
+        await loadSheet();
+      });
+    });
+    window.session.onChange(function(state){
+      if (window.siteNav) window.siteNav.setLoggedIn(state.loggedIn);
     });
   });
 })();

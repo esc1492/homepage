@@ -276,6 +276,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="/shared/session.mjs"></script>
 <script>
 (function(){
   var SUPABASE_URL = 'https://oggzgullnohqehthewuw.supabase.co';
@@ -290,9 +291,6 @@
   // CLOVA 한도(이미지 1장 50MB). 브라우저에서 먼저 걸러 헛된 업로드를 막습니다.
   var MAX_BYTES = 50 * 1024 * 1024;
 
-  var sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  var accessToken = null;
   var sourceBlob = null;    // 전송할 바이트 (이미지는 축소본, PDF 는 원본)
   var sourceType = null;    // 'image' | 'pdf'
   var sourceName = '';
@@ -505,11 +503,10 @@
     setBusy(true, sourceType === 'pdf' ? 'PDF 를 처리하고 있습니다...' : 'OCR 처리 중입니다...');
 
     try {
-      var res = await fetch('/api/ocr', {
+      var res = await window.session.authedFetch('/api/ocr', {
         method: 'POST',
         headers: {
           'content-type': sourceBlob.type || (sourceType === 'pdf' ? 'application/pdf' : 'image/jpeg'),
-          'Authorization': 'Bearer ' + accessToken,
           'x-file-name': encodeURIComponent(sourceName)
         },
         body: sourceBlob
@@ -574,11 +571,10 @@
     setBusy(true, '번역 중입니다...');
 
     try {
-      var res = await fetch('/api/ocr?translate=1', {
+      var res = await window.session.authedFetch('/api/ocr?translate=1', {
         method: 'POST',
         headers: {
-          'content-type': 'text/plain; charset=utf-8',
-          'Authorization': 'Bearer ' + accessToken
+          'content-type': 'text/plain; charset=utf-8'
         },
         body: ocrText
       });
@@ -670,15 +666,16 @@
   });
 
   // 홈페이지와 같은 Supabase 세션을 그대로 씁니다 (같은 origin).
-  sbClient.auth.getSession().then(function(res){
-    var session = res.data && res.data.session;
-    if (session){
-      accessToken = session.access_token;
-      if (window.siteNav) window.siteNav.setLoggedIn(true);
-      showApp();
-    } else {
-      showGate();
-    }
+  // module script 는 deferred 라 이 classic script 보다 나중에 실행됩니다 → DOMContentLoaded 에서 시작합니다.
+  window.addEventListener('DOMContentLoaded', function(){
+    window.session.init({ url: SUPABASE_URL, key: SUPABASE_KEY }).then(function(session){
+      if (window.siteNav) window.siteNav.setLoggedIn(!!session);
+      if (session) showApp();
+      else showGate();
+    });
+    window.session.onChange(function(state){
+      if (window.siteNav) window.siteNav.setLoggedIn(state.loggedIn);
+    });
   });
 })();
 </script>

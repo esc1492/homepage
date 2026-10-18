@@ -75,6 +75,9 @@ fetch.py (Python 3, no deps) → data.json
 - Light theme (CSS custom properties for consistent tokens) — warm ivory (Cursor 스타일, `DESIGN.md` 참조)
 - Responsive: 메인+사이드바 2열 → 1열 (768px breakpoint)
 - **형제 페이지**: `chat/index.html` (`/chat` 챗봇) — 같은 방식(순수 HTML/CSS/JS, CDN supabase-js, `DESIGN.md` 토큰). 빌드 도구를 쓰지 않으며 홈페이지와 Supabase 세션을 공유합니다
+- **상단 배너**: 모바일에서 **고정하지 않고 흐릅니다** (2026-10-18 결정). base 규칙이 media 블록보다
+  먼저 오도록 정리했고, `.wrap`의 모바일 여백은 현재 화면 기준으로 유지합니다
+  (`docs/adr/0004-mobile-banner.md`)
 
 ### 공유 SiteNav module (`shared/`)
 
@@ -91,6 +94,23 @@ fetch.py (Python 3, no deps) → data.json
   `predev`·`prebuild`가 `scripts/sync-site-nav.mjs`로 `shared/`를 각 프로젝트의 `shared/`에 복사합니다.
   **복사본은 gitignore 대상이므로 원본은 항상 `shared/`입니다**
 - 테스트: `node --test shared/sitenav.test.mjs` (view-model 4개)
+
+### 세션 module (`shared/session.mjs`)
+
+네 페이지(`index`·`chat`·`ocr`·`voca`)의 Supabase 부트스트랩·세션 상태·토큰 주입·로그인 플래그는
+`shared/session.mjs` **한 곳**이 소유합니다 (`docs/adr/0002-session-module.md`, `GLOSSARY.md`).
+
+- 페이지 스크립트는 classic inline script 이고 module 은 deferred 입니다 → 각 페이지는
+  `DOMContentLoaded` 에서 `window.session.init({ url, key })` 를 호출합니다
+- API 호출은 `window.session.authedFetch(url, init)` 을 씁니다. **매 요청마다 최신 토큰**을
+  헤더에 넣으므로 `access_token` 을 변수에 스냅샷하지 마십시오 (서브 페이지가 이렇게 했다가
+  토큰 갱신 후 401 로 떨어졌습니다)
+- `localStorage.loggedIn` 플래그는 **module 단독 소유**입니다. index 의 로그인/로그아웃도 직접 쓰지 않고,
+  게임 3종 SiteNav 는 지금처럼 읽기만 합니다
+- `onChange(cb)` 로 세션 변화를 구독합니다. **401 UI 는 페이지가 그대로 맡습니다** (chat 롤백·ocr 상태 표시·voca 게이트)
+- 로그인 게이트는 `index.html` 의 `data-auth` 선언과 `session.getSession()` 으로 판정합니다. `/album` 은 자체 로그인 화면이 있어 게이트하지 않습니다
+- index 의 데이터 쿼리는 `sbClient` 전역을 계속 씁니다 — `init` 직후 `session.getClient()`로 채웁니다
+- 테스트: `node --test shared/session.test.mjs` (토큰 갱신·`authedFetch` 헤더 회귀 포함)
 
 ### Cards
 
@@ -115,8 +135,8 @@ Login modal authenticates via Supabase Auth (email/password):
 - **Fixed email**: `dwkim1492@gmail.com` (hardcoded in `index.html`)
 - Supabase JS loaded from CDN (`https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2`)
 - Supabase URL + publishable key hardcoded inline near the bottom of `index.html` (`SUPABASE_URL` / `SUPABASE_KEY`); publishable key is safe to expose client-side
-- Login: `signInWithPassword({ email, password })` → `onAuthStateChange`/`getSession`가 `applyAuthState(session)` 실행 → `isAuthed` + `localStorage.loggedIn` 설정. 새 탭은 챗봇 메뉴 경유 로그인(`pendingLink`)일 때만 열림
-- Logout: `signOut()` + `applyAuthState(null)`가 `isAuthed`/`localStorage.loggedIn` 해제
+- Login: `session.signIn(email, password)` → `onAuthStateChange` → `session.onChange`가 `applyAuthState(session)` 실행. `isAuthed`·아이콘 표시는 index가, `localStorage.loggedIn` 플래그는 세션 module이 씁니다. 새 탭은 챗봇 메뉴 경유 로그인(`pendingLink`)일 때만 열림
+- Logout: `session.signOut()` → `applyAuthState(null)`이 `isAuthed`·아이콘을 해제하고, module이 플래그를 지웁니다
 
 Note: 루트 `package.json`은 이제 **의존성이 없습니다**. `@supabase/supabase-js`·`@supabase/ssr`은 루트에서 import 하는 곳이 한 곳도 없어 제거했습니다 (2026-09-16) — 홈페이지는 CDN을 쓰고, 앨범·테트리스는 각자 자체 의존성을 가집니다. `.env.local`(`NEXT_PUBLIC_*`)은 여전히 미사용이며 보관 중입니다.
 
@@ -378,7 +398,7 @@ Streamlit 판(`chatbot_app.py`)을 Vercel 로 옮긴 것입니다 (2026-09-21). 
 
 1. **정적 배포에 함수를 얹을 수 있습니다.** `framework: null` + `buildCommand: null` + `outputDirectory: "."` 조합에서도 `api/` 는 함께 빌드됩니다. `vercel dev` 로 배포 없이 확인할 수 있습니다
 2. `rewrites` destination 에 **`.html` 금지** (위 Deployment 절 참조). `/chat` 은 `/chat/index` 로 보냅니다
-3. **로그인 게이트가 두 곳에 있습니다.** `index.html` 의 `data-link` 와, 같은 파일에서 URL 문자열을 비교하는 게이트입니다 (현재 `url==='/chat'||url==='/ocr'||url==='/voca'`). 한쪽만 고치면 게이트가 조용히 죽어 로그인 모달이 뜨지 않습니다. 이 게이트는 **UX 용이며 실제 보안 경계는 함수의 401** 입니다
+3. **로그인 게이트는 마크업이 선언합니다.** 인증이 필요한 `data-link` 항목에 `data-auth`를 붙이면 클릭 시 실제 세션(`window.session.getSession()`)을 확인하고 로그인 모달을 엽니다. URL 문자열 목록은 제거했으므로 링크를 추가할 때 목록을 고칠 필요가 없습니다. 이 게이트는 **UX 용이며 실제 보안 경계는 함수의 401** 입니다
 
 ## OCR — `/ocr`
 
@@ -445,7 +465,7 @@ POST /api/ocr?translate=1  Content-Type: text/plain
 
 1. **`.vercelignore` 의 `*.py` 때문에 파이썬 함수는 조용히 배포에서 빠집니다.** `api/ocr.py` 를 만들면 404 가 납니다. 그래서 **JS 로 썼습니다** — 예외 규칙(`!api/ocr.py`)을 뚫는 방법도 있지만 다음 사람이 또 밟습니다
 2. `rewrites` destination 에 **`.html` 금지** (위 Deployment 절 참조). `/ocr` 은 `/ocr/index` 로 보냅니다
-3. **로그인 게이트가 두 곳에 있습니다.** `index.html` 의 `data-link` 와, 같은 파일에서 URL 문자열을 비교하는 게이트입니다 (현재 `url==='/chat'||url==='/ocr'||url==='/voca'`). 한쪽만 고치면 게이트가 조용히 죽어 로그인 모달이 뜨지 않습니다. 이 게이트는 **UX 용이며 실제 보안 경계는 함수의 401** 입니다
+3. **로그인 게이트는 마크업이 선언합니다.** 인증이 필요한 `data-link` 항목에 `data-auth`를 붙이면 클릭 시 실제 세션(`window.session.getSession()`)을 확인하고 로그인 모달을 엽니다. URL 문자열 목록은 제거했으므로 링크를 추가할 때 목록을 고칠 필요가 없습니다. 이 게이트는 **UX 용이며 실제 보안 경계는 함수의 401** 입니다
 4. 파일명은 `X-File-Name` 헤더로 보내므로 **`encodeURIComponent` 로 인코딩**해야 합니다. 헤더에 비ASCII 를 그대로 넣으면 예외가 납니다
 
 ### 보관용 `requirements.txt` 는 지우지 마십시오
@@ -519,7 +539,7 @@ POST /api/voca?extract=1              → { words: [...] }       본문 = 텍스
 
 1. **`.vercelignore` 의 `*.py` 때문에 파이썬 함수는 조용히 배포에서 빠집니다** — OCR 과 같은 이유로 JS 로 썼습니다
 2. `rewrites` destination 에 **`.html` 금지**. `/voca` 는 `/voca/index` 로 보냅니다
-3. **로그인 게이트가 두 곳에 있습니다.** `index.html` 의 `data-link` 와, 같은 파일에서 URL 문자열을 비교하는 게이트(`url==='/chat'||url==='/ocr'||url==='/voca'`)입니다. 한쪽만 고치면 게이트가 조용히 죽습니다. 이 게이트는 **UX 용이며 실제 보안 경계는 함수의 401/403** 입니다
+3. **로그인 게이트는 마크업이 선언합니다.** 인증이 필요한 `data-link` 항목에 `data-auth`를 붙이면 클릭 시 실제 세션(`window.session.getSession()`)을 확인하고 로그인 모달을 엽니다. URL 문자열 목록은 제거했습니다. 이 게이트는 **UX 용이며 실제 보안 경계는 함수의 401/403** 입니다
 4. **없는 경로가 200 으로 보입니다** (위 Deployment 절) — 배포 포함 여부는 상태 코드가 아니라 본문으로 확인하십시오
 
 ### 보관용 Streamlit 판 (`voca/`)
