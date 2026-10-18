@@ -1,4 +1,5 @@
 import './globals.css';
+import '../shared/sitenav.css';
 import SiteNav from '../components/SiteNav.jsx';
 
 export const metadata = {

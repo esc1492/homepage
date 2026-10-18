@@ -20,6 +20,9 @@ venv/
 # claude-code-playground/ 는 별도 git 저장소를 클론해 둔 것이라 홈페이지와 무관합니다.
 # 넣지 않으면 /claude-code-playground/... 로 그대로 서빙됩니다 (minesweeper-src/ 와 같은 함정)
 claude-code-playground/
+# 빌드 보조 스크립트 — 배포본은 이미 빌드된 산출물을 서빙하므로 필요 없습니다.
+# ⚠️ shared/ 는 제외하지 마십시오. 정적 페이지가 /shared/sitenav.* 를 직접 로드합니다.
+scripts/
 *.md
 moment/
 

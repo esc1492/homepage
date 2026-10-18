@@ -76,6 +76,22 @@ fetch.py (Python 3, no deps) → data.json
 - Responsive: 메인+사이드바 2열 → 1열 (768px breakpoint)
 - **형제 페이지**: `chat/index.html` (`/chat` 챗봇) — 같은 방식(순수 HTML/CSS/JS, CDN supabase-js, `DESIGN.md` 토큰). 빌드 도구를 쓰지 않으며 홈페이지와 Supabase 세션을 공유합니다
 
+### 공유 SiteNav module (`shared/`)
+
+서브 페이지 6곳(`chat`·`ocr`·`voca` + 테트리스·알카노이드·지뢰찾기)의 상단 내비게이션은
+`shared/sitenav.mjs` + `shared/sitenav.css` **한 벌**입니다. 홈 `index.html`의 `.nav`는
+드롭다운 메뉴·포커스 모드·로그인 모달을 가진 별도 변형이라 의도적으로 제외했습니다
+(`docs/adr/0001-sitenav-scope-and-delivery.md`, `GLOSSARY.md`).
+
+- 정적 페이지: `<div data-site-nav data-logged-in="false"></div>` + `/shared/sitenav.mjs` module script.
+  로그인 성공 시 `window.siteNav.setLoggedIn(true)` 한 줄로 아이콘 상태를 갱신합니다
+- Next.js: `components/SiteNav.jsx`가 얇은 adapter입니다. 마크업은 module이 소유하고,
+  localStorage 읽기는 adapter가 맡습니다
+- **Next 세 프로젝트가 `shared/`를 직접 import 하지 않습니다** — `turbopack.root`를 각 프로젝트로 고정해 두었기 때문입니다.
+  `predev`·`prebuild`가 `scripts/sync-site-nav.mjs`로 `shared/`를 각 프로젝트의 `shared/`에 복사합니다.
+  **복사본은 gitignore 대상이므로 원본은 항상 `shared/`입니다**
+- 테스트: `node --test shared/sitenav.test.mjs` (view-model 4개)
+
 ### Cards
 
 | Card | Data Source | Key Function |
