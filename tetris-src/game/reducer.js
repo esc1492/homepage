@@ -55,7 +55,6 @@ export function createInitialState() {
     score: 0,
     level: 1,
     lines: 0,
-    locks: 0, // 고정 횟수 — 효과음 트리거 판별용 (reducer 에서 사운드를 낼 수 없으므로)
     status: 'idle', // 'idle' | 'playing' | 'over'
   };
 }
@@ -68,6 +67,9 @@ function startGame(rng) {
     status: 'playing',
   };
 }
+
+/** 이벤트가 없는 액션이 공유하는 배열 — 참조 비교로 불필요한 재생을 막습니다. */
+const NO_EVENTS = [];
 
 /** 원본 place() — 피스를 보드에 고정하고, 줄을 지우고, 다음 피스를 꺼냅니다. */
 function lockPiece(state, rng) {
@@ -101,30 +103,36 @@ function lockPiece(state, rng) {
   const spawned = state.next;
   const over = !fits(board, spawned);
 
+  const events = [{ type: 'lock' }];
+  if (cleared) events.push({ type: 'clear', lines: cleared });
+  if (over) events.push({ type: 'over' });
+
   return {
-    board,
-    piece: spawned,
-    next: randomPiece(rng),
-    score,
-    level,
-    lines,
-    locks: state.locks + 1,
-    status: over ? 'over' : 'playing',
+    state: {
+      board,
+      piece: spawned,
+      next: randomPiece(rng),
+      score,
+      level,
+      lines,
+      status: over ? 'over' : 'playing',
+    },
+    events,
   };
 }
 
 /** 원본 drop() — 한 칸 내리고, 못 내리면 고정합니다. */
 function stepDown(state, rng) {
-  if (state.status !== 'playing') return state;
+  if (state.status !== 'playing') return { state, events: NO_EVENTS };
   if (fits(state.board, state.piece, 0, 1)) {
-    return { ...state, piece: { ...state.piece, y: state.piece.y + 1 } };
+    return { state: { ...state, piece: { ...state.piece, y: state.piece.y + 1 } }, events: NO_EVENTS };
   }
   return lockPiece(state, rng);
 }
 
 /** 원본 hardDrop() — 바닥까지 내린 뒤 고정합니다. */
 function hardDrop(state, rng) {
-  if (state.status !== 'playing') return state;
+  if (state.status !== 'playing') return { state, events: NO_EVENTS };
   let y = state.piece.y;
   while (fits(state.board, { ...state.piece, y }, 0, 1)) y++;
   return lockPiece({ ...state, piece: { ...state.piece, y } }, rng);
@@ -132,38 +140,43 @@ function hardDrop(state, rng) {
 
 /** 원본 doRotate() — 벽에 막히면 좌우로 한 칸 밀어봅니다(월킥). */
 function rotatePiece(state) {
-  if (state.status !== 'playing') return state;
+  if (state.status !== 'playing') return { state, events: NO_EVENTS };
   const m = rotateMatrix(state.piece.m);
   const { piece, board } = state;
 
   if (fits(board, piece, 0, 0, m)) {
-    return { ...state, piece: { ...piece, m } };
+    return { state: { ...state, piece: { ...piece, m } }, events: [{ type: 'rotate' }] };
   }
   if (fits(board, piece, 1, 0, m)) {
-    return { ...state, piece: { ...piece, m, x: piece.x + 1 } };
+    return { state: { ...state, piece: { ...piece, m, x: piece.x + 1 } }, events: [{ type: 'rotate' }] };
   }
   if (fits(board, piece, -1, 0, m)) {
-    return { ...state, piece: { ...piece, m, x: piece.x - 1 } };
+    return { state: { ...state, piece: { ...piece, m, x: piece.x - 1 } }, events: [{ type: 'rotate' }] };
   }
-  return state;
+  // 회전이 실패하면 상태도, 이벤트도 바꾸지 않습니다 — 실패한 회전에 소리가 나지 않습니다.
+  return { state, events: NO_EVENTS };
 }
 
 function movePiece(state, dx) {
-  if (state.status !== 'playing') return state;
-  if (!fits(state.board, state.piece, dx, 0)) return state;
-  return { ...state, piece: { ...state.piece, x: state.piece.x + dx } };
+  if (state.status !== 'playing') return { state, events: NO_EVENTS };
+  if (!fits(state.board, state.piece, dx, 0)) return { state, events: NO_EVENTS };
+  return { state: { ...state, piece: { ...state.piece, x: state.piece.x + dx } }, events: NO_EVENTS };
 }
 
 /**
+ * 상태와 함께 표현 이벤트를 돌려줍니다. 컴포넌트는 이벤트를 사운드에 매핑하기만 합니다.
+ * 이벤트: `{type:'lock'}` · `{type:'clear', lines}` · `{type:'rotate'}` · `{type:'over'}`
+ *
  * @param {object} state
  * @param {{type: string, dx?: number, rng?: () => number}} action
+ * @returns {{state: object, events: Array<object>}}
  */
-export function reduce(state, action) {
+export function reduceWithEvents(state, action) {
   const rng = action.rng ?? Math.random;
 
   switch (action.type) {
     case 'start':
-      return startGame(rng);
+      return { state: startGame(rng), events: NO_EVENTS };
     case 'drop':
       return stepDown(state, rng);
     case 'move':
@@ -173,6 +186,11 @@ export function reduce(state, action) {
     case 'hardDrop':
       return hardDrop(state, rng);
     default:
-      return state;
+      return { state, events: NO_EVENTS };
   }
+}
+
+/** 이벤트가 필요 없는 호출부를 위한 얇은 wrapper. */
+export function reduce(state, action) {
+  return reduceWithEvents(state, action).state;
 }

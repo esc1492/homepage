@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "predev": "node ../scripts/sync-site-nav.mjs",
+    "predev": "node ../scripts/sync-shared.mjs",
     "dev": "next dev",
-    "prebuild": "node ../scripts/sync-site-nav.mjs",
+    "prebuild": "node ../scripts/sync-shared.mjs",
     "build": "next build && rm -rf ../minesweeper && cp -R out ../minesweeper",
     "test": "node --test \"game/*.test.js\""
   },

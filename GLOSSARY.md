@@ -40,3 +40,15 @@ JSON 오류 응답, provider 설정을 소유합니다. 오류는 JSON `{ error 
 `server/*-core.mjs` — 네트워크·환경변수를 모르는 파싱·검증·조립 로직. handler 는 이 module 을
 호출만 하고, 테스트는 core 의 interface 를 직접 검증합니다. 조용히 틀리면 그럴듯한 오답이
 나오는 휴리스틱(줄 묶기·언어 판정·셀 좌표·삭제 순서)이 여기에 있습니다.
+
+## 게임 오디오 (Game audio)
+
+`shared/game-audio.mjs` — 테트리스·알카노이드가 함께 쓰는 효과음 hook. 보이스 4개 풀,
+`NEXT_PUBLIC_BASE_PATH` 기반 URL, 테마곡 유무를 option 으로 받습니다. 순수한 풀 선택은
+`shared/game-audio-core.mjs` 에 있습니다.
+
+## 게임 이벤트 (Game event)
+
+reducer/step 함수가 상태와 함께 돌려주는 데이터. 테트리스는
+`lock`·`clear`·`rotate`·`over`, 알카노이드는 `stepWorld` 의 events 배열입니다.
+컴포넌트는 이벤트를 사운드·연출에 매핑하고, 상태를 diff 해 추론하지 않습니다.

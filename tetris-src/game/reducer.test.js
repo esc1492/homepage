@@ -8,6 +8,7 @@ import {
   fits,
   randomPiece,
   reduce,
+  reduceWithEvents,
   rotateMatrix,
 } from './reducer.js';
 
@@ -94,7 +95,7 @@ test('start: 빈 보드와 재생 상태, piece/next 를 준비한다', () => {
   assert.equal(s.score, 0);
   assert.equal(s.level, 1);
   assert.equal(s.lines, 0);
-  assert.equal(s.locks, 0);
+  assert.equal('locks' in s, false, '표현 관심사(locks)는 상태에 없습니다');
   assert.ok(s.piece && s.next);
   assert.equal(
     s.board.flat().every((v) => v === 0),
@@ -120,16 +121,14 @@ test('drop: 빈 공간이 있으면 한 칸 내려간다', () => {
   const next = reduce(s, { type: 'drop', rng: I_PIECE });
 
   assert.equal(next.piece.y, 1);
-  assert.equal(next.locks, 0, '고정되지 않았으므로 locks 은 그대로');
 });
 
-test('drop: 바닥에 닿으면 보드에 고정하고 locks 를 올린다', () => {
+test('drop: 바닥에 닿으면 보드에 고정한다', () => {
   const piece = { id: 1, m: [[1]], x: 0, y: ROWS - 1 };
   const s = stateWith({ piece, next: randomPiece(I_PIECE) });
   const next = reduce(s, { type: 'drop', rng: I_PIECE });
 
   assert.equal(next.board[ROWS - 1][0], 1);
-  assert.equal(next.locks, 1);
   assert.notEqual(next.piece, piece, '다음 피스로 교체됨');
 });
 
@@ -139,7 +138,6 @@ test('hardDrop: 바닥까지 내린 뒤 즉시 고정한다', () => {
   const next = reduce(s, { type: 'hardDrop', rng: I_PIECE });
 
   assert.equal(next.board[ROWS - 1][2], 1);
-  assert.equal(next.locks, 1);
 });
 
 test('줄 삭제: 1줄 → 100점, 레벨은 그대로', () => {
@@ -261,6 +259,93 @@ test('rotate: 어디에도 들어가지 못하면 상태를 바꾸지 않는다'
   const s = stateWith({ board, piece, next: randomPiece(I_PIECE) });
 
   assert.equal(reduce(s, { type: 'rotate' }), s);
+});
+
+test('reduceWithEvents: start 는 이벤트가 없다', () => {
+  const { state, events } = reduceWithEvents(createInitialState(), {
+    type: 'start',
+    rng: I_PIECE,
+  });
+  assert.equal(state.status, 'playing');
+  assert.deepEqual(events, []);
+});
+
+test('reduceWithEvents: 고정되면 lock 이벤트', () => {
+  const piece = { id: 1, m: [[1]], x: 0, y: ROWS - 1 };
+  const s = stateWith({ piece, next: randomPiece(I_PIECE) });
+  const { state, events } = reduceWithEvents(s, { type: 'drop', rng: I_PIECE });
+
+  assert.equal(state.board[ROWS - 1][0], 1);
+  assert.deepEqual(events, [{ type: 'lock' }]);
+});
+
+test('reduceWithEvents: 고정되지 않은 하강은 이벤트가 없다', () => {
+  const piece = { id: 1, m: [[1]], x: 0, y: 0 };
+  const s = stateWith({ piece, next: randomPiece(I_PIECE) });
+  const { events } = reduceWithEvents(s, { type: 'drop', rng: I_PIECE });
+
+  assert.deepEqual(events, []);
+});
+
+test('reduceWithEvents: 줄 삭제는 lock 다음 clear 이벤트', () => {
+  const board = fillRows(createBoard(), [ROWS - 1]);
+  const s = stateWith({
+    board,
+    piece: { id: 1, m: [[1]], x: 0, y: ROWS - 1 },
+    next: randomPiece(I_PIECE),
+  });
+  const { events } = reduceWithEvents(s, { type: 'drop', rng: I_PIECE });
+
+  assert.deepEqual(events, [{ type: 'lock' }, { type: 'clear', lines: 1 }]);
+});
+
+test('reduceWithEvents: 게임오버는 lock 다음 over 이벤트', () => {
+  const board = createBoard();
+  board[0][4] = 1;
+  board[0][5] = 1;
+
+  const s = stateWith({
+    board,
+    piece: { id: 1, m: [[1]], x: 0, y: ROWS - 1 },
+    next: { id: 2, m: [[2, 2], [2, 2]], x: 4, y: 0 },
+  });
+  const { state, events } = reduceWithEvents(s, { type: 'drop', rng: I_PIECE });
+
+  assert.equal(state.status, 'over');
+  assert.deepEqual(events, [{ type: 'lock' }, { type: 'over' }]);
+});
+
+test('reduceWithEvents: 성공한 회전만 rotate 이벤트를 낸다', () => {
+  const piece = { id: 4, m: [[4, 0], [4, 0], [4, 4]], x: COLS - 2, y: 5 };
+  const s = stateWith({ piece, next: randomPiece(I_PIECE) });
+  assert.deepEqual(reduceWithEvents(s, { type: 'rotate' }).events, [{ type: 'rotate' }]);
+
+  const blocked = stateWith({
+    piece: { id: 1, m: [[1], [1], [1], [1]], x: COLS - 1, y: 5 },
+    next: randomPiece(I_PIECE),
+  });
+  const result = reduceWithEvents(blocked, { type: 'rotate' });
+  assert.equal(result.state, blocked);
+  assert.deepEqual(result.events, []);
+});
+
+test('reduceWithEvents: over 상태의 액션은 상태도 이벤트도 바꾸지 않는다', () => {
+  const over = stateWith({
+    status: 'over',
+    piece: { id: 3, m: [[3]], x: 0, y: 0 },
+    next: randomPiece(I_PIECE),
+  });
+
+  for (const action of [
+    { type: 'drop' },
+    { type: 'rotate' },
+    { type: 'move', dx: 1 },
+    { type: 'hardDrop' },
+  ]) {
+    const result = reduceWithEvents(over, { ...action, rng: I_PIECE });
+    assert.equal(result.state, over);
+    assert.deepEqual(result.events, []);
+  }
 });
 
 test('speedForLevel: 800ms 에서 시작해 80ms 에서 멈춘다', () => {

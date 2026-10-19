@@ -91,7 +91,7 @@ fetch.py (Python 3, no deps) → data.json
 - Next.js: `components/SiteNav.jsx`가 얇은 adapter입니다. 마크업은 module이 소유하고,
   localStorage 읽기는 adapter가 맡습니다
 - **Next 세 프로젝트가 `shared/`를 직접 import 하지 않습니다** — `turbopack.root`를 각 프로젝트로 고정해 두었기 때문입니다.
-  `predev`·`prebuild`가 `scripts/sync-site-nav.mjs`로 `shared/`를 각 프로젝트의 `shared/`에 복사합니다.
+  `predev`·`prebuild`가 `scripts/sync-shared.mjs`로 `shared/`를 각 프로젝트의 `shared/`에 복사합니다.
   **복사본은 gitignore 대상이므로 원본은 항상 `shared/`입니다**
 - 테스트: `node --test shared/sitenav.test.mjs` (view-model 4개)
 
@@ -111,6 +111,18 @@ fetch.py (Python 3, no deps) → data.json
 - 로그인 게이트는 `index.html` 의 `data-auth` 선언과 `session.getSession()` 으로 판정합니다. `/album` 은 자체 로그인 화면이 있어 게이트하지 않습니다
 - index 의 데이터 쿼리는 `sbClient` 전역을 계속 씁니다 — `init` 직후 `session.getClient()`로 채웁니다
 - 테스트: `node --test shared/session.test.mjs` (토큰 갱신·`authedFetch` 헤더 회귀 포함)
+
+### 게임 오디오 module (`shared/game-audio.mjs`)
+
+테트리스·알카노이드의 효과음 재생은 `shared/game-audio.mjs` **한 벌**입니다
+(`docs/adr/0007-game-audio.md`).
+
+- `useGameAudio({ sounds, themeFile })` — 보이스 4개 풀, `play`, `unlock`, 테마곡 시작·정지·토글
+- 순수한 풀 선택·URL 규칙은 `shared/game-audio-core.mjs` 에 있고 `node --test` 로 검증합니다
+- 각 프로젝트의 `hooks/useAudio.js` 는 **module 상수 `SFX` 를 넘기는 얇은 adapter** 입니다.
+  배열을 render 마다 새로 만들면 effect 가 다시 돌아 Audio 객체가 재생성되므로 module 상수로 둡니다
+- 배포: `scripts/sync-shared.mjs` 가 build 전에 tetris·arkanoid 의 `shared/` 로 복사합니다 (gitignore 대상)
+- 테스트: `npm test` 의 `shared/game-audio-core.test.mjs`
 
 ### Cards
 
@@ -205,9 +217,9 @@ Next.js는 자산을 `/tetris/_next/...` 로 참조하므로, 산출물이 `tetr
 
 ### 설계 요점
 
-- **상태**: `useReducer` 가 단일 진실 공급원. 하강 간격은 `max(80, 800-(level-1)*70)` ms 라 최대 초당 12.5회만 dispatch 됩니다. 60fps는 **그리기에만** 해당하며 rAF 루프가 ref로 명령형 호출합니다(React 렌더 우회).
+- **상태**: `useState` + 순수 `reduceWithEvents` 가 단일 진실 공급원입니다. reducer 는 `{ state, events }` 를 돌려주고 컴포넌트가 이벤트를 사운드로 매핑합니다. 하강 간격은 `max(80, 800-(level-1)*70)` ms 라 최대 초당 12.5회만 dispatch 됩니다. 60fps는 **그리기에만** 해당하며 rAF 루프가 ref로 명령형 호출합니다(React 렌더 우회).
 - **`setInterval` 대신 rAF**: 백그라운드 탭에서 자동 정지, 드리프트 없음. 단 `ts - lastT` 가 커지면 하강이 폭주하므로 `MAX_FRAME_DELTA_MS = 200` 으로 자릅니다.
-- **오디오**: 테마곡은 96kbps·2.1MB로 재인코딩해 `public/audio/` 에 두고 `preload="none"` + '시작' 클릭 시 로드. 효과음 4개는 합계 30KB. 효과음은 **소리마다 보이스 4개 풀**을 돌려 연타 시 앞 소리가 잘리지 않게 합니다(`VOICES_PER_SOUND`).
+- **오디오**: 테마곡은 96kbps·2.1MB로 재인코딩해 `public/audio/` 에 두고 `preload="none"` + '시작' 클릭 시 로드. 효과음 4개는 합계 30KB. 효과음은 **소리마다 보이스 4개 풀**을 돌려 연타 시 앞 소리가 잘리지 않게 합니다(`VOICES_PER_SOUND`). 트리거는 reducer 의 events(`lock`·`clear`·`rotate`·`over`)이고, 컴포넌트는 상태를 diff 하지 않습니다 — **실패한 회전은 이벤트가 없어 소리도 나지 않습니다**.
 - **최고점수**: `localStorage` 키 `tetrisHighScore` (홈페이지의 `myTodos`·`loggedIn` 과 같은 평면 네이밍). 현재 점수가 기록을 넘는 순간 저장하므로 게임오버를 기다리지 않습니다. `localStorage` 는 브라우저 전용이라 **렌더 중에 읽지 않고 effect 에서** 읽습니다 — 서버 프리렌더에서 `ReferenceError` 가 나거나 하이드레이션 불일치가 생깁니다.
 
 ### ⚠️ 변환 시 걸린 함정 (재발 방지)
@@ -248,8 +260,8 @@ cd tetris-src && npm run build # → repo 루트 tetris/ 갱신 (next build && c
 
 | 항목 | 테트리스 | 알카노이드 | 이유 |
 | --- | --- | --- | --- |
-| 상태 | `useReducer` (순수) | **ref 안의 가변 월드** | 입력이 이산적이지 않습니다 — 패들이 손가락을 초당 60회 따라가고 공도 매 틱 움직입니다. HUD·오버레이·점수·목숨이 전부 캔버스에 그려지므로(`drawHUD` 가 목숨을 미니 패들로 그림) 매 프레임 React 가 다시 그릴 것이 없고, 상태가 커서 60Hz 로 복사할 이유도 없습니다 |
-| 부수효과 | `locks`/`lines` 를 diff 해 소리 추론 | `stepWorld` 가 **events 배열을 반환** | 원본의 `playSound` 9곳을 데이터로 바꿨습니다. diff 추론보다 정확하고 순서가 보존됩니다 |
+| 상태 | `useState` + `reduceWithEvents` (순수) | **ref 안의 가변 월드** | 입력이 이산적이지 않습니다 — 패들이 손가락을 초당 60회 따라가고 공도 매 틱 움직입니다. HUD·오버레이·점수·목숨이 전부 캔버스에 그려지므로(`drawHUD` 가 목숨을 미니 패들로 그림) 매 프레임 React 가 다시 그릴 것이 없고, 상태가 커서 60Hz 로 복사할 이유도 없습니다 |
+| 부수효과 | `reduceWithEvents` 가 **`{state, events}` 반환** | `stepWorld` 가 **events 배열 반환** | 두 게임 모두 이벤트를 데이터로 돌려줍니다. diff 추론보다 정확하고 순서가 보존됩니다 |
 | 시간 | `MAX_FRAME_DELTA_MS = 200` | **`MAX_TICKS_PER_FRAME × TICK_MS` = 83.3ms (파생)** | 200ms 를 그대로 쓰면 16.667ms 틱에서 12틱이 한 프레임에 몰려, 라운드 5에서 공이 최대 71px 을 순간이동해 브릭(높이 16px)과 패들을 통과합니다 |
 | 루프 | `if (acc >= interval)` | **`while`** | 30fps 화면에서도 60Hz 시뮬레이션을 유지하려면 프레임당 여러 틱이 필요합니다 |
 | 터치 | `useSwipe`(이산 제스처) | **`usePointer`(Pointer Events)** | 알카노이드는 절대 위치 연속 드래그라 제스처 판정이 아닙니다 |

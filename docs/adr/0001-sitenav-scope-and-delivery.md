@@ -21,7 +21,7 @@
 2. **홈 `index.html`의 `.nav`는 제외**합니다. 햄버거가 홈 이동이 아니라 드롭다운 메뉴를 열고,
    문이 포커스 모드, 아이콘이 로그인 모달을 엽니다. 같은 interface로 묶으면 메뉴·모달·포커스 모드가
    module의 interface로 들어와 module이 얕아집니다.
-3. **전달은 prebuild 복사**입니다. `scripts/sync-site-nav.mjs`가 `shared/`의 두 파일을
+3. **전달은 prebuild 복사**입니다. `scripts/sync-shared.mjs`(당시 이름 `sync-site-nav.mjs`)가 `shared/`의 두 파일을
    `tetris-src/shared/`·`arkanoid-src/shared/`·`minesweeper-src/shared/`로 복사하고,
    각 프로젝트의 `predev`·`prebuild`가 실행합니다. 복사본은 gitignore 대상입니다.
 4. **시각 기준은 parchment**(홈 `.nav`와 동일, blur 없음)입니다.

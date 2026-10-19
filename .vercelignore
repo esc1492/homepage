@@ -25,6 +25,8 @@ claude-code-playground/
 scripts/
 # 서버 공유 모듈의 테스트 — 함수 번들에 필요 없습니다. server/*.mjs 본체는 제외하지 마십시오.
 server/*.test.mjs
+# 공유 module 테스트 — 정적 페이지가 로드하지 않습니다.
+shared/*.test.mjs
 *.md
 moment/
 

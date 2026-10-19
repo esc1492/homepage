@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { BOARD_H, BOARD_W, NEXT_SIZE } from '../game/constants.js';
-import { createInitialState, reduce } from '../game/reducer.js';
+import { createInitialState, reduceWithEvents } from '../game/reducer.js';
 import { drawNext, drawScene, setupCanvas } from '../game/render.js';
 import { useAudio } from '../hooks/useAudio.js';
 import { useGameLoop } from '../hooks/useGameLoop.js';
@@ -20,7 +20,7 @@ const START_LABEL = {
 };
 
 export default function TetrisGame() {
-  const [state, dispatch] = useReducer(reduce, undefined, createInitialState);
+  const [state, setState] = useState(createInitialState);
 
   const boardRef = useRef(null);
   const nextRef = useRef(null);
@@ -33,6 +33,23 @@ export default function TetrisGame() {
   const needsDrawRef = useRef(true);
 
   const { enabled: soundEnabled, play, startTheme, stopTheme, toggle } = useAudio();
+
+  // reducer 는 표현 이벤트를 돌려주고, 여기서 사운드로 매핑합니다.
+  // 상태 갱신과 같은 동작에서 처리하므로 이전 상태와 diff 할 필요가 없습니다.
+  const dispatch = useCallback(
+    (action) => {
+      const { state: next, events } = reduceWithEvents(stateRef.current, action);
+      stateRef.current = next;
+      setState(next);
+      for (const event of events) {
+        if (event.type === 'lock') play('drop');
+        else if (event.type === 'clear') play('break');
+        else if (event.type === 'rotate') play('change');
+        else if (event.type === 'over') stopTheme();
+      }
+    },
+    [play, stopTheme],
+  );
 
   // 현재 점수가 기록을 넘으면 즉시 올라가므로, 플레이 중에도 갱신되는 것이 보입니다.
   const highScore = useHighScore(state.score);
@@ -60,7 +77,7 @@ export default function TetrisGame() {
     if (nextCtx) drawNext(nextCtx, stateRef.current.next);
   }, []);
 
-  const onTick = useCallback(() => dispatch({ type: 'drop' }), []);
+  const onTick = useCallback(() => dispatch({ type: 'drop' }), [dispatch]);
 
   const { resetTimer } = useGameLoop({
     playing: isPlaying,
@@ -89,19 +106,16 @@ export default function TetrisGame() {
 
   // --- 입력 ---
 
-  const handleMove = useCallback((dx) => dispatch({ type: 'move', dx }), []);
+  const handleMove = useCallback((dx) => dispatch({ type: 'move', dx }), [dispatch]);
 
-  const handleRotate = useCallback(() => {
-    dispatch({ type: 'rotate' });
-    play('change'); // 원본과 동일: 회전이 실제로 됐는지와 무관하게 재생
-  }, [play]);
+  const handleRotate = useCallback(() => dispatch({ type: 'rotate' }), [dispatch]);
 
   const handleSoftDrop = useCallback(() => {
     dispatch({ type: 'drop' });
     resetTimer(); // 다음 자동 하강까지의 시간을 초기화
-  }, [resetTimer]);
+  }, [dispatch, resetTimer]);
 
-  const handleHardDrop = useCallback(() => dispatch({ type: 'hardDrop' }), []);
+  const handleHardDrop = useCallback(() => dispatch({ type: 'hardDrop' }), [dispatch]);
 
   useKeyboard({
     enabled: isPlaying,
@@ -118,29 +132,6 @@ export default function TetrisGame() {
     onRotate: handleRotate,
     onHardDrop: handleHardDrop,
   });
-
-  // --- 효과음 / 배경음악 ---
-  // reducer 는 순수해야 하므로 사운드를 직접 낼 수 없습니다.
-  // 상태 변화를 관찰해 "고정됐다", "줄이 지워졌다" 를 판별합니다.
-  const prevRef = useRef({
-    locks: state.locks,
-    lines: state.lines,
-    status: state.status,
-  });
-
-  useEffect(() => {
-    const prev = prevRef.current;
-
-    if (state.locks > prev.locks) play('drop');
-    if (state.lines > prev.lines) play('break');
-    if (state.status === 'over' && prev.status !== 'over') stopTheme();
-
-    prevRef.current = {
-      locks: state.locks,
-      lines: state.lines,
-      status: state.status,
-    };
-  }, [state.locks, state.lines, state.status, play, stopTheme]);
 
   const handleStart = () => {
     dispatch({ type: 'start' });
