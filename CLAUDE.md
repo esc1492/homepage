@@ -596,9 +596,12 @@ cd voca && .venv/bin/streamlit run app.py
 
 | 상황 | 도구 |
 | --- | --- |
-| 단순 화면 확인 / 스크린샷 / 렌더링 체크 | `agent-browser` |
-| 로그인 세션 유지, 폼 다단계 입력, CI에 넣을 스크립트 필요 | Playwright MCP |
-| 애매함 | 먼저 `agent-browser`로 빠르게 확인 → 실패하거나 복잡해지면 Playwright로 전환 |
+| **기본** — 화면 확인 / 스크린샷 / 렌더링 체크 / 페이지 조작 / 콘솔·네트워크 디버깅 | `agent-browser` |
+| **이미 로그인된 실제 브라우저**(동완님 Chrome/Edge 프로필)가 필요할 때 | `ego lite` (`ego-browser`) |
+| CI에 넣을 재현 가능한 자동화 스크립트 | Playwright MCP |
+| 애매함 | `agent-browser` 먼저 → 로그인·세션 때문이면 `ego lite` → 그래도 복잡하면 Playwright |
+
+> 두 도구의 스킬 설명이 각각 "자기를 기본으로 쓰라"고 선언합니다. **위 우선순위가 스킬 설명보다 우선합니다.**
 
 ### agent-browser
 
@@ -614,8 +617,30 @@ agent-browser screenshot <파일>    # 스크린샷 저장
 
 - **페이지가 바뀌면 반드시 다시 `snapshot`** 을 떠서 참조 ID를 갱신한 뒤 조작합니다. 이전 스냅샷의 `@eN`은 무효입니다.
 - 전체 명령은 `agent-browser --help`, 워크플로·문제 해결은 `agent-browser skills get core`.
-- 설치 완료 (2026-09-15, v0.37.1 / Chrome 153) — 다른 머신에서는 `npm i -g agent-browser && agent-browser install`이 필요합니다.
+- 설치 완료 (2026-10-20 v0.39.1 로 업데이트 / Chrome for Testing 153) — 다른 머신에서는 `npm i -g agent-browser && agent-browser install`이 필요합니다.
   플러그인 설치(`/plugin install`)만으로는 바이너리가 내려오지 않아 `No binary found for darwin-arm64` 오류가 납니다.
+
+### ego lite (`ego-browser`)
+
+`ego lite` 앱이 `~/.local/bin/ego-browser` CLI를 제공합니다. **이미 로그인된 동완님 브라우저 프로필을 그대로 쓰는 것이 목적**이므로, 새로 로그인하는 작업에는 쓰지 않습니다.
+
+```sh
+ego-browser skill                  # 설치 버전에 맞는 사용 가이드 (먼저 실행)
+ego-browser nodejs <<'EOF'
+const task = await taskSpace("목표이름");
+const page = task.page("p1");
+await page.goto("https://example.com");
+console.log(await page.snapshot());
+await task.finish({ keep: [] });
+EOF
+```
+
+- **task space는 목표당 하나**를 만들고 이후 라운드에서도 같은 이름/ID로 이어갑니다. 스크립트는 매번 새 Node 프로세스라 변수는 유지되지 않습니다.
+- `page.screenshot({ path })`는 **절대경로 파일로 직접 씁니다** (base64 반환 아님). `path`를 생략하면 임시 디렉터리 경로를 돌려줍니다.
+- `task.finish({ keep })`의 `keep`은 `"all"` 또는 페이지 라벨 배열만 받습니다 — 전부 닫으려면 `keep: []`.
+- 스냅샷은 대화형 요소만 걸러주지 않습니다. 큰 페이지에서는 `snapshot({ scope: "subtree", root: "@n" })`로 범위를 좁히십시오 — 전체 스냅샷이 Bash 출력 한도를 넘으면 잘립니다.
+- 스킬에 `allowed-tools` 선언이 없어 `ego-browser nodejs` 실행마다 권한 확인이 뜰 수 있습니다.
+- 설치 확인: `ego-browser --version` (2026-10-20 확인 — 0.6.0.16 / Chromium 154.0.8037.44). 스킬은 `~/.agents/skills/ego-browser` → `~/.claude/skills/ego-browser` 심볼릭 링크입니다.
 
 ## Compaction
 
