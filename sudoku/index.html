@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>스도쿠</title>
+<link rel="stylesheet" href="/shared/sitenav.css">
+<style>
+  :root {
+    --color-canvas-parchment: #f7f7f4;
+    --color-inkwell: #262510;
+    --color-muted-stone: #7a7974;
+    --color-pebble-gray: #e6e5e0;
+    --color-highlight-beige: #cdcdc9;
+    --color-onyx-outline: #f54e00;
+    --color-forest-green-action: #34785c;
+    --color-deep-shadow: #141414;
+    --color-error: #b3261e;
+
+    --font-primary: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    --board-size: min(94vw, 58dvh, 480px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-primary);
+    background: var(--color-canvas-parchment);
+    color: var(--color-inkwell);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .app {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 68px 16px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .bar {
+    width: var(--board-size);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .bar h1 { font-size: 18px; font-weight: 600; letter-spacing: 0.04em; }
+
+  select, button {
+    font: inherit;
+    color: inherit;
+    background: var(--color-canvas-parchment);
+    border: 1px solid var(--color-pebble-gray);
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+
+  select:hover, button:hover:not(:disabled) { background: var(--color-pebble-gray); }
+  button:disabled { color: var(--color-muted-stone); cursor: default; opacity: 0.6; }
+  button:focus-visible, select:focus-visible, .cell:focus-visible {
+    outline: 2px solid var(--color-onyx-outline);
+    outline-offset: 1px;
+  }
+
+  .status {
+    width: var(--board-size);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    text-align: center;
+  }
+
+  .status div {
+    border: 1px solid var(--color-pebble-gray);
+    border-radius: 4px;
+    padding: 4px 2px;
+  }
+
+  .status .label { display: block; font-size: 11px; color: var(--color-muted-stone); }
+  .status strong { font-size: 14px; font-variant-numeric: tabular-nums; }
+
+  .status .danger strong { color: var(--color-error); }
+
+  /* ── 보드 ── */
+  .board {
+    width: var(--board-size);
+    aspect-ratio: 1 / 1;
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    border: 2px solid var(--color-inkwell);
+    border-radius: 2px;
+    overflow: hidden;
+    background: var(--color-canvas-parchment);
+    touch-action: manipulation;
+  }
+
+  .cell {
+    position: relative;
+    border: 0;
+    border-right: 1px solid var(--color-highlight-beige);
+    border-bottom: 1px solid var(--color-highlight-beige);
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    font-size: clamp(15px, calc(var(--board-size) / 13), 28px);
+    line-height: 1;
+    color: var(--color-forest-green-action);
+  }
+
+  .cell.b-r { border-right: 2px solid var(--color-inkwell); }
+  .cell.b-b { border-bottom: 2px solid var(--color-inkwell); }
+  .cell:nth-child(9n) { border-right: 0; }
+  .cell:nth-last-child(-n + 9) { border-bottom: 0; }
+
+  .cell.given { color: var(--color-inkwell); font-weight: 600; }
+  .cell.peer { background: rgba(38, 37, 16, 0.05); }
+  .cell.same { background: rgba(192, 133, 50, 0.18); }
+  .cell.selected { background: rgba(245, 78, 0, 0.14); box-shadow: inset 0 0 0 2px var(--color-onyx-outline); }
+  .cell.wrong { color: var(--color-error); background: rgba(179, 38, 30, 0.12); }
+  .cell.wrong.selected { box-shadow: inset 0 0 0 2px var(--color-error); }
+  .cell.hinted { animation: pop 0.4s ease; }
+
+  @keyframes pop { from { transform: scale(0.6); opacity: 0.3; } to { transform: scale(1); opacity: 1; } }
+
+  .cell .val { pointer-events: none; }
+
+  .cell .notes {
+    position: absolute;
+    inset: 2px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    font-size: clamp(7px, calc(var(--board-size) / 40), 11px);
+    color: var(--color-muted-stone);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cell .notes i { font-style: normal; display: grid; place-items: center; }
+
+  /* ── 입력 ── */
+  .pad {
+    width: var(--board-size);
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 4px;
+  }
+
+  .pad button {
+    padding: 10px 0;
+    font-size: clamp(15px, calc(var(--board-size) / 16), 20px);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tools {
+    width: var(--board-size);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+
+  .tools button[aria-pressed="true"] {
+    background: var(--color-inkwell);
+    color: var(--color-canvas-parchment);
+    border-color: var(--color-inkwell);
+  }
+
+  .hint-line {
+    width: var(--board-size);
+    min-height: 20px;
+    font-size: 12px;
+    color: var(--color-muted-stone);
+    text-align: center;
+  }
+
+  /* ── 오버레이 ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(38, 37, 16, 0.45);
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    z-index: 200;
+  }
+
+  .overlay[hidden] { display: none; }
+
+  .overlay .card {
+    background: var(--color-canvas-parchment);
+    border-radius: 6px;
+    padding: 28px 24px;
+    width: min(92vw, 360px);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .overlay h2 { font-size: 20px; }
+  .overlay p { color: var(--color-muted-stone); }
+  .overlay .actions { display: flex; gap: 8px; justify-content: center; margin-top: 4px; }
+  .overlay .primary {
+    background: var(--color-inkwell);
+    color: var(--color-canvas-parchment);
+    border-color: var(--color-inkwell);
+  }
+  .overlay .primary:hover { background: var(--color-deep-shadow, #141414); }
+</style>
+</head>
+<body>
+<div data-site-nav data-logged-in="false"></div>
+
+<main class="app">
+  <div class="bar">
+    <h1>스도쿠</h1>
+    <div class="bar-actions">
+      <select id="difficulty" aria-label="난이도"></select>
+      <button type="button" id="new-game">새 게임</button>
+    </div>
+  </div>
+
+  <section class="status" aria-live="polite">
+    <div id="mistakes-box"><span class="label">실수</span><strong id="mistakes">0/3</strong></div>
+    <div><span class="label">힌트</span><strong id="hints">3</strong></div>
+    <div><span class="label">시간</span><strong id="timer">00:00</strong></div>
+    <div><span class="label">최고</span><strong id="best">--:--</strong></div>
+  </section>
+
+  <div class="board" id="board" role="grid" aria-label="스도쿠 보드"></div>
+
+  <div class="pad" id="pad"></div>
+
+  <div class="tools">
+    <button type="button" id="notes" aria-pressed="false">메모</button>
+    <button type="button" id="erase">지우기</button>
+    <button type="button" id="undo">되돌리기</button>
+    <button type="button" id="hint">힌트</button>
+  </div>
+
+  <p class="hint-line" id="hint-line" aria-live="polite"></p>
+</main>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
+    <h2 id="overlay-title"></h2>
+    <p id="overlay-text"></p>
+    <div class="actions">
+      <button type="button" class="primary" id="overlay-new">새 게임</button>
+      <button type="button" id="overlay-close">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 로그인 아이콘: 세션 module 대신 읽기만 합니다(게임 3종 SiteNav 와 같은 방식). -->
+<script type="module">
+  if (localStorage.getItem('loggedIn') === 'true') {
+    document.querySelector('[data-site-nav]')?.setAttribute('data-logged-in', '1');
+  }
+</script>
+<script type="module" src="/shared/sitenav.mjs"></script>
+
+<script type="module">
+import {
+  CELLS,
+  DIFFICULTIES,
+  PEERS,
+  difficultySpec,
+  findConflicts,
+  formatTime,
+  generatePuzzle,
+  isSolved,
+  parseBoard,
+} from '/sudoku/core.mjs';
+
+const SAVE_KEY = 'sudoku-save';
+const MAX_MISTAKES = 3;
+const START_HINTS = 3;
+const bestKey = (difficulty) => `sudoku-best-${difficulty}`;
+
+const $ = (id) => document.getElementById(id);
+const boardEl = $('board');
+const padEl = $('pad');
+const difficultyEl = $('difficulty');
+const mistakesEl = $('mistakes');
+const hintsEl = $('hints');
+const timerEl = $('timer');
+const bestEl = $('best');
+const hintLineEl = $('hint-line');
+const notesBtn = $('notes');
+const hintBtn = $('hint');
+const overlay = $('overlay');
+
+const state = {
+  difficulty: DIFFICULTIES[0].key,
+  puzzle: new Int8Array(CELLS),
+  solution: new Int8Array(CELLS),
+  values: new Int8Array(CELLS),
+  editable: new Uint8Array(CELLS),
+  notes: Array.from({ length: CELLS }, () => new Set()),
+  selected: null,
+  notesMode: false,
+  mistakes: 0,
+  hints: START_HINTS,
+  startedAt: Date.now(),
+  elapsedMs: 0,
+  finished: false,
+  history: [],
+  wrong: new Set(),
+};
+
+const cellEls = [];
+for (let i = 0; i < CELLS; i++) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'cell';
+  btn.dataset.i = String(i);
+  btn.setAttribute('role', 'gridcell');
+  if (i % 9 % 3 === 2 && i % 9 !== 8) btn.classList.add('b-r');
+  if (Math.floor(i / 9) % 3 === 2 && i < 72) btn.classList.add('b-b');
+  btn.innerHTML = '<span class="val"></span><span class="notes">' +
+    '<i></i>'.repeat(9) + '</span>';
+  btn.addEventListener('click', () => select(i));
+  boardEl.appendChild(btn);
+  cellEls.push(btn);
+}
+
+for (const d of DIFFICULTIES) {
+  const opt = document.createElement('option');
+  opt.value = d.key;
+  opt.textContent = d.label;
+  difficultyEl.appendChild(opt);
+}
+
+for (let d = 1; d <= 9; d++) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = String(d);
+  b.setAttribute('aria-label', `${d} 입력`);
+  b.addEventListener('click', () => inputDigit(d));
+  padEl.appendChild(b);
+}
+
+// ── 상태 조작 ──────────────────────────────────────────────────────────
+
+const elapsedSeconds = () =>
+  state.finished ? state.elapsedMs / 1000 : (Date.now() - state.startedAt) / 1000;
+
+function pushHistory(i) {
+  state.history.push({ i, val: state.values[i], notes: new Set(state.notes[i]) });
+  if (state.history.length > 200) state.history.shift();
+}
+
+function setValue(i, val) {
+  state.values[i] = val;
+  if (val) state.notes[i].clear();
+}
+
+function clearPeerNotes(i, digit) {
+  for (const p of PEERS[i]) state.notes[p].delete(digit);
+}
+
+function select(i) {
+  state.selected = i;
+  render();
+}
+
+function inputDigit(digit) {
+  if (state.finished) return;
+  const i = state.selected;
+  if (i == null || !state.editable[i]) return;
+
+  if (state.notesMode) {
+    if (state.values[i]) return;
+    pushHistory(i);
+    if (state.notes[i].has(digit)) state.notes[i].delete(digit);
+    else state.notes[i].add(digit);
+    afterChange();
+    return;
+  }
+
+  if (state.values[i] === digit) {
+    pushHistory(i);
+    setValue(i, 0);
+  } else {
+    const correct = digit === state.solution[i];
+    pushHistory(i);
+    setValue(i, digit);
+    if (correct) {
+      clearPeerNotes(i, digit);
+    } else {
+      state.mistakes += 1;
+      hintLineEl.textContent = `실수 ${state.mistakes}/${MAX_MISTAKES}`;
+    }
+  }
+  afterChange();
+}
+
+function eraseSelected() {
+  if (state.finished) return;
+  const i = state.selected;
+  if (i == null || !state.editable[i]) return;
+  if (!state.values[i] && state.notes[i].size === 0) return;
+  pushHistory(i);
+  state.values[i] = 0;
+  state.notes[i].clear();
+  afterChange();
+}
+
+function undo() {
+  const last = state.history.pop();
+  if (!last) return;
+  state.values[last.i] = last.val;
+  state.notes[last.i] = new Set(last.notes);
+  state.selected = last.i;
+  state.wrong = computeWrong();
+  render();
+  save();
+}
+
+function useHint() {
+  if (state.finished || state.hints <= 0) return;
+  let i = state.selected;
+  if (i == null || state.values[i] || !state.editable[i]) {
+    i = state.values.findIndex((v, k) => !v && state.editable[k]);
+  }
+  if (i < 0) return;
+  pushHistory(i);
+  setValue(i, state.solution[i]);
+  clearPeerNotes(i, state.solution[i]);
+  state.hints -= 1;
+  state.selected = i;
+  cellEls[i].classList.add('hinted');
+  setTimeout(() => cellEls[i].classList.remove('hinted'), 450);
+  afterChange();
+}
+
+function toggleNotes() {
+  state.notesMode = !state.notesMode;
+  notesBtn.setAttribute('aria-pressed', String(state.notesMode));
+  hintLineEl.textContent = state.notesMode ? '메모 모드: 후보 숫자를 표시합니다' : '';
+}
+
+function moveSelection(key) {
+  let i = state.selected;
+  if (i == null) {
+    i = state.editable.findIndex((e, k) => e && !state.values[k]);
+    if (i < 0) return;
+    select(i);
+    return;
+  }
+  const r = Math.floor(i / 9);
+  const c = i % 9;
+  if (key === 'ArrowLeft' && c > 0) i -= 1;
+  else if (key === 'ArrowRight' && c < 8) i += 1;
+  else if (key === 'ArrowUp' && r > 0) i -= 9;
+  else if (key === 'ArrowDown' && r < 8) i += 9;
+  select(i);
+}
+
+function computeWrong() {
+  const wrong = findConflicts(state.values);
+  for (let i = 0; i < CELLS; i++) {
+    if (state.editable[i] && state.values[i] && state.values[i] !== state.solution[i]) wrong.add(i);
+  }
+  return wrong;
+}
+
+function afterChange() {
+  state.wrong = computeWrong();
+  if (state.mistakes >= MAX_MISTAKES) finish('lose');
+  else if (isSolved(state.values, state.solution)) finish('win');
+  render();
+  save();
+}
+
+function finish(result) {
+  state.finished = true;
+  state.elapsedMs = Date.now() - state.startedAt;
+  render();
+
+  if (result === 'win') {
+    const seconds = Math.round(state.elapsedMs / 1000);
+    const prev = Number(localStorage.getItem(bestKey(state.difficulty))) || Infinity;
+    if (seconds < prev) localStorage.setItem(bestKey(state.difficulty), String(seconds));
+    localStorage.removeItem(SAVE_KEY);
+    showOverlay('완성했습니다!', `${formatTime(seconds)} · ${difficultySpec(state.difficulty).label}`);
+    updateBest();
+  } else {
+    localStorage.removeItem(SAVE_KEY);
+    showOverlay('실수 3회', '게임이 끝났습니다. 새 게임으로 다시 도전해 보세요.');
+  }
+}
+
+function showOverlay(title, text) {
+  $('overlay-title').textContent = title;
+  $('overlay-text').textContent = text;
+  overlay.hidden = false;
+  $('overlay-new').focus();
+}
+
+function hideOverlay() {
+  overlay.hidden = true;
+}
+
+// ── 렌더 ──────────────────────────────────────────────────────────────
+
+function render() {
+  const selected = state.selected;
+  const selectedValue = selected != null ? state.values[selected] : 0;
+  const peers = selected != null ? new Set(PEERS[selected]) : new Set();
+
+  for (let i = 0; i < CELLS; i++) {
+    const el = cellEls[i];
+    const val = state.values[i];
+    el.querySelector('.val').textContent = val ? String(val) : '';
+    el.classList.toggle('given', !state.editable[i]);
+    el.classList.toggle('selected', i === selected);
+    el.classList.toggle('peer', peers.has(i));
+    el.classList.toggle('same', Boolean(selectedValue) && val === selectedValue && i !== selected);
+    el.classList.toggle('wrong', state.wrong.has(i));
+
+    const notes = el.querySelectorAll('.notes i');
+    for (let d = 0; d < 9; d++) {
+      notes[d].textContent = val ? '' : (state.notes[i].has(d + 1) ? String(d + 1) : '');
+    }
+
+    const row = Math.floor(i / 9) + 1;
+    const col = (i % 9) + 1;
+    el.setAttribute(
+      'aria-label',
+      `${row}행 ${col}열` + (state.editable[i] ? '' : ' 고정') + (val ? ` ${val}` : ' 빈칸'),
+    );
+  }
+
+  mistakesEl.textContent = `${state.mistakes}/${MAX_MISTAKES}`;
+  $('mistakes-box').classList.toggle('danger', state.mistakes > 0);
+  hintsEl.textContent = String(state.hints);
+  hintBtn.disabled = state.hints <= 0 || state.finished;
+  timerEl.textContent = formatTime(elapsedSeconds());
+}
+
+function updateBest() {
+  const best = Number(localStorage.getItem(bestKey(state.difficulty)));
+  bestEl.textContent = best ? formatTime(best) : '--:--';
+}
+
+// ── 저장 / 복원 ────────────────────────────────────────────────────────
+
+function save() {
+  if (state.finished) return;
+  const data = {
+    v: 1,
+    difficulty: state.difficulty,
+    puzzle: Array.from(state.puzzle).join(''),
+    solution: Array.from(state.solution).join(''),
+    values: Array.from(state.values),
+    notes: state.notes.map((set) => [...set]),
+    mistakes: state.mistakes,
+    hints: state.hints,
+    elapsedMs: Math.round(elapsedSeconds() * 1000),
+  };
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+  } catch (_) { /* 저장 공간 부족 등은 게임 진행을 막지 않습니다 */ }
+}
+
+function loadSave() {
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(SAVE_KEY));
+  } catch (_) {
+    return null;
+  }
+  if (!data || data.v !== 1) return null;
+  if (typeof data.puzzle !== 'string' || data.puzzle.length !== CELLS) return null;
+  if (typeof data.solution !== 'string' || data.solution.length !== CELLS) return null;
+  if (!Array.isArray(data.values) || data.values.length !== CELLS) return null;
+  if (!Array.isArray(data.notes) || data.notes.length !== CELLS) return null;
+  if (!DIFFICULTIES.some((d) => d.key === data.difficulty)) return null;
+  return data;
+}
+
+function applySave(data) {
+  state.difficulty = data.difficulty;
+  state.puzzle = parseBoard(data.puzzle);
+  state.solution = parseBoard(data.solution);
+  state.values = Int8Array.from(data.values, (v) => Number(v) || 0);
+  state.editable = Uint8Array.from(state.puzzle, (v) => (v ? 0 : 1));
+  state.notes = data.notes.map((arr) => new Set(Array.isArray(arr) ? arr.filter((n) => n >= 1 && n <= 9) : []));
+  state.mistakes = Number(data.mistakes) || 0;
+  state.hints = Number.isInteger(data.hints) ? data.hints : START_HINTS;
+  state.finished = false;
+  state.selected = null;
+  state.history = [];
+  state.startedAt = Date.now() - (Number(data.elapsedMs) || 0);
+  state.wrong = computeWrong();
+  difficultyEl.value = state.difficulty;
+}
+
+// ── 게임 시작 ──────────────────────────────────────────────────────────
+
+function startNewGame(difficulty = difficultyEl.value) {
+  hideOverlay();
+  hintLineEl.textContent = '퍼즐을 만드는 중…';
+  // 생성은 수 ms 이지만, 안내 문구가 먼저 그려지도록 한 프레임 양보합니다.
+  requestAnimationFrame(() => {
+    const { puzzle, solution } = generatePuzzle({ difficulty });
+    state.difficulty = difficulty;
+    state.puzzle = parseBoard(puzzle);
+    state.solution = parseBoard(solution);
+    state.values = Int8Array.from(state.puzzle);
+    state.editable = Uint8Array.from(state.puzzle, (v) => (v ? 0 : 1));
+    state.notes = Array.from({ length: CELLS }, () => new Set());
+    state.selected = null;
+    state.notesMode = false;
+    state.mistakes = 0;
+    state.hints = START_HINTS;
+    state.startedAt = Date.now();
+    state.elapsedMs = 0;
+    state.finished = false;
+    state.history = [];
+    state.wrong = new Set();
+    notesBtn.setAttribute('aria-pressed', 'false');
+    difficultyEl.value = difficulty;
+    hintLineEl.textContent = '';
+    updateBest();
+    render();
+    save();
+  });
+}
+
+// ── 이벤트 ────────────────────────────────────────────────────────────
+
+difficultyEl.addEventListener('change', () => startNewGame(difficultyEl.value));
+$('new-game').addEventListener('click', () => startNewGame(difficultyEl.value));
+$('overlay-new').addEventListener('click', () => startNewGame(difficultyEl.value));
+$('overlay-close').addEventListener('click', hideOverlay);
+$('erase').addEventListener('click', eraseSelected);
+$('undo').addEventListener('click', undo);
+$('hint').addEventListener('click', useHint);
+notesBtn.addEventListener('click', toggleNotes);
+
+document.addEventListener('keydown', (event) => {
+  if (event.metaKey || event.ctrlKey || event.altKey) return;
+  const tag = event.target?.tagName;
+  if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+
+  if (/^[1-9]$/.test(event.key)) {
+    inputDigit(Number(event.key));
+    event.preventDefault();
+  } else if (event.key === '0' || event.key === 'Backspace' || event.key === 'Delete') {
+    eraseSelected();
+    event.preventDefault();
+  } else if (event.key.startsWith('Arrow')) {
+    moveSelection(event.key);
+    event.preventDefault();
+  } else if (event.key === 'n' || event.key === 'N') {
+    toggleNotes();
+  } else if (event.key === 'h' || event.key === 'H') {
+    useHint();
+  }
+});
+
+setInterval(() => {
+  if (!state.finished) timerEl.textContent = formatTime(elapsedSeconds());
+}, 1000);
+
+// ── 부트 ──────────────────────────────────────────────────────────────
+
+for (const d of DIFFICULTIES) {
+  if (!difficultyEl.value) {
+    difficultyEl.value = d.key;
+    break;
+  }
+}
+
+const saved = loadSave();
+if (saved) {
+  applySave(saved);
+  updateBest();
+  render();
+} else {
+  startNewGame(DIFFICULTIES[0].key);
+}
+</script>
+</body>
+</html>

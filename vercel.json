@@ -19,6 +19,8 @@
     { "source": "/ocr", "destination": "/ocr/index" },
     { "source": "/ocr/:path*", "destination": "/ocr/index" },
     { "source": "/voca", "destination": "/voca/index" },
-    { "source": "/voca/:path*", "destination": "/voca/index" }
+    { "source": "/voca/:path*", "destination": "/voca/index" },
+    { "source": "/sudoku", "destination": "/sudoku/index" },
+    { "source": "/sudoku/:path*", "destination": "/sudoku/index" }
   ]
 }

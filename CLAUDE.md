@@ -20,6 +20,8 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
 
 바로가기 '게임 → MINESWEEPER' 항목으로 **지뢰찾기** 를 같은 사이트의 `/minesweeper` 경로에서 엽니다 (`minesweeper-src/` 소스 + `minesweeper/` 빌드 산출물).
 
+바로가기 '게임 → SUDOKU' 항목으로 **스도쿠** 를 같은 사이트의 `/sudoku` 경로에서 엽니다 (`sudoku/` 정적 UI + `sudoku/core.mjs` 순수 로직). 빌드·서버·인증이 없습니다.
+
 바로가기 '챗봇' 항목으로 **미키 챗봇** 을 같은 사이트의 `/chat` 경로에서 엽니다 (`api/chat.js` 서버 함수 + `chat/` 정적 UI). Streamlit 판(`chatbot_app.py`)을 Vercel 로 옮긴 것입니다.
 
 바로가기 'OCR' 항목으로 **이미지·PDF 텍스트 추출**을 같은 사이트의 `/ocr` 경로에서 엽니다 (`api/ocr.js` 서버 함수 + `ocr/` 정적 UI). Streamlit 판(`ocr_app.py`)을 Vercel 로 옮긴 것입니다.
@@ -39,6 +41,7 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
   - `/chat`·`/chat/*`도 같습니다
   - `/ocr`·`/ocr/*`도 같습니다
   - `/voca`·`/voca/*`도 같습니다
+  - `/sudoku`·`/sudoku/*`도 같습니다
   - `rewrites`는 파일시스템 조회 **이후**에 적용되므로 `/tetris/_next/...` 같은 실제 자산은 가로채이지 않습니다
     - 이 성질 때문에 **없는 경로도 200 이 나옵니다** — `/voca/app.py` 는 404 가 아니라 `/voca/index` 로 폴백한 HTML(200)입니다. 배포에 실렸는지 확인할 때 상태 코드만 보면 오판합니다. 본문·`content-length` 를 확실히 없는 경로와 대조하십시오 (2026-09-23 실제로 오판할 뻔했습니다)
     - `/album/`(슬래시)은 `/album` 으로 **308 리다이렉트**됩니다 (`cleanUrls`). `curl` 은 기본적으로 리다이렉트를 따라가지 않으므로 **`-L` 없이 확인하면 빈 응답을 검사하고 "미반영"으로 오판**합니다 (2026-10-11 실제로 오판했습니다)
@@ -48,7 +51,7 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
   - `minesweeper-src/` 는 2026-10-08 에 뒤늦게 추가했습니다 — 빠져 있는 동안 소스가 `/minesweeper-src/...` 로 그대로 서빙되었습니다. **새 Next.js 소스 폴더를 만들면 이 목록에 반드시 넣으십시오**
   - ⚠️ `.vercelignore`는 gitignore 문법이라 패턴이 **하위 모든 깊이에 적용**됩니다. `*.py`가 그 예로, 파이썬으로 서버 함수를 쓰면 `api/foo.py`가 조용히 업로드에서 빠집니다
   - `voca/` 는 제외 목록에 없지만 `*.py`·`.streamlit/`·`.venv/`·`requirements.txt` 가 각각 걸려 **`voca/index.html` 만** 배포됩니다
-- Production URL: https://homepage-dwkim.vercel.app (앨범: `/album`, 테트리스: `/tetris`, 알카노이드: `/arkanoid`, 지뢰찾기: `/minesweeper`, 챗봇: `/chat`, OCR: `/ocr`, 영단어: `/voca`)
+- Production URL: https://homepage-dwkim.vercel.app (앨범: `/album`, 테트리스: `/tetris`, 알카노이드: `/arkanoid`, 지뢰찾기: `/minesweeper`, 챗봇: `/chat`, OCR: `/ocr`, 영단어: `/voca`, 스도쿠: `/sudoku`)
 
 ## Data Pipeline (레거시 — 현재 프론트에서 미사용)
 
@@ -355,6 +358,40 @@ cd minesweeper-src && npm run build # → repo 루트 minesweeper/ 갱신
 ### ⚠️ `.vercelignore` 에 `minesweeper-src/` 를 빠뜨리지 마십시오
 
 `tetris-src/`·`arkanoid-src/` 와 달리 처음에 제외 목록에 없어 **소스가 그대로 서빙되었습니다** (2026-10-08 확인 — `/minesweeper-src/game/minesweeper.js`·`package.json`·`next.config.mjs`·`app/page.jsx` 가 모두 200). 시크릿은 없었지만 배포 용량이 늘고 관례를 어깁니다.
+
+## 스도쿠 — `/sudoku`
+
+클래식 스도쿠입니다. 서버·인증·빌드가 없습니다.
+
+- **소스 = 서빙**: `sudoku/index.html`(UI) + `sudoku/core.mjs`(순수 로직). Next.js 산출물이 아니므로 **재빌드가 없습니다**
+- **경로**: `https://homepage-dwkim.vercel.app/sudoku` (홈페이지 바로가기 '게임 → SUDOKU' 타일)
+
+### sudoku.com 분석에서 가져온 것과 아닌 것
+
+2026-10-25 에 sudoku.com 번들을 정적 분석해 모델을 확인했습니다.
+
+- **가져온 것** — 81자 `mission`/`solution` 문자열('0'=빈칸), `{val, editable}` 셀, 81×9 메모 배열(`notes[cell][digit-1]`), 같은 숫자 재입력 시 지우기, 실수 3회·힌트 3회, 행/열/박스 중복 하이라이트, 타이머, 저장/복원, 난이도 6단계
+- **가져오지 않은 것** — 퍼즐·정답은 원본에서 **서버가 내려줍니다**(`GET /api/v2/level/{difficulty}` → `{id, mission, solution, win_rate}`). 우리는 서버가 없으므로 **생성기와 유일해 보장을 직접 구현**했습니다
+- ⚠️ **난이도는 "힌트 수"로만 정합니다** — 원본은 서버가 난이도를 책정합니다(풀이 기법 기준으로 보이나 확인하지 못했습니다). 우리 등급은 빈칸 수 기준이라 같은 난이도라도 체감이 다를 수 있습니다
+- 원본의 killer 모드·daily·토너먼트·광고는 **범위 밖**입니다
+
+### 설계 요점
+
+- `sudoku/core.mjs` 는 **DOM·브라우저 API 를 import 하지 않습니다** — 게임 3종의 `game/*.js` 와 같은 원칙이라 `node --test` 로 그대로 검증됩니다
+- **생성**: 무작위 완성 격자(MRV 백트래킹) → 칸을 무작위 순서로 비우며 **`countSolutions(..., 2) === 1` 일 때만 확정**. 유일해가 깨지는 제거는 되돌리므로 결과 퍼즐은 항상 해가 하나입니다
+- **성능**: 전 난이도 실측 0.3~3.7ms (극한 24힌트 기준). 브라우저에서는 `requestAnimationFrame` 한 프레임 뒤 생성해 "만드는 중…" 문구가 먼저 그려집니다
+- **실수 판정**: 입력값이 정답과 다르면 mistake, 중복은 conflict 로 **즉시** 표시합니다(원본의 `autoCheckMistakes` 기본값과 같습니다). 같은 숫자를 다시 누르면 지워지고 **실수는 줄지 않습니다** — 원본과 같습니다
+- **메모**: 81개 Set. 정답을 맞히면 같은 행/열/박스의 메모에서 그 숫자를 지웁니다
+- **저장**: `localStorage` 키 `sudoku-save` 하나에 puzzle·solution·values·notes·mistakes·hints·elapsedMs 를 담고, 새로고침하면 자동 복원합니다. 최고 기록은 `sudoku-best-<난이도>`(초). 홈페이지 `myTodos`·테트리스 `tetrisHighScore` 와 같은 평면 네이밍입니다
+- **렌더**: 원본은 canvas 지만 여기서는 DOM 격자입니다 — 굵은 3×3 경계를 클래스로 주고, 접근성(버튼·aria-label)과 반응형이 그대로 따라옵니다
+- SiteNav 는 `shared/sitenav.mjs` 한 벌을 씁니다. 로그인 아이콘은 `localStorage.loggedIn` 을 **읽기만** 합니다(게임 3종과 같은 방식)
+
+### 테스트
+
+```sh
+node --test sudoku/core.test.mjs   # 10개: 유일해·힌트 수·결정론·중복 검출 등
+npm test                            # 루트 전체에 포함
+```
 
 ## 챗봇 (미키) — `/chat`
 
@@ -664,7 +701,7 @@ This is a personal start page. 정적 페이지에는 테스트 프레임워크�
 
 **빌드가 있는 곳 4곳** — `moment/`(앨범, Vite), `tetris-src/`(테트리스, Next.js), `arkanoid-src/`(알카노이드, Next.js), `minesweeper-src/`(지뢰찾기, Next.js). 네 프로젝트 모두 **산출물을 커밋**하므로 소스를 고치면 재빌드해야 합니다.
 
-**테스트가 있는 곳** — 루트 `npm test`가 `shared/*.test.mjs`·`server/*.test.mjs`를, 게임 3종이 각자 `npm test`를 돌립니다. `moment/`는 테스트가 없습니다.
+**테스트가 있는 곳** — 루트 `npm test`가 `shared/*.test.mjs`·`server/*.test.mjs`·`sudoku/*.test.mjs`를, 게임 3종이 각자 `npm test`를 돌립니다. `moment/`는 테스트가 없습니다.
 
 `chat/`(`/chat`)·`ocr/`(`/ocr`)·`voca/`(`/voca`)는 **빌드도 테스트도 없습니다** — 정적 HTML 이라 재빌드할 것이 없고, 서버 쪽은 `api/chat.js`·`api/ocr.js`·`api/voca.js` 각 한 파일입니다. handler 자체의 검증은 로컬 `vercel dev` 로 합니다 (Vercel CLI 필요).
 

@@ -27,6 +27,8 @@ scripts/
 server/*.test.mjs
 # 공유 module 테스트 — 정적 페이지가 로드하지 않습니다.
 shared/*.test.mjs
+# 스도쿠 순수 로직 테스트 — 서빙 대상이 아닙니다 (core.mjs 본체는 제외하지 마십시오).
+sudoku/*.test.mjs
 *.md
 moment/
 
