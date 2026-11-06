@@ -106,3 +106,39 @@ begin
   exception when duplicate_object then null;
   end;
 end $$;
+
+-- 6) 게시판 (velog 스타일 글쓰기) — 사진 피드(posts)와 분리된 테이블
+create table if not exists public.board_posts (
+  id bigint generated always as identity primary key,
+  user_id uuid references auth.users (id) on delete cascade,
+  username text,
+  title text not null,
+  body text not null default '',
+  tags text[] not null default '{}',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.board_posts enable row level security;
+
+drop policy if exists "게시판 글은 누구나 볼 수 있다" on public.board_posts;
+create policy "게시판 글은 누구나 볼 수 있다"
+on public.board_posts for select using ( true );
+
+drop policy if exists "로그인하면 게시판 글을 쓸 수 있다" on public.board_posts;
+create policy "로그인하면 게시판 글을 쓸 수 있다"
+on public.board_posts for insert to authenticated
+with check ( (select auth.uid()) = user_id );
+
+drop policy if exists "내 게시판 글만 수정" on public.board_posts;
+create policy "내 게시판 글만 수정"
+on public.board_posts for update to authenticated
+using ( (select auth.uid()) = user_id );
+
+drop policy if exists "내 게시판 글만 삭제" on public.board_posts;
+create policy "내 게시판 글만 삭제"
+on public.board_posts for delete to authenticated
+using ( (select auth.uid()) = user_id );
+
+create index if not exists board_posts_created_at_idx
+  on public.board_posts (created_at desc);

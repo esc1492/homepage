@@ -14,6 +14,8 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
 
 바로가기 '앨범' 항목으로 **모먼트(사진 게시판)** 를 같은 사이트의 `/album` 경로에서 엽니다 (`moment/` 소스 + `album/` 빌드 산출물).
 
+바로가기 드롭다운의 '앨범' **바로 아래 '게시판'** 항목으로 **velog 스타일 게시판**을 같은 사이트의 `/board` 경로에서 엽니다 (`board-src/` 소스 + `board/` 빌드 산출물). 사진 피드(`posts`)와 데이터가 분리된 별도 앱입니다.
+
 바로가기 '게임 → TETRIS' 항목으로 **테트리스** 를 같은 사이트의 `/tetris` 경로에서 엽니다 (`tetris-src/` 소스 + `tetris/` 빌드 산출물). Streamlit 판(`tetris_streamlit.py`)을 Next.js 로 옮긴 것입니다.
 
 바로가기 '게임 → ARKANOID' 항목으로 **알카노이드** 를 같은 사이트의 `/arkanoid` 경로에서 엽니다 (`arkanoid-src/` 소스 + `arkanoid/` 빌드 산출물).
@@ -35,6 +37,7 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
 - `vercel.json` sets `outputDirectory: "."` so `index.html` (및 repo 루트의 정적 파일)이 그대로 서빙됨
 - `vercel.json`의 `rewrites`가 `/album`·`/album/*`을 `/album/index`로 보내 SPA 딥링크 새로고침을 처리
   - ⚠️ **destination에 `.html`을 쓰면 동작하지 않습니다.** `cleanUrls: true`가 확장자를 제거하므로 `/album/index.html`은 매칭되지 않고 404가 됩니다 (2026-09-12 첫 배포에서 실제 발생 → `/album/index`로 수정)
+  - `/board`·`/board/*`도 같은 규칙으로 `/board/index`로 보냅니다
   - `/tetris`·`/tetris/*`도 같은 규칙으로 `/tetris/index`로 보냅니다
   - `/arkanoid`·`/arkanoid/*`도 같습니다
   - `/minesweeper`·`/minesweeper/*`도 같습니다
@@ -51,7 +54,7 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
   - `minesweeper-src/` 는 2026-10-08 에 뒤늦게 추가했습니다 — 빠져 있는 동안 소스가 `/minesweeper-src/...` 로 그대로 서빙되었습니다. **새 Next.js 소스 폴더를 만들면 이 목록에 반드시 넣으십시오**
   - ⚠️ `.vercelignore`는 gitignore 문법이라 패턴이 **하위 모든 깊이에 적용**됩니다. `*.py`가 그 예로, 파이썬으로 서버 함수를 쓰면 `api/foo.py`가 조용히 업로드에서 빠집니다
   - `voca/` 는 제외 목록에 없지만 `*.py`·`.streamlit/`·`.venv/`·`requirements.txt` 가 각각 걸려 **`voca/index.html` 만** 배포됩니다
-- Production URL: https://homepage-dwkim.vercel.app (앨범: `/album`, 테트리스: `/tetris`, 알카노이드: `/arkanoid`, 지뢰찾기: `/minesweeper`, 챗봇: `/chat`, OCR: `/ocr`, 영단어: `/voca`, 스도쿠: `/sudoku`)
+- Production URL: https://homepage-dwkim.vercel.app (앨범: `/album`, 게시판: `/board`, 테트리스: `/tetris`, 알카노이드: `/arkanoid`, 지뢰찾기: `/minesweeper`, 챗봇: `/chat`, OCR: `/ocr`, 영단어: `/voca`, 스도쿠: `/sudoku`)
 
 ## Data Pipeline (레거시 — 현재 프론트에서 미사용)
 
@@ -190,6 +193,28 @@ cd moment && npm run build     # → repo 루트 album/ 갱신 (vite.config.js�
 
 `moment/vite.config.js`에 `base: "/album/"`, `build.outDir: "../album"`, `emptyOutDir: true`가 설정되어 있습니다.
 **`album/`을 커밋하지 않으면 배포본이 소스와 어긋납니다.** Supabase 키를 회전하면 `moment/.env.local` 수정 후 재빌드해야 합니다 (키가 번들에 인라인됨 — Vercel 환경변수 불필요).
+
+## 게시판 — `/board`
+
+velog 스타일 글 게시판입니다. 앨범(사진 피드)과 **별도 앱**이고 데이터도 분리되어 있습니다 (2026-11-06 추가).
+
+- **소스**: `board-src/` (Vite + React 19 + react-router 7 + react-markdown)
+- **서빙**: `board/` — 빌드 산출물. Vercel은 빌드하지 않으므로 **이 폴더가 실제 배포본**
+- **경로**: `https://homepage-dwkim.vercel.app/board` (바로가기 드롭다운 **앨범 바로 아래 '게시판'**, `data-link="/board"` → 새 탭)
+- **테이블**: `board_posts(id, user_id, username, title, body, tags text[], created_at, updated_at)` + RLS 4개(SELECT 전체 / INSERT·UPDATE·DELETE 작성자). SQL 은 `moment/supabase_setup.sql` 6절
+- **인증**: 앨범과 같은 Supabase 프로젝트·세션. 로그인 전에는 AuthPage 만 보여줍니다. 같은 오리진이라 홈페이지 로그인과 세션이 공유됩니다
+- **에디터**: `board-src/src/components/MarkdownEditor.jsx` — 마크다운 툴바·미리보기·이미지 다중 업로드. `MarkdownView` 로 본문을 렌더합니다 (앨범 앱과 코드가 같지만 **복사본**이므로 한쪽을 고치면 다른 쪽도 확인하십시오)
+- 이미지는 앨범과 같은 `photos` 버킷의 `${userId}/board/` 아래에 올리고, HEIC 는 `lib/heic.js` 가 JPEG 로 바꿉니다
+- 라우트는 `basename="/board"` 아래라 `vercel.json` 의 `/board/:path*` rewrite 로 새로고침이 됩니다
+
+### ⚠️ 빌드 산출물을 커밋하므로 소스 수정 시 재빌드 필수
+
+```sh
+cd board-src && npm test      # 순수 로직 단위 테스트 15개 (markdownEdit · markdown)
+cd board-src && npm run build # → repo 루트 board/ 갱신 (vite.config.js의 outDir)
+```
+
+**`board/`을 커밋하지 않으면 배포본이 소스와 어긋납니다.** Supabase 키는 `board-src/.env.local` 에서 빌드 시 번들에 인라인됩니다(`moment/.env.local` 과 같은 값).
 
 ## 테트리스 — `/tetris`
 
@@ -699,9 +724,9 @@ Drop:
 
 This is a personal start page. 정적 페이지에는 테스트 프레임워크·linter·빌드가 없습니다. Edit and open in browser directly.
 
-**빌드가 있는 곳 4곳** — `moment/`(앨범, Vite), `tetris-src/`(테트리스, Next.js), `arkanoid-src/`(알카노이드, Next.js), `minesweeper-src/`(지뢰찾기, Next.js). 네 프로젝트 모두 **산출물을 커밋**하므로 소스를 고치면 재빌드해야 합니다.
+**빌드가 있는 곳 5곳** — `moment/`(앨범, Vite), `board-src/`(게시판, Vite), `tetris-src/`(테트리스, Next.js), `arkanoid-src/`(알카노이드, Next.js), `minesweeper-src/`(지뢰찾기, Next.js). 다섯 프로젝트 모두 **산출물을 커밋**하므로 소스를 고치면 재빌드해야 합니다.
 
-**테스트가 있는 곳** — 루트 `npm test`가 `shared/*.test.mjs`·`server/*.test.mjs`·`sudoku/*.test.mjs`를, 게임 3종이 각자 `npm test`를 돌립니다. `moment/`는 테스트가 없습니다.
+**테스트가 있는 곳** — 루트 `npm test`가 `shared/*.test.mjs`·`server/*.test.mjs`·`sudoku/*.test.mjs`를, 게임 3종이 각자 `npm test`를, `board-src/`가 마크다운 도우미 테스트 15개를 돌립니다. `moment/`는 테스트가 있습니다(같은 15개, `npm test`).
 
 `chat/`(`/chat`)·`ocr/`(`/ocr`)·`voca/`(`/voca`)는 **빌드도 테스트도 없습니다** — 정적 HTML 이라 재빌드할 것이 없고, 서버 쪽은 `api/chat.js`·`api/ocr.js`·`api/voca.js` 각 한 파일입니다. handler 자체의 검증은 로컬 `vercel dev` 로 합니다 (Vercel CLI 필요).
 

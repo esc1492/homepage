@@ -3,6 +3,8 @@ import { Link, useParams } from "react-router";
 import { supabase } from "../lib/supabase";
 import { fetchPost } from "../api/posts";
 import { fetchComments, addComment } from "../api/comments";
+import MarkdownView from "../components/MarkdownView";
+import { hasImage } from "../lib/markdown";
 
 function PostDetailPage({ user }) {
   const { id } = useParams();
@@ -56,8 +58,8 @@ function PostDetailPage({ user }) {
         <div className="card-head">
           <strong>{post.username}</strong>
         </div>
-        <p className="card-body">{post.content}</p>
-        {post.image_url && (
+        <MarkdownView content={post.content} className="card-body" />
+        {post.image_url && !hasImage(post.content) && (
           <img className="card-image" src={post.image_url} alt="첨부 사진" />
         )}
       </article>

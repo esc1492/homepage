@@ -48,11 +48,7 @@ function FeedPage({ user }) {
     return () => supabase.removeChannel(channel);
   }, [user.id]);
 
-  async function handleAdd(content, file) {
-    let imageUrl = null;
-    if (file) {
-      imageUrl = await uploadImage(file, user.id); // 사진 먼저 업로드
-    }
+  async function handleAdd(content, imageUrl) {
     const newPost = await createPost({ content, imageUrl, user });
     setPosts((prev) => [newPost, ...prev]); // 화면 맨 위에 바로 반영
   }
@@ -64,7 +60,10 @@ function FeedPage({ user }) {
 
   return (
     <>
-      <NewPostForm onAdd={handleAdd} />
+      <NewPostForm
+        onAdd={handleAdd}
+        onUploadImage={(file) => uploadImage(file, user.id)}
+      />
       <main>
         {loading ? (
           <p className="loading">불러오는 중…</p>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { addLike, removeLike } from "../api/likes";
+import { plainText } from "../lib/markdown";
 
 function PostCard({ post, user, count = 0, initialLiked = false, onDelete }) {
   // 내가 이미 누른 좋아요인지 DB에서 받아 시작 (하트 토글은 이후 로컬에서 관리)
@@ -40,7 +41,7 @@ function PostCard({ post, user, count = 0, initialLiked = false, onDelete }) {
         <strong>{post.username}</strong>
         <span className="time">{new Date(post.created_at).toLocaleString()}</span>
       </div>
-      <p className="card-body">{post.content}</p>
+      <p className="card-body">{plainText(post.content)}</p>
       {post.image_url && (
         <img className="card-image" src={post.image_url} alt="첨부 사진" />
       )}
