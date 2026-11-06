@@ -222,7 +222,11 @@ body {
 }
 .board-item:hover { border-color: var(--brand); }
 .board-item h3 { margin: 0 0 6px; font-size: 17px; line-height: 1.4; }
-.board-excerpt { margin: 0 0 8px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.board-excerpt {
+  margin: 0 0 8px; color: var(--muted); font-size: 14px; line-height: 1.6;
+  white-space: pre-line;           /* 발췌의 개행을 그대로 보여줍니다 */
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
 .board-meta { display: flex; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 12px; align-items: center; }
 .board-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
 .board-tags em {

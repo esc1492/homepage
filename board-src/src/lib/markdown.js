@@ -21,6 +21,7 @@ export function plainText(markdown, limit = 120) {
   text = text.replace(/^\s*>\s?/gm, "");
   text = text.replace(/^\s*([-*+]|\d+\.)\s+/gm, "");
   text = text.replace(/[*_~`]/g, "");
-  text = text.replace(/[ \t]+/g, " ").replace(/\s*\n\s*/g, " ").trim();
+  // 한 번 누른 엔터를 카드에서도 줄바꿈으로 보여줍니다. 빈 줄은 한 줄로 줄입니다.
+  text = text.replace(/[ \t]+/g, " ").replace(/ *\n */g, "\n").replace(/\n{2,}/g, "\n").trim();
   return text.length > limit ? text.slice(0, limit).trimEnd() + "…" : text;
 }
