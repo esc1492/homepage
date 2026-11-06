@@ -204,6 +204,7 @@ velog 스타일 글 게시판입니다. 앨범(사진 피드)과 **별도 앱**�
 - **테이블**: `board_posts(id, user_id, username, title, body, tags text[], created_at, updated_at)` + RLS 4개(SELECT 전체 / INSERT·UPDATE·DELETE 작성자). SQL 은 `moment/supabase_setup.sql` 6절
 - **인증**: 앨범과 같은 Supabase 프로젝트·세션. 로그인 전에는 AuthPage 만 보여줍니다. 같은 오리진이라 홈페이지 로그인과 세션이 공유됩니다
 - **에디터**: `board-src/src/components/MarkdownEditor.jsx` — 마크다운 툴바·미리보기·이미지 다중 업로드. `MarkdownView` 로 본문을 렌더합니다 (앨범 앱과 코드가 같지만 **복사본**이므로 한쪽을 고치면 다른 쪽도 확인하십시오)
+- **개행**: `MarkdownView` 의 `remarkPlugins={[remarkGfm, remarkBreaks]}` 에서 `remark-breaks` 가 **한 번 누른 엔터를 `<br>`** 로 렌더합니다. 마크다운 규격 기본값은 soft break 라 미리보기·본문에서 줄이 붙어 나옵니다 (2026-11-06 실제 발생 → 수정). 앨범 `MarkdownView` 도 같은 설정입니다
 - 이미지는 앨범과 같은 `photos` 버킷의 `${userId}/board/` 아래에 올리고, HEIC 는 `lib/heic.js` 가 JPEG 로 바꿉니다
 - 라우트는 `basename="/board"` 아래라 `vercel.json` 의 `/board/:path*` rewrite 로 새로고침이 됩니다
 
