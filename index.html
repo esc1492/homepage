@@ -80,6 +80,7 @@ body {
 }
 
 .nav-brand {
+  position: relative;
   display: flex;
   align-items: center;
   height: 20px;
@@ -93,7 +94,7 @@ body {
   justify-content: space-between;
   width: 22px;
   height: 18px;
-  transition: transform 0.3s ease;
+  transition: opacity 0.1s ease;
 }
 
 .triple-line .line {
@@ -101,22 +102,31 @@ body {
   height: 2.5px;
   background: var(--color-inkwell);
   border-radius: 1px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease;
   transform-origin: center;
 }
 
-.nav-brand.open .triple-line {
-  transform: rotate(0deg);
-}
-.nav-brand.open .line:nth-child(1) {
-  transform: translateY(6px) rotate(45deg);
-}
-.nav-brand.open .line:nth-child(2) {
+/* 막대 3개가 X 로 변하는 애니메이션을 먼저 보여주고, 0.2s 뒤 막대를 SVG X 로 바꿉니다.
+   막대 두 개를 회전해 겹치면 엔진에 따라 교차점에 밝은 이음매(점)가 생기는데, path 하나는
+   알파 마스크를 한 번만 만들어 그런 이음매가 없습니다. */
+.nav-brand.open .line:nth-child(1) { transform: translateY(7.75px) rotate(45deg); }
+.nav-brand.open .line:nth-child(2) { opacity: 0; }
+.nav-brand.open .line:nth-child(3) { transform: translateY(-7.75px) rotate(-45deg); }
+
+.triple-x {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  color: var(--color-inkwell);
   opacity: 0;
+  transition: opacity 0.1s ease;
+  pointer-events: none;
 }
-.nav-brand.open .line:nth-child(3) {
-  transform: translateY(-6px) rotate(-45deg);
-}
+.nav-brand.open .triple-line { opacity: 0; transition: opacity 0.12s ease 0.2s; }
+.nav-brand.open .triple-x { opacity: 1; transition: opacity 0.15s ease 0.2s; }
 
 .nav-title {
   font-size: 13px;
@@ -284,8 +294,11 @@ body {
   .top-banner { object-fit: cover; }
   .triple-line { width: 18px; height: 15px; }
   .triple-line .line { height: 2px; }
-  .nav-brand.open .line:nth-child(1) { transform: translateY(5px) rotate(45deg); }
-  .nav-brand.open .line:nth-child(3) { transform: translateY(-5px) rotate(-45deg); }
+  /* 모바일은 .triple-line 이 15px·선 2px 이라 두 선의 중심이 1px·7.5px·14px — 중앙(7.5px)에
+     맞추려면 ±6.5px 입니다. */
+  .nav-brand.open .line:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+  .nav-brand.open .line:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+  .triple-x { width: 14px; height: 14px; }
   .dropdown-inner { grid-template-columns: 1fr 1fr; gap: 20px; padding: 16px 14px 20px; }
 }
 
@@ -765,6 +778,7 @@ body {
 <nav class="nav">
   <span class="nav-brand" id="brandBtn">
     <span class="triple-line"><span class="line"></span><span class="line"></span><span class="line"></span></span>
+    <svg class="triple-x" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M1.5 2 L16.5 17 M16.5 2 L1.5 17" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
   </span>
   <span class="nav-right">
   <span class="nav-door" id="doorBtn">
@@ -792,6 +806,7 @@ body {
   <div class="dropdown-inner">
     <div class="dropdown-section"><h3>바로가기</h3>
       <div class="dropdown-items">
+        <div class="dropdown-item" data-home><div class="icon">🏠</div><div class="info"><span class="title">홈</span><span class="desc">시작 페이지</span></div></div>
         <div class="dropdown-item" data-scroll="weather-card"><div class="icon">🌤</div><div class="info"><span class="title">날씨</span><span class="desc">서울 날씨 · 미세먼지 · 주간 예보</span></div></div>
         <div class="dropdown-item" data-scroll="todo-card"><div class="icon">✅</div><div class="info"><span class="title">할 일</span><span class="desc">나의 할 일 · 가족 할 일</span></div></div>
         <div class="dropdown-item" data-link="/chat" data-auth><div class="icon">🐭</div><div class="info"><span class="title">챗봇</span><span class="desc">미키</span></div></div>
@@ -964,22 +979,37 @@ body {
     if(open && !panel.contains(e.target) && !brand.contains(e.target)) closePanel();
   });
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') closePanel(); });
+  /* 카드 하나만 보이는 포커스 모드. 서브 페이지 바로가기 메뉴도 /#weather-card 로 이 모드를 켭니다. */
+  function focusCard(id){
+    document.querySelectorAll('.focus-target').forEach(function(el){ el.classList.remove('focus-target'); });
+    if(id==='todo-card'){
+      document.querySelectorAll('.sidebar .card').forEach(function(el){ el.classList.add('focus-target'); });
+    } else {
+      document.getElementById(id).classList.add('focus-target');
+    }
+    document.querySelector('.wrap').classList.add('focus-mode');
+    document.getElementById('doorBtn').classList.add('active');
+    var target=document.getElementById(id);
+    if(target) setTimeout(function(){ target.scrollIntoView({behavior:'smooth',block:'center'}); },50);
+  }
+  /* 홈은 이 페이지 자신입니다 — 문 버튼과 같이 메뉴를 닫고 맨 위로 돌아갑니다. */
+  document.querySelectorAll('.dropdown-item[data-home]').forEach(function(el){
+    el.addEventListener('click',function(){
+      restoreView();
+      closePanel();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
   document.querySelectorAll('.dropdown-item[data-scroll]').forEach(function(el){
     el.addEventListener('click',function(e){
       var id=this.getAttribute('data-scroll');
       closePanel();
-      document.querySelectorAll('.focus-target').forEach(function(el){ el.classList.remove('focus-target'); });
-      if(id==='todo-card'){
-        document.querySelectorAll('.sidebar .card').forEach(function(el){ el.classList.add('focus-target'); });
-      } else {
-        document.getElementById(id).classList.add('focus-target');
-      }
-      document.querySelector('.wrap').classList.add('focus-mode');
-      document.getElementById('doorBtn').classList.add('active');
-      var target=document.getElementById(id);
-      if(target) setTimeout(function(){ target.scrollIntoView({behavior:'smooth',block:'center'}); },50);
+      focusCard(id);
     });
   });
+  /* 콘텐츠는 기본으로 숨겨져 있습니다(.layout display:none). 해시로 들어와도 같은 모드를 켭니다. */
+  var hashId=location.hash.replace('#','');
+  if(hashId==='weather-card'||hashId==='todo-card') focusCard(hashId);
   document.querySelectorAll('.dropdown-item[data-link]').forEach(function(el){
     el.addEventListener('click',function(e){
       var url=this.getAttribute('data-link');

@@ -87,10 +87,39 @@ fetch.py (Python 3, no deps) → data.json
 
 ### 공유 SiteNav module (`shared/`)
 
-서브 페이지 6곳(`chat`·`ocr`·`voca` + 테트리스·알카노이드·지뢰찾기)의 상단 내비게이션은
+서브 페이지 7곳(`chat`·`ocr`·`voca`·`sudoku` + 테트리스·알카노이드·지뢰찾기)의 상단 내비게이션은
 `shared/sitenav.mjs` + `shared/sitenav.css` **한 벌**입니다. 홈 `index.html`의 `.nav`는
 드롭다운 메뉴·포커스 모드·로그인 모달을 가진 별도 변형이라 의도적으로 제외했습니다
 (`docs/adr/0001-sitenav-scope-and-delivery.md`, `GLOSSARY.md`).
+
+- **왼쪽 햄버거는 바로가기 메뉴를 엽니다** (2026-11-09 변경 — 그전에는 홈으로 이동). 항목은
+  `SITE_MENU` 상수에 있고 홈 드롭다운과 같은 구성(날씨·할 일·앱 8종)입니다. 날씨·할 일은
+  `/#weather-card`·`/#todo-card` 로 이동해 홈의 해당 카드로 스크롤합니다. 메뉴가 열리면 햄버거가
+  X 로 바뀌고, 바깥 클릭·Escape·항목 클릭으로 닫힙니다. 메뉴 맨 위가 **홈(`/`)** 이고,
+  그 아래 날씨·할 일·앱 8종이 이어집니다
+- **문 아이콘은 누르면 문짝이 열립니다** (2026-11-09) — 문짝(`<g class="door-leaf">`)이 힌지(x=3)를 축으로
+  `scaleX(0.5)` 로 0.2s 동안 좁아진 뒤, 그때 실제 동작(서브 앱은 뒤로 가기/홈, 게시판·앨범은 앱 닫기)이
+  실행됩니다. JS 의 `setTimeout(…, 200)` 과 CSS 의 `transition: transform 0.2s` 를 맞춰야 합니다.
+  `rotate` 로 돌리면 원근으로 그린 문짝이 틀 밖으로 나가 어색하므로 `scaleX` 를 씁니다.
+  홈 `.nav` 의 문은 포커스 모드 토글이라 열린 문이 곧바로 닫힌 문으로 바뀌어 애니메이션이 잘리므로 넣지 않았습니다
+- **홈 `.nav` 와 좌표가 같아야 합니다** (2026-11-09 정렬). 좁은 화면에서 홈은 여백이 14px 인데
+  서브 앱이 22px 이라 **아이콘이 8px 오른쪽으로 밀려 보였습니다**. 1px 아래 선은 `border` 가 아니라
+  `box-shadow: inset 0 -1px 0` 입니다 — `border` 는 border-box 에서 내용 높이를 1px 줄여
+  아이콘을 0.5px 위로 띄웁니다. 현재 두 내비의 `brand`·`triple-line` 좌표는 (14, 18)·(18, 20.5) 로 같습니다
+- **열린 X 는 애니메이션 뒤에 `<svg class="triple-x">` 한 장으로 갈아 끼웁니다** (2026-11-09). 막대 3개는
+  그대로 `rotate(±45deg)` 로 변하며 X 가 되고(0.3s), **0.2s 지점에서 막대가 사라지고 SVG X 가 나타납니다**.
+  막대 두 개를 회전해 겹친 최종 상태는 엔진에 따라 교차점에 **밝은 이음매가 점처럼** 보입니다 — cmux 내장
+  브라우저에서 실제 발생했고 Chrome 에서는 재현되지 않았습니다. `path` 하나
+  (`M1.5 2 L16.5 17 M16.5 2 L1.5 17`)는 알파 마스크를 한 번만 만들어 그 이음매가 없습니다.
+  **교체 순간 위치가 튀지 않도록 SVG 의 크기·중심을 막대 X 와 픽셀 단위로 맞춰야 합니다** — 데스크톱 18px
+  (경로 y 를 0.5 내려 중심을 맞춤), 모바일 14px. 실측 기준 bbox·잉크 중심이 같아야 합니다
+  (1280px·DPR2: 막대 (57,40)-(90,73) / SVG 동일). 세 곳(`index.html`·`shared/sitenav.css`·`moment/src/index.css`)이
+  같은 방식·같은 좌표를 써야 X 모양이 일치합니다
+- **인증 게이트는 메뉴에 없습니다** — 챗봇·학습·OCR 은 대상 페이지가 각자 로그인 게이트를
+  그립니다 (홈은 로그인 모달을 열기 위해 `data-auth` 로 막습니다)
+- ⚠️ `applyLoggedIn` 이 `root.innerHTML` 을 다시 그리므로 **바인딩에서 노드를 잡아 두면 안 됩니다.**
+  `setLoggedIn` 뒤에는 잡아 둔 참조가 떨어진 노드라 메뉴가 조용히 죽습니다 (2026-11-09 실제 발생).
+  `bindNav` 는 핸들러마다 `root.querySelector` 로 다시 조회합니다
 
 - 정적 페이지: `<div data-site-nav data-logged-in="false"></div>` + `/shared/sitenav.mjs` module script.
   로그인 성공 시 `window.siteNav.setLoggedIn(true)` 한 줄로 아이콘 상태를 갱신합니다
@@ -99,7 +128,9 @@ fetch.py (Python 3, no deps) → data.json
 - **Next 세 프로젝트가 `shared/`를 직접 import 하지 않습니다** — `turbopack.root`를 각 프로젝트로 고정해 두었기 때문입니다.
   `predev`·`prebuild`가 `scripts/sync-shared.mjs`로 `shared/`를 각 프로젝트의 `shared/`에 복사합니다.
   **복사본은 gitignore 대상이므로 원본은 항상 `shared/`입니다**
-- 테스트: `node --test shared/sitenav.test.mjs` (view-model 4개)
+- **앨범(`moment/`)은 이 module 을 쓰지 않습니다** — 자체 `components/SiteNav.jsx` 가 같은 메뉴를
+  `MENU` 상수로 **복사**해 갖고 있습니다. 한쪽을 고치면 다른 쪽도 보십시오
+- 테스트: `node --test shared/sitenav.test.mjs` (view-model·메뉴 목록 5개)
 
 ### 세션 module (`shared/session.mjs`)
 
@@ -203,6 +234,8 @@ velog 스타일 글 게시판입니다. 앨범(사진 피드)과 **별도 앱**�
 - **경로**: `https://homepage-dwkim.vercel.app/board` (바로가기 드롭다운 **앨범 바로 아래 '게시판'**, `data-link="/board"` → 새 탭)
 - **테이블**: `board_posts(id, user_id, username, title, body, tags text[], created_at, updated_at)` + RLS 4개(SELECT 전체 / INSERT·UPDATE·DELETE 작성자). SQL 은 `moment/supabase_setup.sql` 6절
 - **인증**: 앨범과 같은 Supabase 프로젝트·세션. 로그인 전에는 AuthPage 만 보여줍니다. 같은 오리진이라 홈페이지 로그인과 세션이 공유됩니다
+- **상단 내비게이션**: 앨범과 같은 SiteNav **복사본**(`board-src/src/components/SiteNav.jsx` + `index.css`)을 씁니다 — 햄버거가 바로가기 메뉴를 엽니다 (2026-11-09 추가). 공유 module(`shared/sitenav.mjs`)이 아니므로, 메뉴를 고치면 **`shared/`·`moment/`·`board-src/` 세 곳**을 함께 봐야 합니다
+- **문 아이콘은 앱을 닫습니다** (`window.close()` → 실패 시 `/`). 이 앱은 내부 라우트가 있어 화면 이동마다 히스토리가 쌓이므로 `history.back()` 으로는 앱이 닫히지 않고 **목록→글→목록을 되짚어 가기만 합니다** (2026-11-09 실제 발생 → 수정). 앨범도 같은 처리입니다
 - **에디터**: `board-src/src/components/MarkdownEditor.jsx` — 마크다운 툴바·미리보기·이미지 다중 업로드. `MarkdownView` 로 본문을 렌더합니다 (앨범 앱과 코드가 같지만 **복사본**이므로 한쪽을 고치면 다른 쪽도 확인하십시오)
 - **개행**: `MarkdownView` 의 `remarkPlugins={[remarkGfm, remarkBreaks]}` 에서 `remark-breaks` 가 **한 번 누른 엔터를 `<br>`** 로 렌더합니다. 마크다운 규격 기본값은 soft break 라 미리보기·본문에서 줄이 붙어 나옵니다 (2026-11-06 실제 발생 → 수정). 앨범 `MarkdownView` 도 같은 설정입니다
 - 이미지는 앨범과 같은 `photos` 버킷의 `${userId}/board/` 아래에 올리고, HEIC 는 `lib/heic.js` 가 JPEG 로 바꿉니다
