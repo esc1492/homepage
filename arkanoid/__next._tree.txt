@@ -1,2 +1,2 @@
 :HL["/arkanoid/_next/static/chunks/1hyrq_fvdt39_.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}},"staleTime":300,"buildId":"Xk0zKfKGNJVzaunoycBqI"}
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}},"staleTime":300,"buildId":"4nX47dmzqeyZrVuNxR9sj"}

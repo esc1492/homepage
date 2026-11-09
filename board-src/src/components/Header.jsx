@@ -8,7 +8,7 @@ function Header({ user }) {
     <header className="header">
       <div>
         <h1>게시판</h1>
-        <p>velog 스타일로 기록을 남겨보세요.</p>
+        <p>나의 관심사를 기록해 보세요.</p>
       </div>
       {user && (
         <div className="header-user">

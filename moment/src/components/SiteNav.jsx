@@ -13,16 +13,16 @@ const MENU = [
       { icon: "📚", title: "학습", desc: "영단어", href: "/voca" },
       { icon: "🔍", title: "OCR", desc: "이미지 텍스트 추출", href: "/ocr" },
       { icon: "📷", title: "앨범", desc: "사진 게시판", href: "/album" },
-      { icon: "📝", title: "게시판", desc: "velog 스타일 글쓰기", href: "/board" },
+      { icon: "📝", title: "게시판", desc: "나의 관심사 글쓰기", href: "/board" },
     ],
   },
   {
     title: "게임",
     items: [
-      { icon: "🎮", title: "게임", desc: "TETRIS", href: "/tetris" },
-      { icon: "🧱", title: "게임", desc: "ARKANOID", href: "/arkanoid" },
-      { icon: "💣", title: "게임", desc: "MINESWEEPER", href: "/minesweeper" },
-      { icon: "🔢", title: "게임", desc: "SUDOKU", href: "/sudoku" },
+      { icon: "🎮", title: "TETRIS", desc: "", href: "/tetris" },
+      { icon: "🧱", title: "ARKANOID", desc: "", href: "/arkanoid" },
+      { icon: "💣", title: "MINESWEEPER", desc: "", href: "/minesweeper" },
+      { icon: "🔢", title: "SUDOKU", desc: "", href: "/sudoku" },
     ],
   },
 ];
@@ -150,7 +150,7 @@ function SiteNav({ user }) {
                       <span className="icon">{item.icon}</span>
                       <span className="info">
                         <span className="title">{item.title}</span>
-                        <span className="desc">{item.desc}</span>
+                        {item.desc ? <span className="desc">{item.desc}</span> : null}
                       </span>
                     </a>
                   ))}

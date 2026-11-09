@@ -36,16 +36,16 @@ export const SITE_MENU = [
       { icon: '📚', title: '학습', desc: '영단어', href: '/voca' },
       { icon: '🔍', title: 'OCR', desc: '이미지 텍스트 추출', href: '/ocr' },
       { icon: '📷', title: '앨범', desc: '사진 게시판', href: '/album' },
-      { icon: '📝', title: '게시판', desc: 'velog 스타일 글쓰기', href: '/board' },
+      { icon: '📝', title: '게시판', desc: '나의 관심사 글쓰기', href: '/board' },
     ],
   },
   {
     title: '게임',
     items: [
-      { icon: '🎮', title: '게임', desc: 'TETRIS', href: '/tetris' },
-      { icon: '🧱', title: '게임', desc: 'ARKANOID', href: '/arkanoid' },
-      { icon: '💣', title: '게임', desc: 'MINESWEEPER', href: '/minesweeper' },
-      { icon: '🔢', title: '게임', desc: 'SUDOKU', href: '/sudoku' },
+      { icon: '🎮', title: 'TETRIS', desc: '', href: '/tetris' },
+      { icon: '🧱', title: 'ARKANOID', desc: '', href: '/arkanoid' },
+      { icon: '💣', title: 'MINESWEEPER', desc: '', href: '/minesweeper' },
+      { icon: '🔢', title: 'SUDOKU', desc: '', href: '/sudoku' },
     ],
   },
 ];
@@ -55,7 +55,7 @@ function renderMenu() {
     <div class="sitenav-menu-section">
       <h3>${section.title}</h3>
       <div class="sitenav-menu-items">
-        ${section.items.map((item) => `<a class="sitenav-menu-item" href="${item.href}"><span class="icon">${item.icon}</span><span class="info"><span class="title">${item.title}</span><span class="desc">${item.desc}</span></span></a>`).join('\n        ')}
+        ${section.items.map((item) => `<a class="sitenav-menu-item" href="${item.href}"><span class="icon">${item.icon}</span><span class="info"><span class="title">${item.title}</span>${item.desc ? `<span class="desc">${item.desc}</span>` : ''}</span></a>`).join('\n        ')}
       </div>
     </div>`).join('');
   return `<div class="sitenav-menu"><div class="sitenav-menu-inner">${sections}</div></div>`;

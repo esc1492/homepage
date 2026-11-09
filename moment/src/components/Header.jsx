@@ -7,7 +7,7 @@ function Header({ user }) {
   return (
     <header className="header">
       <div>
-        <h1>모먼트</h1>
+        <h1>moment</h1>
         <p>오늘의 한 장면을 남겨보세요.</p>
       </div>
       {user && (
