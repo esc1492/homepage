@@ -384,9 +384,10 @@ body {
 .post-nav-item:hover { border-color: var(--brand); }
 .post-nav-item.next { flex-direction: row-reverse; }   /* 화살표를 오른쪽에 둡니다 */
 .post-nav-arrow {
-  flex: 0 0 auto; width: 30px; height: 30px; border-radius: 999px;
+  flex: 0 0 auto; width: 44px; height: 44px; border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
-  border: 1px solid var(--line); color: var(--brand); font-size: 15px;
+  border: 1px solid var(--brand); color: var(--brand); font-size: 30px;
+  line-height: 1;
 }
 .post-nav-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .post-nav-item.next .post-nav-text { align-items: flex-end; text-align: right; }
