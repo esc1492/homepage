@@ -67,10 +67,6 @@ function BoardWritePage({ user }) {
 
   return (
     <div className="board">
-      <Link to={editing ? "/" + id : "/"} className="back">
-        ← 게시판으로
-      </Link>
-
       <form className="board-form" onSubmit={handleSubmit}>
         <input
           className="board-title-input"
