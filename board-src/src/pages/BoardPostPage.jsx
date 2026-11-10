@@ -1,19 +1,35 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { fetchBoardPost, deleteBoardPost } from "../api/board";
+import {
+  fetchBoardPost,
+  fetchAdjacentBoardPosts,
+  deleteBoardPost,
+} from "../api/board";
 import MarkdownView from "../components/MarkdownView";
 
 function BoardPostPage({ user }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [post, setPost] = useState(null);
+  const [adjacent, setAdjacent] = useState({ prev: null, next: null });
   const [error, setError] = useState("");
 
   useEffect(() => {
+    setPost(null);
+    setAdjacent({ prev: null, next: null });
+    setError("");
     fetchBoardPost(id)
       .then(setPost)
       .catch((e) => setError(e.message || "글을 불러오지 못했어요."));
   }, [id]);
+
+  // 이전·다음 글은 덧붙는 안내라, 실패해도 글 읽기를 막지 않고 표시만 생략합니다.
+  useEffect(() => {
+    if (!post) return;
+    fetchAdjacentBoardPosts(post)
+      .then(setAdjacent)
+      .catch(() => setAdjacent({ prev: null, next: null }));
+  }, [post]);
 
   async function handleDelete() {
     if (!confirm("이 글을 삭제할까요?")) return;
@@ -40,8 +56,6 @@ function BoardPostPage({ user }) {
 
   return (
     <div className="board">
-      <Link to="/" className="back">← 게시판으로</Link>
-
       <article className="board-post">
         <h1 className="board-title">{post.title}</h1>
         <div className="board-meta">
@@ -66,6 +80,29 @@ function BoardPostPage({ user }) {
           </div>
         )}
       </article>
+
+      {(adjacent.prev || adjacent.next) && (
+        <nav className="post-nav" aria-label="이전·다음 글">
+          {adjacent.prev && (
+            <Link to={"/" + adjacent.prev.id} className="post-nav-item">
+              <span className="post-nav-arrow" aria-hidden="true">←</span>
+              <span className="post-nav-text">
+                <span className="post-nav-label">이전 포스트</span>
+                <span className="post-nav-title">{adjacent.prev.title}</span>
+              </span>
+            </Link>
+          )}
+          {adjacent.next && (
+            <Link to={"/" + adjacent.next.id} className="post-nav-item next">
+              <span className="post-nav-arrow" aria-hidden="true">→</span>
+              <span className="post-nav-text">
+                <span className="post-nav-label">다음 포스트</span>
+                <span className="post-nav-title">{adjacent.next.title}</span>
+              </span>
+            </Link>
+          )}
+        </nav>
+      )}
     </div>
   );
 }

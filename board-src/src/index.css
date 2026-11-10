@@ -200,6 +200,14 @@ body {
   display: flex; justify-content: space-between; align-items: center;
   padding: 16px 0; border-bottom: 2px solid var(--brand); margin-bottom: 16px;
 }
+.header-brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+.header-logo {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: #fff; border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px; line-height: 1;
+}
+.header-brand:hover .header-logo { border-color: var(--brand); }
 .header h1 { margin: 0; color: var(--brand); font-size: 24px; }
 .header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
 .header-user { display: flex; align-items: center; gap: 10px; font-size: 14px; }
@@ -364,3 +372,31 @@ body {
   padding: 8px 16px; font-size: 14px; cursor: pointer;
 }
 .board-cancel { color: var(--muted); text-decoration: none; font-size: 14px; align-self: center; }
+
+/* === 이전 · 다음 글 === */
+.post-nav { display: flex; gap: 10px; margin-top: 16px; }
+.post-nav-item {
+  flex: 1 1 0; min-width: 0;
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px 14px; text-decoration: none; color: inherit;
+}
+.post-nav-item:hover { border-color: var(--brand); }
+.post-nav-item.next { flex-direction: row-reverse; }   /* 화살표를 오른쪽에 둡니다 */
+.post-nav-arrow {
+  flex: 0 0 auto; width: 30px; height: 30px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line); color: var(--brand); font-size: 15px;
+}
+.post-nav-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.post-nav-item.next .post-nav-text { align-items: flex-end; text-align: right; }
+.post-nav-label { font-size: 12px; color: var(--muted); }
+.post-nav-title {
+  font-size: 14px; font-weight: 600; line-height: 1.4; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* 좁은 화면에서는 두 칸이면 제목이 몇 글자로 잘려 한 줄씩 쌓습니다 (velog 과 같은 방식). */
+@media (max-width: 480px) {
+  .post-nav { flex-direction: column; }
+  .post-nav-item { flex: 0 0 auto; }
+}

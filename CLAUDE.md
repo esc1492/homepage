@@ -350,6 +350,20 @@ EOF
 - 스킬에 `allowed-tools` 선언이 없어 `ego-browser nodejs` 실행마다 권한 확인이 뜰 수 있습니다.
 - 설치 확인: `ego-browser --version` (2026-10-20 확인 — 0.6.0.16 / Chromium 154.0.8037.44). 스킬은 `~/.agents/skills/ego-browser` → `~/.claude/skills/ego-browser` 심볼릭 링크입니다.
 
+## 작업 흐름 — 로컬 확인을 먼저, 커밋은 그다음
+
+수정을 마치면 **바로 커밋하지 않습니다.** 먼저 로컬에서 띄워 동완님이 화면을 직접 확인할 수 있게
+하고, 확인이 끝난 뒤에 커밋·배포합니다 (2026-11-10 요청).
+
+- 커밋 여부를 묻기 전에 **서버를 띄우고 접속 주소를 알려 주십시오.** 확인 전 "커밋할까요?"는 묻지 않습니다
+- 빌드 5곳은 각자 dev 서버로 띄웁니다 — `cd board-src && npm run dev` → `http://localhost:5173/board/`
+  처럼 `base`/`basePath` 때문에 **주소에 앱 이름이 붙습니다**
+- 정적 페이지는 repo 루트에서 정적 서버를 띄워 `/index.html`·`/chat/`·`/ocr/`·`/voca/`·`/sudoku/` 를 엽니다
+  (로컬에는 `vercel.json` 의 rewrite 가 없으므로 `/album` 같은 확장자 없는 경로는 쓰지 않습니다)
+- `api/*.js` 는 `vercel dev` 로 확인합니다
+- ⚠️ 로컬은 배포본과 **오리진이 달라 Supabase 세션이 공유되지 않습니다.** 그 자리에서 한 번 로그인해야
+  하고, 로그인 게이트 뒤 화면은 이 로그인이 되어야 보입니다 — 주소를 알려 줄 때 함께 말씀드리십시오
+
 ## Compaction
 
 When compacting, always preserve:

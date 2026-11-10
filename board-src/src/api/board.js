@@ -25,6 +25,29 @@ export async function fetchBoardPost(id) {
   return data;
 }
 
+// 같은 글의 이웃 — prev 는 더 오래된 글, next 는 더 최근 글
+export async function fetchAdjacentBoardPosts(post) {
+  const [older, newer] = await Promise.all([
+    supabase
+      .from("board_posts")
+      .select("id,title")
+      .lt("created_at", post.created_at)
+      .order("created_at", { ascending: false })
+      .limit(1),
+    supabase
+      .from("board_posts")
+      .select("id,title")
+      .gt("created_at", post.created_at)
+      .order("created_at", { ascending: true })
+      .limit(1),
+  ]);
+
+  if (older.error) throw older.error;
+  if (newer.error) throw newer.error;
+
+  return { prev: older.data[0] ?? null, next: newer.data[0] ?? null };
+}
+
 export async function createBoardPost({ title, body, tags, user }) {
   const { data, error } = await supabase
     .from("board_posts")

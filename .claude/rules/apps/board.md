@@ -21,6 +21,10 @@ velog 스타일 글 게시판입니다. 앨범(사진 피드)과 **별도 앱**�
 - **문 아이콘은 앱을 닫습니다** (`window.close()` → 실패 시 `/`). 이 앱은 내부 라우트가 있어 화면 이동마다 히스토리가 쌓이므로 `history.back()` 으로는 앱이 닫히지 않고 **목록→글→목록을 되짚어 가기만 합니다** (2026-11-09 실제 발생 → 수정). 앨범도 같은 처리입니다
 - **에디터**: `board-src/src/components/MarkdownEditor.jsx` — 마크다운 툴바·미리보기·이미지 다중 업로드. `MarkdownView` 로 본문을 렌더합니다 (앨범 앱과 코드가 같지만 **복사본**이므로 한쪽을 고치면 다른 쪽도 확인하십시오)
 - **개행**: `MarkdownView` 의 `remarkPlugins={[remarkGfm, remarkBreaks]}` 에서 `remark-breaks` 가 **한 번 누른 엔터를 `<br>`** 로 렌더합니다. 마크다운 규격 기본값은 soft break 라 미리보기·본문에서 줄이 붙어 나옵니다 (2026-11-06 실제 발생 → 수정). 앨범 `MarkdownView` 도 같은 설정입니다
+- **이전·다음 글**: 글 상세 하단의 두 카드(← 이전 포스트 / 다음 포스트 →). `fetchAdjacentBoardPosts` 가
+  `created_at` 기준으로 **이전 = 더 오래된 글, 다음 = 더 최근 글**을 각각 limit 1 로 조회합니다(2026-11-10).
+  목록이 최신순이라 "이전 글"이 목록에서 아래쪽 항목입니다. 480px 이하에서는 두 카드를 세로로 쌓습니다.
+  인접 글 조회가 실패해도 본문 표시는 막지 않고 카드만 생략합니다
 - 이미지는 앨범과 같은 `photos` 버킷의 `${userId}/board/` 아래에 올리고, HEIC 는 `lib/heic.js` 가 JPEG 로 바꿉니다
 - 라우트는 `basename="/board"` 아래라 `vercel.json` 의 `/board/:path*` rewrite 로 새로고침이 됩니다
 
