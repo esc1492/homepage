@@ -18,12 +18,13 @@ export const TILE = {
 
 const HOLE = 10; // internal: temporary hole
 
-export const SPEED = { walk: 160, climb: 190, fall: 100, guard: 200 };
+// ms per tile. 원작 화면 캡처에서 잰 간격(걷기 약 260ms/칸)에 맞췄습니다.
+export const SPEED = { walk: 260, climb: 300, fall: 155, guard: 285 };
 export const DIG_MS = 320;
 export const HOLE_MS = 5200;
-export const TRAP_MS = 2000;
+export const TRAP_MS = 2000; // 경비병이 구멍에서 기어 나오기까지 (주인공은 나오지 못함)
 export const SCORE_GOLD = 250;
-export const SCORE_GUARD = 75;
+export const SCORE_GUARD = 75; // 가둘 때 +75, 구멍이 메워져 죽을 때 +75
 export const SCORE_LEVEL = 1500;
 
 export function parseLevel(map) {
@@ -71,6 +72,7 @@ export class Game {
     this.holes = new Map();
     this.time = 0;
     this.pendingDig = null;
+    this.pendingDir = null;
     this.state = "playing"; // playing | dead | complete | gameover
     this.deadTimer = 0;
   }
@@ -120,6 +122,9 @@ export class Game {
 
     this.time += dt;
     if (input.dig) this.pendingDig = { dir: input.dig, until: this.time + 250 };
+    // 걸음은 260ms 마다 한 번인데 키는 그보다 짧게 눌릴 수 있습니다. 짧게 눌러도 다음
+    // 걸음 시점에 반영되도록 방향 입력을 잠시 받아 둡니다 (파기 입력과 같은 방식).
+    if (input.dir) this.pendingDir = { dir: input.dir, until: this.time + SPEED.walk * 1.2 };
     this.updateHoles();
 
     const p = this.player;
@@ -150,18 +155,8 @@ export class Game {
     if (this.time < p.digUntil) return;
 
     const idx = p.r * W + p.c;
-    if (this.holes.has(idx)) {
-      if (!p.trappedAt) p.trappedAt = this.time + TRAP_MS;
-      if (this.time >= p.trappedAt) {
-        if (this.walkableAt(p.c, p.r - 1)) this.moveChar(p, p.c, p.r - 1);
-        else {
-          const d = input.dir || p.dir;
-          if (this.walkableAt(p.c + d, p.r)) this.moveChar(p, p.c + d, p.r);
-        }
-      }
-      return;
-    }
-    p.trappedAt = 0;
+    // 원작처럼 구멍에 빠지면 구멍이 메워질 때까지 나올 수 없습니다
+    if (this.holes.has(idx)) return;
     if (!this.supported(p)) { this.moveChar(p, p.c, p.r + 1); return; }
 
     const onLadder = this.tileAt(p.c, p.r) === TILE.LADDER;
@@ -172,24 +167,39 @@ export class Game {
     if (digDir && this.supported(p)) { this.dig(digDir); this.pendingDig = null; return; }
     if (input.up && (onLadder || aboveIsLadder) && this.walkableAt(p.c, p.r - 1)) { this.moveChar(p, p.c, p.r - 1); return; }
     if (input.down && below === TILE.LADDER) { this.moveChar(p, p.c, p.r + 1); return; }
-    if (input.dir && this.walkableAt(p.c + input.dir, p.r)) {
-      p.dir = input.dir;
-      this.moveChar(p, p.c + input.dir, p.r);
+    // 이번 프레임에 키가 없어도, 조금 전에 눌렸던 방향이면 한 걸음 반영합니다
+    const dir = input.dir || (this.pendingDir && this.time <= this.pendingDir.until ? this.pendingDir.dir : 0);
+    if (dir && this.walkableAt(p.c + dir, p.r)) {
+      p.dir = dir;
+      this.pendingDir = null;
+      this.moveChar(p, p.c + dir, p.r);
       return;
     }
   }
 
   stepGuard(g) {
     const idx = g.r * W + g.c;
+    // 구멍에 빠진 경비병은 잠시 뒤 기어 나옵니다. 그 전에 구멍이 메워지면 죽습니다.
     if (this.holes.has(idx)) {
       if (!g.trappedAt) g.trappedAt = this.time + TRAP_MS;
       if (this.time >= g.trappedAt && this.walkableAt(g.c, g.r - 1)) this.moveChar(g, g.c, g.r - 1);
       return;
     }
     g.trappedAt = 0;
-    const next = this.bfsStep(g.c, g.r, this.player.c, this.player.r);
+    // 발밑이 비어 있으면 걷기보다 낙하가 먼저입니다 (구멍 위에 서면 빠짐)
+    if (!this.supported(g)) { this.moveChar(g, g.c, g.r + 1); return; }
+    // 원작처럼 주인공과 같은 줄이면 구멍을 피하지 않고 곧장 걸어갑니다.
+    // BFS 는 구멍 너머로 가는 길을 찾지 못해 경비병이 구멍 앞에서 멈추기 때문입니다.
+    const p = this.player;
+    if (g.r === p.r && this.tileAt(g.c, g.r) !== TILE.LADDER) {
+      const dir = Math.sign(p.c - g.c);
+      if (dir && this.walkableAt(g.c + dir, g.r)) {
+        this.moveChar(g, g.c + dir, g.r);
+        return;
+      }
+    }
+    const next = this.bfsStep(g.c, g.r, p.c, p.r);
     if (next) this.moveChar(g, next.c, next.r);
-    else if (!this.supported(g)) this.moveChar(g, g.c, g.r + 1);
   }
 
   neighbors(c, r) {
@@ -248,6 +258,9 @@ export class Game {
         this.state = "complete";
         this.score += SCORE_LEVEL;
       }
+    } else if (this.holes.has(r * W + c)) {
+      // 경비병을 구멍에 가두면 +75 (원작). 구멍이 메워져 죽으면 updateHoles 에서 +75 더
+      this.score += SCORE_GUARD;
     }
   }
 

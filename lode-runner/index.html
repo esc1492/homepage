@@ -58,7 +58,7 @@
     color: var(--bg); background: var(--gold);
     border: 0; border-radius: 3px; padding: 8px 18px; cursor: pointer;
   }
-  .touch { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .touch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .touch button {
     font: inherit; font-size: 15px; color: var(--ink);
     background: var(--panel); border: 1px solid #2a2a48; border-radius: 6px;
@@ -81,18 +81,18 @@
     <span>LEVEL <b id="level">001</b></span>
   </header>
   <div class="stage">
-    <canvas id="screen" width="224" height="128"></canvas>
+    <canvas id="screen" width="280" height="176"></canvas>
     <div id="overlay" class="overlay hidden"><div class="big"></div><div class="sub"></div><button hidden></button></div>
   </div>
   <div class="touch">
-    <button data-k="left">◀</button>
+    <button data-k="digL">U</button>
     <button data-k="up">▲</button>
+    <button data-k="digR">O</button>
+    <button data-k="left">◀</button>
     <button data-k="down">▼</button>
     <button data-k="right">▶</button>
-    <button data-k="digL">U</button>
-    <button data-k="digR">O</button>
   </div>
-  <p class="help">C 시작 · ← → 이동 · ↑ ↓ 사다리 · U 왼쪽 파기 · O 오른쪽 파기 · P 일시정지</p>
+  <p class="help">← → 이동 · ↑ ↓ 사다리 · U 왼쪽 파기 · O 오른쪽 파기 · I J K L 도 이동</p>
 </div>
 
 <script type="module">
@@ -132,14 +132,14 @@ const PAL = {
 let levels = [];
 let levelIndex = 0;
 let game = null;
-let paused = false;
 let started = false;
 let last = 0;
 let advancing = false;
 let highScore = Number(localStorage.getItem("lodeRunnerHigh") || 0);
 
 // visual interpolation state
-let visPlayer = { x: 0, y: 0 };
+// phase 는 한 칸 이동할 때마다 뒤집힙니다 — 서 있는 동안에는 STAND 자세로 멈춥니다.
+let visPlayer = { x: 0, y: 0, phase: 0, pc: 0, pr: 0, moving: false, dir: 1, still: 0, anim: 0 };
 let visGuards = [];
 
 const keys = Object.create(null);
@@ -153,8 +153,6 @@ const KEYMAP = {
 };
 
 addEventListener("keydown", (e) => {
-  if (e.code === "KeyC" && !started) { startGame(); e.preventDefault(); return; }
-  if (e.code === "KeyP") { paused = !paused; e.preventDefault(); return; }
   if (e.code === "Space" && overlayBtn && !overlayBtn.hidden) { overlayBtn.click(); e.preventDefault(); return; }
   if (e.code === "KeyU" || e.code === "KeyZ") { digQueued = -1; e.preventDefault(); return; }
   if (e.code === "KeyO" || e.code === "KeyX") { digQueued = 1; e.preventDefault(); return; }
@@ -192,96 +190,201 @@ function readInput() {
 
 // ---------- pixel art ----------
 
+// ClassicReload 에뮬레이터 캔버스(368×270)에서 타일은 가로 10px·세로 11px 입니다.
+// 화면 전체를 그 배율 그대로 그리므로 그림과 캐릭터를 1:1 로 옮길 수 있습니다.
+const TW = 10;
+const TH = 11;
+
 function px(x, y, w, h, color) {
   ctx.fillStyle = color;
   ctx.fillRect(x, y, w, h);
 }
 
 function drawBrick(x, y) {
-  px(x, y, 8, 8, PAL.brick);
-  px(x, y + 3, 8, 1, PAL.brickDark);
-  px(x, y + 7, 8, 1, PAL.brickDark);
-  px(x + 3, y, 1, 3, PAL.brickDark);
-  px(x + 6, y + 4, 1, 3, PAL.brickDark);
+  // 원작 타일: 위 4px 벽돌 + 1px 줄눈 + 아래 5px 벽돌 + 1px 줄눈.
+  // 벽돌 한 장은 8px 이고 사이가 2px 검게 벌어집니다. 위아래 줄눈 위치가 4px 어긋납니다.
+  px(x, y, TW, 4, PAL.brick);
+  px(x + 6, y, 2, 4, "#000000");
+  px(x, y + 5, TW, 5, PAL.brick);
+  px(x + 2, y + 5, 2, 5, "#000000");
+  px(x, y + 4, TW, 1, "#000000");
+  px(x, y + 10, TW, 1, "#000000");
 }
 
 function drawSolid(x, y) {
-  px(x, y, 8, 8, PAL.solid);
-  px(x, y, 8, 1, PAL.solidHi);
-  px(x, y, 1, 8, PAL.solidHi);
-  px(x, y + 7, 8, 1, PAL.brickDark);
-  px(x + 7, y, 1, 8, PAL.brickDark);
+  px(x, y, TW, TH, PAL.solid);
+  px(x, y, TW, 1, PAL.solidHi);
+  px(x, y, 1, TH, PAL.solidHi);
+  px(x, y + TH - 1, TW, 1, PAL.brickDark);
+  px(x + TW - 1, y, 1, TH, PAL.brickDark);
 }
 
 function drawLadder(x, y) {
-  px(x + 1, y, 1, 8, PAL.grey);
-  px(x + 6, y, 1, 8, PAL.grey);
-  px(x + 1, y + 1, 6, 1, PAL.grey);
-  px(x + 1, y + 5, 6, 1, PAL.grey);
+  // 기둥 2px 씩, 발판은 2px·7px 높이에 1px
+  px(x, y, 2, TH, PAL.white);
+  px(x + 6, y, 2, TH, PAL.white);
+  px(x + 2, y + 2, 4, 1, PAL.white);
+  px(x + 2, y + 7, 4, 1, PAL.white);
 }
 
 function drawBar(x, y) {
-  px(x, y + 1, 8, 1, PAL.white);
-  px(x, y + 2, 8, 1, "#666666");
+  // 원작의 줄은 흰색 1px 입니다
+  px(x, y + 1, TW, 1, PAL.white);
 }
 
 function drawTrapdoor(x, y) {
-  px(x, y, 8, 8, PAL.door);
-  px(x + 1, y + 1, 6, 6, PAL.doorHi);
-  px(x + 1, y + 3, 6, 1, PAL.brickDark);
-  px(x + 5, y + 2, 1, 1, PAL.gold);
+  px(x, y, TW, TH, PAL.door);
+  px(x + 1, y + 1, TW - 2, TH - 2, PAL.doorHi);
+  px(x + 1, y + 4, TW - 2, 1, PAL.brickDark);
+  px(x + 6, y + 2, 1, 1, PAL.gold);
 }
 
 function drawGold(x, y) {
-  px(x + 1, y + 3, 6, 4, PAL.gold);
-  px(x + 1, y + 2, 6, 1, "#ffe88a");
-  px(x + 3, y + 4, 2, 2, PAL.goldDark);
+  // 원작 화면의 상자는 흰 테두리(2px) + 벽돌색 몸통의 8×5 네모입니다
+  px(x, y + 5, 8, 1, PAL.white);
+  px(x, y + 6, 2, 3, PAL.white);
+  px(x + 6, y + 6, 2, 3, PAL.white);
+  px(x, y + 9, 8, 1, PAL.white);
+  px(x + 2, y + 6, 4, 3, PAL.brick);
 }
 
 function drawHole(x, y) {
-  px(x, y, 8, 8, "#000000");
-  px(x, y, 8, 1, "#3a1a08");
-  px(x, y, 1, 8, "#5a2a10");
-  px(x + 7, y, 1, 8, "#5a2a10");
+  px(x, y, TW, TH, "#000000");
+  px(x, y, TW, 1, "#3a1a08");
+  px(x, y, 1, TH, "#5a2a10");
+  px(x + TW - 1, y, 1, TH, "#5a2a10");
 }
 
-const RUNNER_A = [
-  "..XX....",
-  "..XX....",
-  ".XXXX...",
-  "..XX....",
-  "..XX....",
-  ".X..X...",
-  "X....X..",
-  "........",
+// 캐릭터는 원작 화면에서 딴 그대로 **9×11**(타일 10×11 안에 들어갑니다)입니다.
+// 크기를 줄이려고 다시 그리면 동작이 뭉개지므로, 캡처한 픽셀을 그대로 씁니다.
+// 서 있는 자세: 가려는 쪽 발은 땅에 디디고 반대 발은 들린 모양이고, 팔은 내려 있습니다.
+// 원작도 정지 자세가 달리기 1번 프레임과 같은 그림입니다.
+const SPR_STAND = [
+  "...#.....",
+  "..###....",
+  "..###....",
+  "...###...",
+  "..###.##.",
+  "##..##.##",
+  "....##...",
+  "...###...",
+  "..##.####",
+  "..##.....",
+  "..##.....",
 ];
-const RUNNER_B = [
-  "..XX....",
-  "..XX....",
-  ".XXXX...",
-  "..XX....",
-  "..XX....",
-  "..XX....",
-  ".X..X...",
-  "X....X..",
+const SPR_RUN1 = [
+  "...#.....",
+  "..###....",
+  "..###....",
+  "...###...",
+  "..###.##.",
+  "##..##.##",
+  "....##...",
+  "...###...",
+  "..##.####",
+  "..##.....",
+  "..##.....",
 ];
-const CLIMB = [
-  "..XX....",
-  "..XX....",
-  ".XXXX...",
-  "..XX....",
-  "..XX....",
-  "..XX....",
-  "..XX....",
-  "..XX....",
+const SPR_RUN2 = [
+  "...#.....",
+  ".###.....",
+  ".###.....",
+  "..##.....",
+  "#.####...",
+  "####.##..",
+  "..##.....",
+  ".####....",
+  "##..##...",
+  "##...##..",
+  ".....##..",
+];
+const SPR_RUN3 = [
+  "....#....",
+  "...###...",
+  "...###...",
+  "....##...",
+  "....###..",
+  "...#####.",
+  ".##.####.",
+  "...###...",
+  "...####..",
+  ".....###.",
+  ".....##..",
+];
+const SPR_CLIMB1 = [
+  "...##....",
+  "...##...#",
+  "...######",
+  "#..###...",
+  "######...",
+  "...###...",
+  "...###...",
+  "..##.##..",
+  "..##.###.",
+  "..##.....",
+  ".###.....",
+];
+const SPR_CLIMB2 = [
+  "....##...",
+  "#...##...",
+  "######...",
+  "...###..#",
+  "...######",
+  "...###...",
+  "...###...",
+  "..##.##..",
+  ".###.##..",
+  ".....##..",
+  ".....###.",
+];
+// 줄에 매달린 자세: 손이 줄에 걸려 위쪽 두 줄에 양옆으로만 잉크가 있고,
+// 머리는 그 아래 줄에 옵니다 (서 있는 자세는 머리가 맨 윗줄에 있습니다 — 이 차이로 구분).
+const SPR_BAR1 = [
+  "##....##.",
+  "##....##.",
+  "##.##.##.",
+  ".####.##.",
+  "...####..",
+  "....##...",
+  "....##...",
+  "....####.",
+  "....##.##",
+  "....##.##",
+  ".....##.#",
+];
+const SPR_BAR2 = [
+  ".##......",
+  ".##......",
+  ".####....",
+  "..###....",
+  "...####..",
+  "...##.##.",
+  "...##....",
+  "...###...",
+  "..##.##..",
+  "..##.##..",
+  "..##.##..",
+];
+const SPR_BAR3 = [
+  "......##.",
+  "......##.",
+  "....####.",
+  ".##.###..",
+  "..####...",
+  "....##...",
+  "....##...",
+  "....###..",
+  "...##.##.",
+  "...##.##.",
+  "...##.##.",
 ];
 
-function drawRunner(x, y, color, frame) {
-  const sprite = frame;
-  px(x, y, 8, 8, "#000");
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 8; c++) {
-      if (sprite[r][c] === "X") px(x + c, y + r, 1, 1, color);
+function drawRunner(x, y, color, sprite, flip = false) {
+  for (let r = 0; r < sprite.length; r++) {
+    const row = sprite[r];
+    for (let c = 0; c < row.length; c++) {
+      if (row[c] !== "#") continue;
+      px(x + (flip ? row.length - 1 - c : c), y + r, 1, 1, color);
     }
   }
 }
@@ -304,10 +407,9 @@ function drawTile(t, x, y) {
 function loadLevel(index, { lives = 5, score = 0 } = {}) {
   levelIndex = index;
   game = new Game(levels[index].tiles, { level: index + 1, lives, score });
-  visPlayer = { x: game.player.c, y: game.player.r };
-  visGuards = game.guards.map((g) => ({ x: g.c, y: g.r }));
+  visPlayer = { x: game.player.c, y: game.player.r, phase: 0, pc: game.player.c, pr: game.player.r, moving: false, dir: 1, still: 0, anim: 0 };
+  visGuards = game.guards.map((g) => ({ x: g.c, y: g.r, phase: 0, pc: g.c, pr: g.r, moving: false, dir: 1, still: 0, anim: 0 }));
   advancing = false;
-  paused = false;
   elideOverlay();
 }
 
@@ -366,7 +468,7 @@ function frame(now) {
   last = now;
 
   if (game) {
-    if (started && !paused) {
+    if (started) {
       const before = game.state;
       game.update(dt, readInput());
       if (before === "playing" && game.state === "gameover") {
@@ -381,14 +483,15 @@ function frame(now) {
       }
     }
 
-    // smooth visual positions
+    // smooth visual positions — 애니메이션 단계는 칸을 실제로 옮겼을 때만 바뀝니다
     const k = Math.min(1, dt / 70);
-    visPlayer.x += (game.player.c - visPlayer.x) * k;
-    visPlayer.y += (game.player.r - visPlayer.y) * k;
+    trackVis(visPlayer, game.player, dt, k);
     for (let i = 0; i < game.guards.length; i++) {
-      if (!visGuards[i]) visGuards[i] = { x: game.guards[i].c, y: game.guards[i].r };
-      visGuards[i].x += (game.guards[i].c - visGuards[i].x) * k;
-      visGuards[i].y += (game.guards[i].r - visGuards[i].y) * k;
+      if (!visGuards[i]) {
+        const g = game.guards[i];
+        visGuards[i] = { x: g.c, y: g.r, phase: 0, pc: g.c, pr: g.r, moving: false, dir: 1, still: 0, anim: 0 };
+      }
+      trackVis(visGuards[i], game.guards[i], dt, k);
     }
 
     draw(now);
@@ -397,32 +500,105 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+// 원작은 한 칸을 걷는 동안 그림이 두 번 바뀝니다 — 반 걸음마다 다음 동작입니다.
+// 그래서 키를 한 번만 눌러 한 칸 움직여도 동작 두 개가 보이고, 계속 걸으면 3개가 돕니다.
+const ANIM_MS = 130;      // 반 걸음 (걷기 260ms)
+const STEP_GAP_MS = 260;  // 한 걸음 길이 — 이 시간 동안만 동작이 넘어갑니다
+
+function trackVis(v, ch, dt, k) {
+  const movedX = ch.c - v.pc;
+  const stepped = movedX !== 0 || ch.r !== v.pr;
+  if (movedX) v.dir = movedX > 0 ? 1 : -1;
+  v.still = stepped ? 0 : v.still + dt;
+  v.pc = ch.c;
+  v.pr = ch.r;
+  v.x += (ch.c - v.x) * k;
+  v.y += (ch.r - v.y) * k;
+  // 걸음이 시작된 뒤 한 걸음 길이 동안만 그림을 넘깁니다 — 시간을 더 주면 손을 뗀 뒤에도
+  // 동작이 계속 돌아 한 번 누르기에 동작이 3개 나옵니다.
+  if (v.still < STEP_GAP_MS) {
+    v.anim += dt;
+    while (v.anim >= ANIM_MS) {
+      v.anim -= ANIM_MS;
+      v.phase = (v.phase + 1) % 3;
+    }
+  }
+  // 보간이 끝나도 다음 걸음까지는 이동 상태를 유지해야 서기 자세가 사이사이 끼지 않습니다
+  const settling = Math.abs(ch.c - v.x) > 0.02 || Math.abs(ch.r - v.y) > 0.02;
+  v.moving = stepped || settling || v.still < STEP_GAP_MS + 20;
+  if (!v.moving) {
+    // 실제로 멈추면 원작처럼 서기 자세로 돌아갑니다
+    v.anim = 0;
+    v.phase = 0;
+  }
+}
+
+const RUN_FRAMES = [SPR_RUN1, SPR_RUN2, SPR_RUN3];
+const BAR_FRAMES = [SPR_BAR1, SPR_BAR2, SPR_BAR3];
+
+function pickSprite(v, ch) {
+  const tile = game.tileAt(ch.c, ch.r);
+  // 기준 스프라이트는 왼쪽을 보고 있어서 오른쪽을 볼 때 뒤집습니다.
+  // 서 있는 자세도 같은 방향을 유지해야 멈출 때 자세가 되돌아가지 않습니다.
+  const flip = v.dir > 0;
+  // 줄에 매달려 있을 때는 손을 번갈아 옮기는 전용 자세를 씁니다
+  if (tile === TILE.BAR) return { sprite: BAR_FRAMES[v.phase], flip };
+  // 사다리 위에서는 서 있어도 오르는 자세를 유지합니다
+  if (tile === TILE.LADDER) return { sprite: v.moving && v.phase ? SPR_CLIMB2 : SPR_CLIMB1, flip: false };
+  // 서 있을 때는 다리를 벌린 전용 자세입니다 (달리기 1번 프레임과 다릅니다)
+  if (!v.moving) return { sprite: SPR_STAND, flip };
+  return { sprite: RUN_FRAMES[v.phase], flip };
+}
+
+function drawCharacter(v, ch, color) {
+  const { sprite, flip } = pickSprite(v, ch);
+  // 스프라이트는 타일 안에서 가로 가운데에 놓습니다 (9px 스프라이트 → +0, 7px → +1)
+  const dx = (TW - sprite[0].length) >> 1;
+  const x = Math.round(v.x * TW) + dx;
+  const y = Math.round(v.y * TH);
+  // 구멍에 빠져도 원작처럼 자르지 않고 칸 위쪽에 맞춰 통째로 그립니다
+  drawRunner(x, y, color, sprite, flip);
+}
+
+function drawHoleRim(x, y) {
+  px(x, y, TW, 1, "#3a1a08");
+  px(x, y, 1, TH, "#5a2a10");
+  px(x + TW - 1, y, 1, TH, "#5a2a10");
+}
+
 function draw(now) {
-  px(0, 0, W * 8, H * 8, "#000");
-  for (let r = 0; r < H; r++) {
-    for (let c = 0; c < W; c++) drawTile(game.tileAt(c, r), c * 8, r * 8);
-  }
+  px(0, 0, W * TW, H * TH, "#000");
 
-  const frameIndex = Math.floor(now / 120) % 2 ? RUNNER_A : RUNNER_B;
-  const climbFrame = CLIMB;
-
+  // 1) 구멍에 빠진 캐릭터를 먼저 그립니다 — 뒤이어 그리는 타일이 구멍 밖으로 나온
+  //    부분(다리 등)을 가려서, 원작처럼 블록 두께 안에 들어가 보입니다
+  const inHole = (ch) => game.holes.has(ch.r * W + ch.c);
   for (let i = 0; i < game.guards.length; i++) {
-    const v = visGuards[i];
-    const climbing = game.tileAt(game.guards[i].c, game.guards[i].r) === TILE.LADDER;
-    drawRunner(Math.round(v.x * 8), Math.round(v.y * 8), PAL.cyan, climbing ? climbFrame : frameIndex);
+    if (inHole(game.guards[i])) drawCharacter(visGuards[i], game.guards[i], PAL.cyan);
+  }
+  if (inHole(game.player) && !(game.state === "dead" && Math.floor(now / 100) % 2)) {
+    drawCharacter(visPlayer, game.player, PAL.white);
   }
 
-  if (!(game.state === "dead" && Math.floor(now / 100) % 2)) {
-    const climbing = game.tileAt(game.player.c, game.player.r) === TILE.LADDER;
-    drawRunner(Math.round(visPlayer.x * 8), Math.round(visPlayer.y * 8), PAL.white, climbing ? climbFrame : frameIndex);
+  // 2) 타일 — 캐릭터가 들어 있는 구멍은 검게 덮지 않고 테두리만 나중에 그립니다
+  for (let r = 0; r < H; r++) {
+    for (let c = 0; c < W; c++) {
+      const idx = r * W + c;
+      if (game.holes.has(idx) && game.guardAt(c, r)) continue;
+      if (game.holes.has(idx) && game.player.c === c && game.player.r === r) continue;
+      drawTile(game.tileAt(c, r), c * TW, r * TH);
+    }
+  }
+  for (const idx of game.holes.keys()) {
+    const c = idx % W, r = (idx / W) | 0;
+    if (game.guardAt(c, r) || (game.player.c === c && game.player.r === r)) drawHoleRim(c * TW, r * TH);
   }
 
-  if (paused) {
-    px(0, 56, W * 8, 16, "rgba(0,0,0,.7)");
-    ctx.fillStyle = PAL.gold;
-    ctx.font = "8px monospace";
-    ctx.textAlign = "center";
-    ctx.fillText("PAUSED", W * 4, 67);
+  // 3) 나머지 캐릭터
+  for (let i = 0; i < game.guards.length; i++) {
+    if (!inHole(game.guards[i])) drawCharacter(visGuards[i], game.guards[i], PAL.cyan);
+  }
+  if (!inHole(game.player) && !(game.state === "dead" && Math.floor(now / 100) % 2)) {
+    drawCharacter(visPlayer, game.player, PAL.white);
   }
 }
 
@@ -430,7 +606,7 @@ async function boot() {
   const res = await fetch("/lode-runner/levels/levels.json");
   levels = await res.json();
   loadLevel(0);
-  showOverlay("LODE RUNNER", "PRESS C TO START", "START", startGame);
+  showOverlay("LODE RUNNER", "", "START", startGame);
   requestAnimationFrame(frame);
 }
 

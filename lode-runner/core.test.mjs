@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { Game, parseLevel, TILE, HOLE_MS, DIG_MS, SPEED } from "./core.mjs";
+import { Game, parseLevel, TILE, HOLE_MS, DIG_MS, TRAP_MS, SPEED } from "./core.mjs";
 
 function blank() {
   return Array.from({ length: 16 }, () => Array(28).fill(0));
@@ -121,6 +121,23 @@ test("guards path toward the player", () => {
   assert.equal(step.r, 4);
 });
 
+test("guard walks into a hole instead of stopping at its edge", () => {
+  const rows = blank();
+  floorRow(rows, 5);
+  rows[4][5] = TILE.ENEMY;
+  rows[4][12] = TILE.PLAYER;
+  const g = new Game(rows);
+  const guard = g.guards[0];
+  g.holes.set(5 * 28 + 7, { refillAt: 99999 }); // col 7 의 바닥에 구멍
+  g.stepGuard(guard);
+  assert.equal(guard.c, 6, "구멍 쪽으로 걸어가야 합니다");
+  g.stepGuard(guard);
+  assert.equal(guard.c, 7, "구멍 바로 위 칸까지 이동");
+  g.stepGuard(guard);
+  assert.equal(guard.r, 5, "구멍 위에서는 빠져야 합니다");
+  assert.equal(g.guardAt(7, 5), guard);
+});
+
 test("player can walk over a hole that has a trapped guard", () => {
   const rows = blank();
   floorRow(rows, 5);
@@ -134,6 +151,51 @@ test("player can walk over a hole that has a trapped guard", () => {
   assert.equal(g.player.r, 4, "player stays on the floor above the trapped guard");
 });
 
+test("trapped guard climbs out after the trap time", () => {
+  const rows = blank();
+  floorRow(rows, 5);
+  rows[4][10] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.dig(-1); // hole at (9,5)
+  const guard = { c: 9, r: 4, pc: 9, pr: 4, dir: 1, timer: 0, digUntil: 0, trappedAt: 0, moving: false };
+  g.guards.push(guard);
+  g.stepGuard(guard);
+  assert.equal(guard.r, 5, "구멍으로 떨어져야 합니다");
+  assert.equal(g.score, 75, "가둔 점수 +75");
+  g.stepGuard(guard);
+  assert.equal(guard.r, 5, "시간이 지나기 전에는 못 나옵니다");
+  g.time = TRAP_MS + 1;
+  g.stepGuard(guard);
+  assert.equal(guard.r, 4, "시간이 지나면 기어 나옵니다");
+});
+
+test("guard still in the hole when it refills dies", () => {
+  const rows = blank();
+  floorRow(rows, 5);
+  rows[4][10] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.dig(-1); // hole at (9,5)
+  const guard = { c: 9, r: 4, pc: 9, pr: 4, dir: 1, timer: 0, digUntil: 0, trappedAt: 0, moving: false };
+  g.guards.push(guard);
+  g.stepGuard(guard); // 떨어짐 (+75)
+  g.time = HOLE_MS + 1; // 기어 나오기 전에 구멍이 메워짐
+  g.updateHoles();
+  assert.equal(g.guards.length, 0, "구멍이 메워지면 죽습니다");
+  assert.equal(g.score, 150, "가둔 75 + 죽은 75");
+});
+
+test("player trapped in a hole cannot climb out", () => {
+  const rows = blank();
+  floorRow(rows, 5);
+  rows[4][10] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.dig(-1); // hole at (9,5)
+  g.player.c = 9; g.player.r = 5;
+  g.update(SPEED.walk * 3, { up: true });
+  assert.equal(g.player.c, 9);
+  assert.equal(g.player.r, 5, "구멍에 갇혀 나올 수 없습니다");
+});
+
 test("player falls into an empty hole", () => {
   const rows = blank();
   floorRow(rows, 5);
@@ -145,4 +207,24 @@ test("player falls into an empty hole", () => {
   assert.equal(g.player.c, 9);
   g.update(SPEED.fall + 10, { dir: -1 });
   assert.ok(g.player.r > 4, "player falls into the hole");
+});
+
+test("a short key tap still produces one step", () => {
+  const rows = blank();
+  floorRow(rows, 5);
+  rows[4][10] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.update(30, { dir: 1 }); // 아주 짧게 눌렀다가 뗌
+  g.update(SPEED.walk, {}); // 다음 걸음 시점에는 키가 없음
+  assert.equal(g.player.c, 11, "짧게 눌러도 한 칸은 움직여야 합니다");
+});
+
+test("a tap older than the input buffer is ignored", () => {
+  const rows = blank();
+  floorRow(rows, 5);
+  rows[4][10] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.update(30, { dir: 1 });
+  g.update(SPEED.walk * 3, {}); // 버퍼가 만료된 뒤
+  assert.equal(g.player.c, 10, "오래된 입력으로 움직이면 안 됩니다");
 });
