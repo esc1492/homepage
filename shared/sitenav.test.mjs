@@ -42,6 +42,7 @@ test('renderNav 의 바로가기 메뉴는 앱 목록 전체를 담는다', () =
     '/arkanoid',
     '/minesweeper',
     '/sudoku',
+    '/lode-runner',
   ]);
   hrefs.forEach((href) => assert.ok(html.includes(`href="${href}"`), href));
 });

@@ -24,6 +24,8 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
 
 바로가기 '게임 → SUDOKU' 항목으로 **스도쿠** 를 같은 사이트의 `/sudoku` 경로에서 엽니다 (`sudoku/` 정적 UI + `sudoku/core.mjs` 순수 로직). 빌드·서버·인증이 없습니다.
 
+바로가기 '게임 → LODE RUNNER' 항목으로 **로드 러너(C64 판 재현)** 를 같은 사이트의 `/lode-runner` 경로에서 엽니다 (`lode-runner/` 정적 UI + `lode-runner/core.mjs` 순수 로직 + `levels/levels.json`). 빌드·서버·인증이 없습니다.
+
 바로가기 '챗봇' 항목으로 **미키 챗봇** 을 같은 사이트의 `/chat` 경로에서 엽니다 (`api/chat.js` 서버 함수 + `chat/` 정적 UI). Streamlit 판(`chatbot_app.py`)을 Vercel 로 옮긴 것입니다.
 
 바로가기 'OCR' 항목으로 **이미지·PDF 텍스트 추출**을 같은 사이트의 `/ocr` 경로에서 엽니다 (`api/ocr.js` 서버 함수 + `ocr/` 정적 UI). Streamlit 판(`ocr_app.py`)을 Vercel 로 옮긴 것입니다.
@@ -32,7 +34,7 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
 
 ## 앱별 상세 문서
 
-앱 9종의 상세(설계 요점 · 이전 이력 · 함정 · 환경변수 · 파일 구조)는 `.claude/rules/apps/<앱>.md` 에
+앱 10종의 상세(설계 요점 · 이전 이력 · 함정 · 환경변수 · 파일 구조)는 `.claude/rules/apps/<앱>.md` 에
 있습니다. `paths` frontmatter 로 범위가 지정되어 있어 **그 앱의 파일을 열 때만** 로드됩니다(항상
 로드되는 것은 각 앱의 요약 카드입니다). 해당 앱을 수정하기 전에 rules 파일을 먼저 읽으십시오.
 
@@ -51,6 +53,7 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
   - `/ocr`·`/ocr/*`도 같습니다
   - `/voca`·`/voca/*`도 같습니다
   - `/sudoku`·`/sudoku/*`도 같습니다
+  - `/lode-runner`·`/lode-runner/*`도 같습니다
   - `rewrites`는 파일시스템 조회 **이후**에 적용되므로 `/tetris/_next/...` 같은 실제 자산은 가로채이지 않습니다
     - 이 성질 때문에 **없는 경로도 200 이 나옵니다** — `/voca/app.py` 는 404 가 아니라 `/voca/index` 로 폴백한 HTML(200)입니다. 배포에 실렸는지 확인할 때 상태 코드만 보면 오판합니다. 본문·`content-length` 를 확실히 없는 경로와 대조하십시오 (2026-09-23 실제로 오판할 뻔했습니다)
     - `/album/`(슬래시)은 `/album` 으로 **308 리다이렉트**됩니다 (`cleanUrls`). `curl` 은 기본적으로 리다이렉트를 따라가지 않으므로 **`-L` 없이 확인하면 빈 응답을 검사하고 "미반영"으로 오판**합니다 (2026-10-11 실제로 오판했습니다)
@@ -60,7 +63,7 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
   - `minesweeper-src/` 는 2026-10-08 에 뒤늦게 추가했습니다 — 빠져 있는 동안 소스가 `/minesweeper-src/...` 로 그대로 서빙되었습니다. **새 Next.js 소스 폴더를 만들면 이 목록에 반드시 넣으십시오**
   - ⚠️ `.vercelignore`는 gitignore 문법이라 패턴이 **하위 모든 깊이에 적용**됩니다. `*.py`가 그 예로, 파이썬으로 서버 함수를 쓰면 `api/foo.py`가 조용히 업로드에서 빠집니다
   - `voca/` 는 제외 목록에 없지만 `*.py`·`.streamlit/`·`.venv/`·`requirements.txt` 가 각각 걸려 **`voca/index.html` 만** 배포됩니다
-- Production URL: https://homepage-dwkim.vercel.app (앨범: `/album`, 게시판: `/board`, 테트리스: `/tetris`, 알카노이드: `/arkanoid`, 지뢰찾기: `/minesweeper`, 챗봇: `/chat`, OCR: `/ocr`, 영단어: `/voca`, 스도쿠: `/sudoku`)
+- Production URL: https://homepage-dwkim.vercel.app (앨범: `/album`, 게시판: `/board`, 테트리스: `/tetris`, 알카노이드: `/arkanoid`, 지뢰찾기: `/minesweeper`, 챗봇: `/chat`, OCR: `/ocr`, 영단어: `/voca`, 스도쿠: `/sudoku`, 로드 러너: `/lode-runner`)
 
 ## Data Pipeline (레거시 — 현재 프론트에서 미사용)
 
@@ -81,7 +84,7 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
 
 ### 공유 SiteNav module (`shared/`)
 
-서브 페이지 7곳(`chat`·`ocr`·`voca`·`sudoku` + 테트리스·알카노이드·지뢰찾기)의 상단 내비게이션은
+서브 페이지 8곳(`chat`·`ocr`·`voca`·`sudoku`·`lode-runner` + 테트리스·알카노이드·지뢰찾기)의 상단 내비게이션은
 `shared/sitenav.mjs` + `shared/sitenav.css` **한 벌**입니다. 홈 `index.html`의 `.nav`는
 드롭다운 메뉴·포커스 모드·로그인 모달을 가진 별도 변형이라 의도적으로 제외했습니다
 (`docs/adr/0001-sitenav-scope-and-delivery.md`, `GLOSSARY.md`).
@@ -247,6 +250,17 @@ HTML 문자열을 띄우는 호스트**였으므로, 실제로는 JS → React �
 - `core.mjs` 는 DOM·브라우저 API 를 import 하지 않습니다 — 게임 3종의 `game/*.js` 와 같은 원칙입니다.
 - 상세(sudoku.com 분석에서 가져온 것/아닌 것, 생성·유일해, 저장 키, 설계 요점): `.claude/rules/apps/sudoku.md`
 
+## 로드 러너 — `/lode-runner`
+
+C64 판 Lode Runner 를 재현한 게임. **소스 = 서빙**(`lode-runner/index.html` + `lode-runner/core.mjs` +
+`lode-runner/levels/levels.json`)이라 빌드·서버·인증이 없습니다. 17개 레벨은 ClassicReload 의
+C64 에뮬레이터 RAM(`$6000`)에서 추출한 원판 보드입니다.
+
+- 테스트: `node --test lode-runner/core.test.mjs` (11개). 루트 `npm test` 에도 포함됩니다.
+- `core.mjs` 는 DOM·브라우저 API 를 import 하지 않습니다 — `sudoku/core.mjs` 와 같은 원칙입니다.
+- ⚠️ 자산 참조는 **절대 경로**(`/lode-runner/...`)입니다 — `/lode-runner`(슬래시 없음)로 열렸을 때 상대 경로가 루트로 풀립니다.
+- 상세(레벨 추출 경로, 구멍 위 통과 규칙, 속도 상수, 키 매핑): `.claude/rules/apps/lode-runner.md`
+
 ## 챗봇 (미키) — `/chat`
 
 Streamlit 판(`chatbot_app.py`, 보관용)을 Vercel 로 옮겼습니다. 서버 `api/chat.js`, UI `chat/index.html`
@@ -382,10 +396,10 @@ Drop:
 
 ## No Tests / No Lint / No CI Tests
 
-정적 페이지(`index.html`·`chat/`·`ocr/`·`voca/`·`sudoku/`)에는 테스트·linter·빌드가 없습니다. 브라우저에서 바로 확인합니다.
+정적 페이지(`index.html`·`chat/`·`ocr/`·`voca/`·`sudoku/`·`lode-runner/`)에는 테스트·linter·빌드가 없습니다. 브라우저에서 바로 확인합니다.
 
 - **빌드 5곳**: `moment/`(Vite) · `board-src/`(Vite) · `tetris-src/`·`arkanoid-src/`·`minesweeper-src/`(Next). 다섯 곳 모두 **산출물을 커밋**하므로 소스를 고치면 해당 앱 카드의 명령으로 재빌드해야 합니다.
-- **테스트**: 루트 `npm test`(`shared/*`·`server/*`·`sudoku/*`), 게임 3종과 `board-src/`·`moment/` 각자 `npm test`.
+- **테스트**: 루트 `npm test`(`shared/*`·`server/*`·`sudoku/*`·`lode-runner/*`), 게임 3종과 `board-src/`·`moment/` 각자 `npm test`.
 - `api/*.js` handler 자체는 로컬 `vercel dev` 로 검증합니다.
 - **옮긴 로직은 조용히 틀리면 그럴듯한 오답을 냅니다** — 순수한 부분은 `server/*-core.mjs` 에 두고 `server/*-core.test.mjs` 가 영구 검증합니다. 네트워크가 필요한 handler 내부는 `globalThis.fetch` 를 가로채는 일회성 하네스로 확인한 뒤 지웁니다.
 - `api/voca.js` 는 **실제 시트를 수정·삭제**하므로 실호출 검증은 테스트 워크시트에서만 하고 반드시 지우십시오.

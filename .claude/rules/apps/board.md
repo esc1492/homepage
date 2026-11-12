@@ -31,7 +31,7 @@ velog 스타일 글 게시판입니다. 앨범(사진 피드)과 **별도 앱**�
 ## ⚠️ 빌드 산출물을 커밋하므로 소스 수정 시 재빌드 필수
 
 ```sh
-cd board-src && npm test      # 순수 로직 단위 테스트 15개 (markdownEdit · markdown)
+cd board-src && npm test      # 순수 로직 단위 테스트 16개 (markdownEdit · markdown)
 cd board-src && npm run build # → repo 루트 board/ 갱신 (vite.config.js의 outDir)
 ```
 

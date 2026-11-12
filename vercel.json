@@ -23,6 +23,8 @@
     { "source": "/voca", "destination": "/voca/index" },
     { "source": "/voca/:path*", "destination": "/voca/index" },
     { "source": "/sudoku", "destination": "/sudoku/index" },
-    { "source": "/sudoku/:path*", "destination": "/sudoku/index" }
+    { "source": "/sudoku/:path*", "destination": "/sudoku/index" },
+    { "source": "/lode-runner", "destination": "/lode-runner/index" },
+    { "source": "/lode-runner/:path*", "destination": "/lode-runner/index" }
   ]
 }

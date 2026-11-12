@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Lode Runner</title>
+<link rel="stylesheet" href="/shared/sitenav.css">
+<style>
+  :root {
+    --ink: #e8e0c8;
+    --dim: #8a8064;
+    --gold: #ffd23f;
+    --bg: #0a0a14;
+    --panel: #14142a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: radial-gradient(circle at 50% 0%, #1a1a3a 0%, var(--bg) 60%);
+    color: var(--ink);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    display: flex;
+    justify-content: center;
+    padding: 72px 16px 16px;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+  }
+  .game { width: min(920px, 100%); display: flex; flex-direction: column; gap: 10px; }
+  .hud {
+    display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between;
+    font-size: 13px; letter-spacing: .08em; color: var(--dim);
+    text-transform: uppercase;
+  }
+  .hud b { color: var(--gold); font-weight: 700; }
+  .stage { position: relative; }
+  canvas {
+    display: block; width: 100%; height: auto;
+    image-rendering: pixelated;
+    background: #000;
+    border: 2px solid #2a2a48;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px #000, 0 12px 40px rgba(0,0,0,.6);
+  }
+  .overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; text-align: center;
+    background: rgba(0,0,0,.72);
+    border-radius: 4px;
+    font-size: clamp(14px, 3vw, 22px);
+    letter-spacing: .1em;
+  }
+  .overlay.hidden { display: none; }
+  .overlay .big { font-size: clamp(20px, 5vw, 36px); color: var(--gold); font-weight: 700; }
+  .overlay button {
+    font: inherit; font-size: 13px; letter-spacing: .1em;
+    color: var(--bg); background: var(--gold);
+    border: 0; border-radius: 3px; padding: 8px 18px; cursor: pointer;
+  }
+  .touch { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .touch button {
+    font: inherit; font-size: 15px; color: var(--ink);
+    background: var(--panel); border: 1px solid #2a2a48; border-radius: 6px;
+    padding: 14px 0; cursor: pointer;
+  }
+  .touch button:active { background: #26264a; }
+  .help { margin: 0; font-size: 11px; color: var(--dim); text-align: center; letter-spacing: .04em; }
+  @media (min-width: 700px) {
+    .touch { display: none; }
+  }
+</style>
+</head>
+<body>
+<div data-site-nav data-logged-in="false"></div>
+<div class="game">
+  <header class="hud">
+    <span>SCORE <b id="score">000000</b></span>
+    <span>MEN <b id="lives">5</b></span>
+    <span>GOLD <b id="gold">0</b></span>
+    <span>LEVEL <b id="level">001</b></span>
+  </header>
+  <div class="stage">
+    <canvas id="screen" width="224" height="128"></canvas>
+    <div id="overlay" class="overlay hidden"><div class="big"></div><div class="sub"></div><button hidden></button></div>
+  </div>
+  <div class="touch">
+    <button data-k="left">◀</button>
+    <button data-k="up">▲</button>
+    <button data-k="down">▼</button>
+    <button data-k="right">▶</button>
+    <button data-k="digL">U</button>
+    <button data-k="digR">O</button>
+  </div>
+  <p class="help">C 시작 · ← → 이동 · ↑ ↓ 사다리 · U 왼쪽 파기 · O 오른쪽 파기 · P 일시정지</p>
+</div>
+
+<script type="module">
+  if (localStorage.getItem('loggedIn') === 'true') {
+    document.querySelector('[data-site-nav]')?.setAttribute('data-logged-in', '1');
+  }
+</script>
+<script type="module" src="/shared/sitenav.mjs"></script>
+
+<script type="module">
+import { Game, TILE, W, H } from "/lode-runner/core.mjs";
+
+const cvs = document.getElementById("screen");
+const ctx = cvs.getContext("2d");
+ctx.imageSmoothingEnabled = false;
+
+const $ = (id) => document.getElementById(id);
+const overlay = $("overlay");
+const overlayBig = overlay.querySelector(".big");
+const overlaySub = overlay.querySelector(".sub");
+const overlayBtn = overlay.querySelector("button");
+
+const PAL = {
+  brick: "#6c3a22",
+  brickDark: "#1a0a05",
+  solid: "#4a2416",
+  solidHi: "#5e3020",
+  grey: "#a8a8a8",
+  white: "#ffffff",
+  gold: "#ffd23f",
+  goldDark: "#b08000",
+  door: "#5a3a1a",
+  doorHi: "#7a4a22",
+  cyan: "#70a4b2",
+};
+
+let levels = [];
+let levelIndex = 0;
+let game = null;
+let paused = false;
+let started = false;
+let last = 0;
+let advancing = false;
+let highScore = Number(localStorage.getItem("lodeRunnerHigh") || 0);
+
+// visual interpolation state
+let visPlayer = { x: 0, y: 0 };
+let visGuards = [];
+
+const keys = Object.create(null);
+let digQueued = 0;
+
+const KEYMAP = {
+  ArrowLeft: "left", KeyJ: "left",
+  ArrowRight: "right", KeyL: "right",
+  ArrowUp: "up", KeyI: "up",
+  ArrowDown: "down", KeyK: "down",
+};
+
+addEventListener("keydown", (e) => {
+  if (e.code === "KeyC" && !started) { startGame(); e.preventDefault(); return; }
+  if (e.code === "KeyP") { paused = !paused; e.preventDefault(); return; }
+  if (e.code === "Space" && overlayBtn && !overlayBtn.hidden) { overlayBtn.click(); e.preventDefault(); return; }
+  if (e.code === "KeyU" || e.code === "KeyZ") { digQueued = -1; e.preventDefault(); return; }
+  if (e.code === "KeyO" || e.code === "KeyX") { digQueued = 1; e.preventDefault(); return; }
+  const k = KEYMAP[e.code];
+  if (k) { keys[k] = true; e.preventDefault(); }
+});
+addEventListener("keyup", (e) => {
+  const k = KEYMAP[e.code];
+  if (k) keys[k] = false;
+});
+
+document.querySelectorAll(".touch button").forEach((btn) => {
+  const k = btn.dataset.k;
+  const press = (e) => {
+    e.preventDefault();
+    if (k === "digL") digQueued = -1;
+    else if (k === "digR") digQueued = 1;
+    else keys[k] = true;
+  };
+  const release = (e) => { e.preventDefault(); if (k.startsWith("dig")) return; keys[k] = false; };
+  btn.addEventListener("pointerdown", press);
+  btn.addEventListener("pointerup", release);
+  btn.addEventListener("pointercancel", release);
+  btn.addEventListener("pointerleave", release);
+});
+
+function readInput() {
+  let dir = 0;
+  if (keys.left) dir -= 1;
+  if (keys.right) dir += 1;
+  const input = { dir, up: !!keys.up, down: !!keys.down, dig: digQueued };
+  digQueued = 0;
+  return input;
+}
+
+// ---------- pixel art ----------
+
+function px(x, y, w, h, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+}
+
+function drawBrick(x, y) {
+  px(x, y, 8, 8, PAL.brick);
+  px(x, y + 3, 8, 1, PAL.brickDark);
+  px(x, y + 7, 8, 1, PAL.brickDark);
+  px(x + 3, y, 1, 3, PAL.brickDark);
+  px(x + 6, y + 4, 1, 3, PAL.brickDark);
+}
+
+function drawSolid(x, y) {
+  px(x, y, 8, 8, PAL.solid);
+  px(x, y, 8, 1, PAL.solidHi);
+  px(x, y, 1, 8, PAL.solidHi);
+  px(x, y + 7, 8, 1, PAL.brickDark);
+  px(x + 7, y, 1, 8, PAL.brickDark);
+}
+
+function drawLadder(x, y) {
+  px(x + 1, y, 1, 8, PAL.grey);
+  px(x + 6, y, 1, 8, PAL.grey);
+  px(x + 1, y + 1, 6, 1, PAL.grey);
+  px(x + 1, y + 5, 6, 1, PAL.grey);
+}
+
+function drawBar(x, y) {
+  px(x, y + 1, 8, 1, PAL.white);
+  px(x, y + 2, 8, 1, "#666666");
+}
+
+function drawTrapdoor(x, y) {
+  px(x, y, 8, 8, PAL.door);
+  px(x + 1, y + 1, 6, 6, PAL.doorHi);
+  px(x + 1, y + 3, 6, 1, PAL.brickDark);
+  px(x + 5, y + 2, 1, 1, PAL.gold);
+}
+
+function drawGold(x, y) {
+  px(x + 1, y + 3, 6, 4, PAL.gold);
+  px(x + 1, y + 2, 6, 1, "#ffe88a");
+  px(x + 3, y + 4, 2, 2, PAL.goldDark);
+}
+
+function drawHole(x, y) {
+  px(x, y, 8, 8, "#000000");
+  px(x, y, 8, 1, "#3a1a08");
+  px(x, y, 1, 8, "#5a2a10");
+  px(x + 7, y, 1, 8, "#5a2a10");
+}
+
+const RUNNER_A = [
+  "..XX....",
+  "..XX....",
+  ".XXXX...",
+  "..XX....",
+  "..XX....",
+  ".X..X...",
+  "X....X..",
+  "........",
+];
+const RUNNER_B = [
+  "..XX....",
+  "..XX....",
+  ".XXXX...",
+  "..XX....",
+  "..XX....",
+  "..XX....",
+  ".X..X...",
+  "X....X..",
+];
+const CLIMB = [
+  "..XX....",
+  "..XX....",
+  ".XXXX...",
+  "..XX....",
+  "..XX....",
+  "..XX....",
+  "..XX....",
+  "..XX....",
+];
+
+function drawRunner(x, y, color, frame) {
+  const sprite = frame;
+  px(x, y, 8, 8, "#000");
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      if (sprite[r][c] === "X") px(x + c, y + r, 1, 1, color);
+    }
+  }
+}
+
+function drawTile(t, x, y) {
+  switch (t) {
+    case TILE.BRICK: drawBrick(x, y); break;
+    case TILE.SOLID: drawSolid(x, y); break;
+    case TILE.LADDER: drawLadder(x, y); break;
+    case TILE.BAR: drawBar(x, y); break;
+    case TILE.TRAPDOOR: drawTrapdoor(x, y); break;
+    case TILE.GOLD: drawGold(x, y); break;
+    case 10: drawHole(x, y); break;
+    default: break; // empty / hidden
+  }
+}
+
+// ---------- game flow ----------
+
+function loadLevel(index, { lives = 5, score = 0 } = {}) {
+  levelIndex = index;
+  game = new Game(levels[index].tiles, { level: index + 1, lives, score });
+  visPlayer = { x: game.player.c, y: game.player.r };
+  visGuards = game.guards.map((g) => ({ x: g.c, y: g.r }));
+  advancing = false;
+  paused = false;
+  elideOverlay();
+}
+
+function startGame() {
+  started = true;
+  last = 0;
+  elideOverlay();
+}
+
+function elideOverlay() {
+  overlay.classList.add("hidden");
+  overlayBtn.hidden = true;
+}
+
+function showOverlay(big, sub, btnLabel, onClick) {
+  overlayBig.textContent = big;
+  overlaySub.textContent = sub || "";
+  overlay.classList.remove("hidden");
+  if (btnLabel) {
+    overlayBtn.textContent = btnLabel;
+    overlayBtn.hidden = false;
+    overlayBtn.onclick = onClick;
+  } else {
+    overlayBtn.hidden = true;
+  }
+}
+
+function nextLevel() {
+  if (levelIndex + 1 >= levels.length) {
+    const finalScore = game.score;
+    saveHigh(finalScore);
+    showOverlay("ALL LEVELS CLEAR", `SCORE ${finalScore}`, "RESTART", () => {
+      loadLevel(0);
+    });
+    return;
+  }
+  loadLevel(levelIndex + 1, { lives: game.lives, score: game.score });
+}
+
+function saveHigh(score) {
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem("lodeRunnerHigh", String(score));
+  }
+}
+
+function updateHud() {
+  $("score").textContent = String(game.score).padStart(6, "0");
+  $("lives").textContent = String(game.lives);
+  $("gold").textContent = String(game.goldLeft);
+  $("level").textContent = String(game.level).padStart(3, "0");
+}
+
+function frame(now) {
+  const dt = Math.min(50, last ? now - last : 16);
+  last = now;
+
+  if (game) {
+    if (started && !paused) {
+      const before = game.state;
+      game.update(dt, readInput());
+      if (before === "playing" && game.state === "gameover") {
+        saveHigh(game.score);
+        showOverlay("GAME OVER", `SCORE ${game.score}`, "RETRY", () => loadLevel(levelIndex));
+      }
+      if (game.state === "complete" && !advancing) {
+        advancing = true;
+        saveHigh(game.score);
+        showOverlay("LEVEL CLEAR", `SCORE ${game.score}`, null, null);
+        setTimeout(nextLevel, 1600);
+      }
+    }
+
+    // smooth visual positions
+    const k = Math.min(1, dt / 70);
+    visPlayer.x += (game.player.c - visPlayer.x) * k;
+    visPlayer.y += (game.player.r - visPlayer.y) * k;
+    for (let i = 0; i < game.guards.length; i++) {
+      if (!visGuards[i]) visGuards[i] = { x: game.guards[i].c, y: game.guards[i].r };
+      visGuards[i].x += (game.guards[i].c - visGuards[i].x) * k;
+      visGuards[i].y += (game.guards[i].r - visGuards[i].y) * k;
+    }
+
+    draw(now);
+    updateHud();
+  }
+  requestAnimationFrame(frame);
+}
+
+function draw(now) {
+  px(0, 0, W * 8, H * 8, "#000");
+  for (let r = 0; r < H; r++) {
+    for (let c = 0; c < W; c++) drawTile(game.tileAt(c, r), c * 8, r * 8);
+  }
+
+  const frameIndex = Math.floor(now / 120) % 2 ? RUNNER_A : RUNNER_B;
+  const climbFrame = CLIMB;
+
+  for (let i = 0; i < game.guards.length; i++) {
+    const v = visGuards[i];
+    const climbing = game.tileAt(game.guards[i].c, game.guards[i].r) === TILE.LADDER;
+    drawRunner(Math.round(v.x * 8), Math.round(v.y * 8), PAL.cyan, climbing ? climbFrame : frameIndex);
+  }
+
+  if (!(game.state === "dead" && Math.floor(now / 100) % 2)) {
+    const climbing = game.tileAt(game.player.c, game.player.r) === TILE.LADDER;
+    drawRunner(Math.round(visPlayer.x * 8), Math.round(visPlayer.y * 8), PAL.white, climbing ? climbFrame : frameIndex);
+  }
+
+  if (paused) {
+    px(0, 56, W * 8, 16, "rgba(0,0,0,.7)");
+    ctx.fillStyle = PAL.gold;
+    ctx.font = "8px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("PAUSED", W * 4, 67);
+  }
+}
+
+async function boot() {
+  const res = await fetch("/lode-runner/levels/levels.json");
+  levels = await res.json();
+  loadLevel(0);
+  showOverlay("LODE RUNNER", "PRESS C TO START", "START", startGame);
+  requestAnimationFrame(frame);
+}
+
+boot().catch((err) => {
+  console.error(err);
+  showOverlay("FAILED TO LOAD", String(err), "RETRY", () => location.reload());
+});
+</script>
+</body>
+</html>

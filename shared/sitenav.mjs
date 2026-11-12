@@ -46,6 +46,7 @@ export const SITE_MENU = [
       { icon: '🧱', title: 'ARKANOID', desc: '', href: '/arkanoid' },
       { icon: '💣', title: 'MINESWEEPER', desc: '', href: '/minesweeper' },
       { icon: '🔢', title: 'SUDOKU', desc: '', href: '/sudoku' },
+      { icon: '🏃', title: 'LODE RUNNER', desc: '', href: '/lode-runner' },
     ],
   },
 ];

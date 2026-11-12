@@ -29,6 +29,12 @@ server/*.test.mjs
 shared/*.test.mjs
 # 스도쿠 순수 로직 테스트 — 서빙 대상이 아닙니다 (core.mjs 본체는 제외하지 마십시오).
 sudoku/*.test.mjs
+# 로드 러너 순수 로직 테스트 — 서빙 대상이 아닙니다 (core.mjs 본체는 제외하지 마십시오).
+lode-runner/*.test.mjs
+# 로드 러너 레벨 분석 산출물 — 게임은 levels/levels.json 만 읽습니다.
+lode-runner/levels/*.png
+lode-runner/levels/*.txt
+lode-runner/levels/*.bin
 *.md
 moment/
 # 게시판 소스 — 재빌드 산출물 board/ 만 서빙합니다 (album/ 과 같은 구조)

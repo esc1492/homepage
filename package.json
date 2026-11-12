@@ -5,7 +5,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node --test \"shared/*.test.mjs\" \"server/*.test.mjs\" \"sudoku/*.test.mjs\""
+    "test": "node --test \"shared/*.test.mjs\" \"server/*.test.mjs\" \"sudoku/*.test.mjs\" \"lode-runner/*.test.mjs\""
   },
   "repository": {
     "type": "git",
