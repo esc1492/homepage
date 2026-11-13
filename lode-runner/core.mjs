@@ -128,6 +128,13 @@ export class Game {
     this.updateHoles();
 
     const p = this.player;
+    // 누르는 순간 첫 걸음이 바로 나가게 합니다. 타이머가 찰 때까지 기다리면 최대 한
+    // 걸음 시간만큼 제자리에 있다가, 손을 뗀 뒤에야 미끄러지는 것처럼 보입니다.
+    const pressed = !!(input.dir || input.up || input.down);
+    if (pressed && !p.prevPressed && p.timer < SPEED.walk - dt) p.timer = SPEED.walk - dt;
+    // 손을 떼면 남아 있던 방향 버퍼도 버립니다 — 짧게 눌러도 두 칸 가지 않도록
+    if (!pressed) this.pendingDir = null;
+    p.prevPressed = pressed;
     p.timer += dt;
     let stepMs = this.supported(p) ? SPEED.walk : SPEED.fall;
     if (this.tileAt(p.c, p.r) === TILE.LADDER) stepMs = input.up || input.down ? SPEED.climb : SPEED.walk;

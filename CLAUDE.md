@@ -256,7 +256,7 @@ C64 판 Lode Runner 를 재현한 게임. **소스 = 서빙**(`lode-runner/index
 `lode-runner/levels/levels.json`)이라 빌드·서버·인증이 없습니다. 17개 레벨은 ClassicReload 의
 C64 에뮬레이터 RAM(`$6000`)에서 추출한 원판 보드입니다.
 
-- 테스트: `node --test lode-runner/core.test.mjs` (11개). 루트 `npm test` 에도 포함됩니다.
+- 테스트: `node --test lode-runner/core.test.mjs` (17개). 루트 `npm test` 에도 포함됩니다.
 - `core.mjs` 는 DOM·브라우저 API 를 import 하지 않습니다 — `sudoku/core.mjs` 와 같은 원칙입니다.
 - ⚠️ 자산 참조는 **절대 경로**(`/lode-runner/...`)입니다 — `/lode-runner`(슬래시 없음)로 열렸을 때 상대 경로가 루트로 풀립니다.
 - 상세(레벨 추출 경로, 구멍 위 통과 규칙, 속도 상수, 키 매핑): `.claude/rules/apps/lode-runner.md`

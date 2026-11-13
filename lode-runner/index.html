@@ -27,12 +27,6 @@
     touch-action: manipulation;
   }
   .game { width: min(920px, 100%); display: flex; flex-direction: column; gap: 10px; }
-  .hud {
-    display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between;
-    font-size: 13px; letter-spacing: .08em; color: var(--dim);
-    text-transform: uppercase;
-  }
-  .hud b { color: var(--gold); font-weight: 700; }
   .stage { position: relative; }
   canvas {
     display: block; width: 100%; height: auto;
@@ -58,11 +52,14 @@
     color: var(--bg); background: var(--gold);
     border: 0; border-radius: 3px; padding: 8px 18px; cursor: pointer;
   }
-  .touch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .touch {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+    width: 50%; margin: 0 auto;
+  }
   .touch button {
-    font: inherit; font-size: 15px; color: var(--ink);
-    background: var(--panel); border: 1px solid #2a2a48; border-radius: 6px;
-    padding: 14px 0; cursor: pointer;
+    font: inherit; font-size: 13px; color: var(--ink);
+    background: var(--panel); border: 1px solid #2a2a48; border-radius: 4px;
+    height: 44px; padding: 0; cursor: pointer;
   }
   .touch button:active { background: #26264a; }
   .help { margin: 0; font-size: 11px; color: var(--dim); text-align: center; letter-spacing: .04em; }
@@ -74,14 +71,8 @@
 <body>
 <div data-site-nav data-logged-in="false"></div>
 <div class="game">
-  <header class="hud">
-    <span>SCORE <b id="score">000000</b></span>
-    <span>MEN <b id="lives">5</b></span>
-    <span>GOLD <b id="gold">0</b></span>
-    <span>LEVEL <b id="level">001</b></span>
-  </header>
   <div class="stage">
-    <canvas id="screen" width="280" height="176"></canvas>
+    <canvas id="screen" width="280" height="184"></canvas>
     <div id="overlay" class="overlay hidden"><div class="big"></div><div class="sub"></div><button hidden></button></div>
   </div>
   <div class="touch">
@@ -103,7 +94,7 @@
 <script type="module" src="/shared/sitenav.mjs"></script>
 
 <script type="module">
-import { Game, TILE, W, H } from "/lode-runner/core.mjs";
+import { Game, TILE, W, H, SPEED } from "/lode-runner/core.mjs";
 
 const cvs = document.getElementById("screen");
 const ctx = cvs.getContext("2d");
@@ -116,10 +107,8 @@ const overlaySub = overlay.querySelector(".sub");
 const overlayBtn = overlay.querySelector("button");
 
 const PAL = {
-  brick: "#6c3a22",
+  brick: "#68372b",
   brickDark: "#1a0a05",
-  solid: "#4a2416",
-  solidHi: "#5e3020",
   grey: "#a8a8a8",
   white: "#ffffff",
   gold: "#ffd23f",
@@ -127,6 +116,32 @@ const PAL = {
   door: "#5a3a1a",
   doorHi: "#7a4a22",
   cyan: "#70a4b2",
+};
+
+// 상태줄 글꼴 — 원작 화면에서 딴 10×8 글리프입니다 (스프라이트와 같은 방식).
+// 크랙판이 쓰는 각진 블록체라 C64 기본 글꼴과 다릅니다. 캡처 359프레임에서
+// 17자를 그대로 떴고, 2·8·9 는 원작 화면에 나온 적이 없어 같은 결로 그렸습니다.
+const STATUS_FONT = {
+  " ": ["..........", "..........", "..........", "..........", "..........", "..........", "..........", ".........."],
+  S: ["########..", "##....##..", "##........", "########..", "....####..", "....####..", "##..####..", "########.."],
+  C: ["########..", "##....##..", "##........", "##........", "####......", "####......", "####..##..", "########.."],
+  O: ["########..", "##..####..", "##..####..", "##....##..", "##....##..", "##....##..", "##....##..", "########.."],
+  R: ["########..", "##....##..", "##....##..", "########..", "######....", "######....", "####..##..", "####..##.."],
+  E: ["########..", "####......", "####......", "######....", "##........", "##........", "##........", "########.."],
+  M: ["##....##..", "####..##..", "########..", "########..", "##....##..", "##....##..", "##....##..", "##....##.."],
+  N: ["##....##..", "##....##..", "####..##..", "########..", "########..", "##..####..", "##....##..", "##....##.."],
+  V: ["####..##..", "####..##..", "####..##..", "####..##..", "####..##..", "########..", "..####....", "..##......"],
+  L: ["##........", "##........", "##........", "##........", "####......", "####......", "####......", "########.."],
+  0: ["########..", "##....##..", "##....##..", "##....##..", "##..####..", "##..####..", "##..####..", "########.."],
+  1: ["..####....", "..####....", "....##....", "....##....", "....##....", "....##....", "..######..", "..######.."],
+  2: ["########..", "##....##..", "......##..", "########..", "##........", "##........", "##..####..", "########.."],
+  3: ["########..", "##....##..", "......##..", "..######..", "......##..", "......##..", "##....##..", "########.."],
+  4: ["####..##..", "####..##..", "####..##..", "########..", "......##..", "......##..", "......##..", "......##.."],
+  5: ["########..", "##........", "##........", "########..", "....####..", "....####..", "....####..", "########.."],
+  6: ["########..", "##....##..", "##........", "##........", "########..", "##..####..", "##..####..", "########.."],
+  7: ["########..", "....####..", "....####..", "....####..", "..####....", "..##......", "..##......", "..##......"],
+  8: ["########..", "##....##..", "##....##..", "########..", "##..####..", "##..####..", "##..####..", "########.."],
+  9: ["########..", "##..####..", "##..####..", "########..", "##........", "##........", "##....##..", "########.."],
 };
 
 let levels = [];
@@ -195,6 +210,21 @@ function readInput() {
 const TW = 10;
 const TH = 11;
 
+// 보드 아래 상태줄 영역. 원작은 보드 바닥(y=222)보다 3px 위에서 글자가 시작해 8px 높이입니다.
+const STATUS_Y = H * TH - 3;
+const CH = H * TH + 8; // 캔버스 전체 높이 (보드 176 + 상태줄 8)
+
+function drawGlyph(ch, x, y, color) {
+  const rows = STATUS_FONT[ch];
+  if (!rows) return;
+  for (let r = 0; r < rows.length; r++) {
+    const row = rows[r];
+    for (let c = 0; c < row.length; c++) {
+      if (row[c] === "#") px(x + c, y + r, 1, 1, color);
+    }
+  }
+}
+
 function px(x, y, w, h, color) {
   ctx.fillStyle = color;
   ctx.fillRect(x, y, w, h);
@@ -212,11 +242,9 @@ function drawBrick(x, y) {
 }
 
 function drawSolid(x, y) {
-  px(x, y, TW, TH, PAL.solid);
-  px(x, y, TW, 1, PAL.solidHi);
-  px(x, y, 1, TH, PAL.solidHi);
-  px(x, y + TH - 1, TW, 1, PAL.brickDark);
-  px(x + TW - 1, y, 1, TH, PAL.brickDark);
+  // 원작의 단단한 블록은 벽돌색 단색에 줄눈이 없어 옆 타일과 이어져 보입니다.
+  // 레벨 1 윗줄의 1·2 교대가 20px 긴 벽돌로 보이는 이유입니다 (에뮬레이터 캡처로 확인).
+  px(x, y, TW, TH - 1, PAL.brick);
 }
 
 function drawLadder(x, y) {
@@ -457,10 +485,19 @@ function saveHigh(score) {
 }
 
 function updateHud() {
-  $("score").textContent = String(game.score).padStart(6, "0");
-  $("lives").textContent = String(game.lives);
-  $("gold").textContent = String(game.goldLeft);
-  $("level").textContent = String(game.level).padStart(3, "0");
+  // 원작과 같은 28칸 구성: "SCORE"+7자리 + 칸 + "MEN"+3자리 + 칸 + "LEVEL"+3자리
+  const segs = [
+    ["SCORE", PAL.brick], [String(game.score).padStart(7, "0"), PAL.cyan], [" ", PAL.brick],
+    ["MEN", PAL.brick], [String(game.lives).padStart(3, "0"), PAL.cyan], [" ", PAL.brick],
+    ["LEVEL", PAL.brick], [String(game.level).padStart(3, "0"), PAL.cyan],
+  ];
+  let x = 0;
+  for (const [text, color] of segs) {
+    for (const ch of text) {
+      drawGlyph(ch, x, STATUS_Y, color);
+      x += TW;
+    }
+  }
 }
 
 function frame(now) {
@@ -468,9 +505,11 @@ function frame(now) {
   last = now;
 
   if (game) {
+    let input = null;
     if (started) {
       const before = game.state;
-      game.update(dt, readInput());
+      input = readInput();
+      game.update(dt, input);
       if (before === "playing" && game.state === "gameover") {
         saveHigh(game.score);
         showOverlay("GAME OVER", `SCORE ${game.score}`, "RETRY", () => loadLevel(levelIndex));
@@ -484,14 +523,15 @@ function frame(now) {
     }
 
     // smooth visual positions — 애니메이션 단계는 칸을 실제로 옮겼을 때만 바뀝니다
-    const k = Math.min(1, dt / 70);
-    trackVis(visPlayer, game.player, dt, k);
+    // 그림은 키를 누르고 있는 동안에만 넘어갑니다 (누른 시간 ↔ 동작 수).
+    const holding = !!(input && (input.dir || input.up || input.down));
+    trackVis(visPlayer, game.player, dt, holding);
     for (let i = 0; i < game.guards.length; i++) {
       if (!visGuards[i]) {
         const g = game.guards[i];
         visGuards[i] = { x: g.c, y: g.r, phase: 0, pc: g.c, pr: g.r, moving: false, dir: 1, still: 0, anim: 0 };
       }
-      trackVis(visGuards[i], game.guards[i], dt, k);
+      trackVis(visGuards[i], game.guards[i], dt, visGuards[i].moving);
     }
 
     draw(now);
@@ -500,33 +540,53 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-// 원작은 한 칸을 걷는 동안 그림이 두 번 바뀝니다 — 반 걸음마다 다음 동작입니다.
-// 그래서 키를 한 번만 눌러 한 칸 움직여도 동작 두 개가 보이고, 계속 걸으면 3개가 돕니다.
-const ANIM_MS = 130;      // 반 걸음 (걷기 260ms)
+// 원작은 한 칸을 걷는 동안 그림이 한 번 바뀝니다 — 짧게 누르면 한 칸에 동작 1~2개,
+// 더 길게 누르면 2~3개입니다. 걸음(260ms)보다 조금 짧은 200ms 로 잡아 한 칸에 한 번만 넘깁니다.
+const ANIM_MS = 200;
 const STEP_GAP_MS = 260;  // 한 걸음 길이 — 이 시간 동안만 동작이 넘어갑니다
 
-function trackVis(v, ch, dt, k) {
+function trackVis(v, ch, dt, holding = false) {
+  v.holding = holding;
+  if (v.stepMs === undefined) {
+    // 첫 호출: 지금 위치에서 출발하도록 잡아 둡니다
+    v.fromX = v.x; v.fromY = v.y; v.stepT = 0; v.stepMs = SPEED.walk; v.gap = 0;
+  }
   const movedX = ch.c - v.pc;
   const stepped = movedX !== 0 || ch.r !== v.pr;
   if (movedX) v.dir = movedX > 0 ? 1 : -1;
   v.still = stepped ? 0 : v.still + dt;
   v.pc = ch.c;
   v.pr = ch.r;
-  v.x += (ch.c - v.x) * k;
-  v.y += (ch.r - v.y) * k;
-  // 걸음이 시작된 뒤 한 걸음 길이 동안만 그림을 넘깁니다 — 시간을 더 주면 손을 뗀 뒤에도
-  // 동작이 계속 돌아 한 번 누르기에 동작이 3개 나옵니다.
-  if (v.still < STEP_GAP_MS) {
+
+  // 칸과 칸 사이는 일정한 속도로 미끄러집니다. 지수 보간(v.x += (목표-v.x)*k)은
+  // 칸 끝에서 속도가 0 에 가까워져 걸음마다 "멈칫" 하므로, 걸음 시간 동안 선형으로 옮깁니다.
+  if (stepped) {
+    v.fromX = v.x;
+    v.fromY = v.y;
+    v.stepT = 0;
+    // 직전 걸음 간격을 이번 걸음 길이로 씁니다 (걷기·오르기·낙하·경비병 속도가 다름)
+    v.stepMs = v.gap > 20 && v.gap < 600 ? v.gap : SPEED.walk;
+    v.gap = 0;
+  }
+  v.gap += dt;
+  v.stepT += dt;
+  const p = Math.min(1, v.stepT / v.stepMs);
+  v.x = v.fromX + (ch.c - v.fromX) * p;
+  v.y = v.fromY + (ch.r - v.fromY) * p;
+
+  // 보간이 끝나도 다음 걸음까지는 이동 상태를 유지해야 서기 자세가 사이사이 끼지 않습니다
+  const settling = p < 1;
+  v.moving = stepped || settling || v.still < STEP_GAP_MS + 20;
+
+  // 그림은 움직이는 동안 계속 넘어갑니다. 키를 누르고 있는 시간도 포함해야
+  // 손을 뗀 뒤 남은 걸음을 한 자세로 미끄러지지 않습니다.
+  if (v.moving || holding) {
     v.anim += dt;
     while (v.anim >= ANIM_MS) {
       v.anim -= ANIM_MS;
       v.phase = (v.phase + 1) % 3;
     }
-  }
-  // 보간이 끝나도 다음 걸음까지는 이동 상태를 유지해야 서기 자세가 사이사이 끼지 않습니다
-  const settling = Math.abs(ch.c - v.x) > 0.02 || Math.abs(ch.r - v.y) > 0.02;
-  v.moving = stepped || settling || v.still < STEP_GAP_MS + 20;
-  if (!v.moving) {
+  } else {
     // 실제로 멈추면 원작처럼 서기 자세로 돌아갑니다
     v.anim = 0;
     v.phase = 0;
@@ -546,7 +606,7 @@ function pickSprite(v, ch) {
   // 사다리 위에서는 서 있어도 오르는 자세를 유지합니다
   if (tile === TILE.LADDER) return { sprite: v.moving && v.phase ? SPR_CLIMB2 : SPR_CLIMB1, flip: false };
   // 서 있을 때는 다리를 벌린 전용 자세입니다 (달리기 1번 프레임과 다릅니다)
-  if (!v.moving) return { sprite: SPR_STAND, flip };
+  if (!v.moving && !v.holding) return { sprite: SPR_STAND, flip };
   return { sprite: RUN_FRAMES[v.phase], flip };
 }
 
@@ -567,7 +627,7 @@ function drawHoleRim(x, y) {
 }
 
 function draw(now) {
-  px(0, 0, W * TW, H * TH, "#000");
+  px(0, 0, W * TW, CH, "#000");
 
   // 1) 구멍에 빠진 캐릭터를 먼저 그립니다 — 뒤이어 그리는 타일이 구멍 밖으로 나온
   //    부분(다리 등)을 가려서, 원작처럼 블록 두께 안에 들어가 보입니다
@@ -588,6 +648,10 @@ function draw(now) {
       drawTile(game.tileAt(c, r), c * TW, r * TH);
     }
   }
+  // 원작은 마지막 벽돌 줄 아래에 전체 폭으로 이어진 바닥 띠를 그립니다. 16번째 행 위쪽
+  // 4px 을 벽돌색 단색으로 채웁니다 (캡처 실측: 폭 280px, 높이 4px, 줄눈 없음).
+  px(0, (H - 1) * TH, W * TW, 4, PAL.brick);
+
   for (const idx of game.holes.keys()) {
     const c = idx % W, r = (idx / W) | 0;
     if (game.guardAt(c, r) || (game.player.c === c && game.player.r === r)) drawHoleRim(c * TW, r * TH);

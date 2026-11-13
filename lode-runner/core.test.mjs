@@ -219,12 +219,13 @@ test("a short key tap still produces one step", () => {
   assert.equal(g.player.c, 11, "짧게 눌러도 한 칸은 움직여야 합니다");
 });
 
-test("a tap older than the input buffer is ignored", () => {
+test("a short key tap steps immediately", () => {
   const rows = blank();
   floorRow(rows, 5);
   rows[4][10] = TILE.PLAYER;
   const g = new Game(rows);
   g.update(30, { dir: 1 });
+  assert.equal(g.player.c, 11, "누르는 즉시 한 칸 나가야 합니다");
   g.update(SPEED.walk * 3, {}); // 버퍼가 만료된 뒤
-  assert.equal(g.player.c, 10, "오래된 입력으로 움직이면 안 됩니다");
+  assert.equal(g.player.c, 11, "오래된 입력으로 더 움직이면 안 됩니다");
 });
