@@ -154,7 +154,7 @@ let highScore = Number(localStorage.getItem("lodeRunnerHigh") || 0);
 
 // visual interpolation state
 // phase 는 한 칸 이동할 때마다 뒤집힙니다 — 서 있는 동안에는 STAND 자세로 멈춥니다.
-let visPlayer = { x: 0, y: 0, phase: 0, pc: 0, pr: 0, moving: false, dir: 1, still: 0, anim: 0 };
+let visPlayer = { x: 0, y: 0, phase: 0, pr: 0, moving: false, dir: 1 };
 let visGuards = [];
 
 const keys = Object.create(null);
@@ -276,11 +276,10 @@ function drawGold(x, y) {
   px(x + 2, y + 6, 4, 3, PAL.brick);
 }
 
+// 판 구멍은 검정 한 칸입니다. 예전에는 위·왼쪽·오른쪽에 어두운 테두리를 그렸는데,
+// 원작에는 그 테두리가 없어 파낼 때 사각 테두리가 생긴 것처럼 보였습니다 (2026-11-15 동완님 확인).
 function drawHole(x, y) {
   px(x, y, TW, TH, "#000000");
-  px(x, y, TW, 1, "#3a1a08");
-  px(x, y, 1, TH, "#5a2a10");
-  px(x + TW - 1, y, 1, TH, "#5a2a10");
 }
 
 // 캐릭터는 원작 화면에서 딴 그대로 **9×11**(타일 10×11 안에 들어갑니다)입니다.
@@ -288,19 +287,6 @@ function drawHole(x, y) {
 // 서 있는 자세: 가려는 쪽 발은 땅에 디디고 반대 발은 들린 모양이고, 팔은 내려 있습니다.
 // 원작도 정지 자세가 달리기 1번 프레임과 같은 그림입니다.
 const SPR_STAND = [
-  "...#.....",
-  "..###....",
-  "..###....",
-  "...###...",
-  "..###.##.",
-  "##..##.##",
-  "....##...",
-  "...###...",
-  "..##.####",
-  "..##.....",
-  "..##.....",
-];
-const SPR_RUN1 = [
   "...#.....",
   "..###....",
   "..###....",
@@ -435,8 +421,8 @@ function drawTile(t, x, y) {
 function loadLevel(index, { lives = 5, score = 0 } = {}) {
   levelIndex = index;
   game = new Game(levels[index].tiles, { level: index + 1, lives, score });
-  visPlayer = { x: game.player.c, y: game.player.r, phase: 0, pc: game.player.c, pr: game.player.r, moving: false, dir: 1, still: 0, anim: 0 };
-  visGuards = game.guards.map((g) => ({ x: g.c, y: g.r, phase: 0, pc: g.c, pr: g.r, moving: false, dir: 1, still: 0, anim: 0 }));
+  visPlayer = { x: game.player.c, y: game.player.r, phase: 0, pr: game.player.r, moving: false, dir: 1 };
+  visGuards = game.guards.map((g) => ({ x: g.c, y: g.r, phase: 0, pr: g.r, moving: false, dir: 1 }));
   advancing = false;
   elideOverlay();
 }
@@ -500,8 +486,12 @@ function updateHud() {
   }
 }
 
+// 동작을 눈으로 확인하기 위한 배속입니다. 0.5 로 두면 2배 느려지지만, 같은 시간을 눌러도
+// 이동 거리가 절반이라 동작 전환도 절반만 일어납니다 — 느낌을 판단할 때는 1 로 두십시오.
+const SLOWMO = 1;
+
 function frame(now) {
-  const dt = Math.min(50, last ? now - last : 16);
+  const dt = Math.min(50, last ? now - last : 16) * SLOWMO;
   last = now;
 
   if (game) {
@@ -522,16 +512,14 @@ function frame(now) {
       }
     }
 
-    // smooth visual positions — 애니메이션 단계는 칸을 실제로 옮겼을 때만 바뀝니다
-    // 그림은 키를 누르고 있는 동안에만 넘어갑니다 (누른 시간 ↔ 동작 수).
-    const holding = !!(input && (input.dir || input.up || input.down));
-    trackVis(visPlayer, game.player, dt, holding);
+    // 화면 위치·동작 갱신 — 동작은 실제로 이동한 거리에 비례해 넘어갑니다
+    trackVis(visPlayer, game.player, dt);
     for (let i = 0; i < game.guards.length; i++) {
       if (!visGuards[i]) {
         const g = game.guards[i];
-        visGuards[i] = { x: g.c, y: g.r, phase: 0, pc: g.c, pr: g.r, moving: false, dir: 1, still: 0, anim: 0 };
+        visGuards[i] = { x: g.c, y: g.r, phase: 0, pr: g.r, moving: false, dir: 1 };
       }
-      trackVis(visGuards[i], game.guards[i], dt, visGuards[i].moving);
+      trackVis(visGuards[i], game.guards[i], dt);
     }
 
     draw(now);
@@ -540,60 +528,46 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-// 원작은 한 칸을 걷는 동안 그림이 한 번 바뀝니다 — 짧게 누르면 한 칸에 동작 1~2개,
-// 더 길게 누르면 2~3개입니다. 걸음(260ms)보다 조금 짧은 200ms 로 잡아 한 칸에 한 번만 넘깁니다.
-const ANIM_MS = 200;
-const STEP_GAP_MS = 260;  // 한 걸음 길이 — 이 시간 동안만 동작이 넘어갑니다
+// 한 칸을 이동하는 동안 동작이 넘어가는 횟수. 작으면 한 동작이 유지되는 동안 같은 그림이
+// 이동해 미끄러지는 것처럼 보입니다 — 3 이면 한 자세가 3.3px 을 끌고 가서 그렇게 보였습니다 (2026-11-15 동완님 확인).
+const POSE_PER_TILE = 6;
 
-function trackVis(v, ch, dt, holding = false) {
-  v.holding = holding;
-  if (v.stepMs === undefined) {
+function trackVis(v, ch, dt) {
+  if (v.dist === undefined) {
     // 첫 호출: 지금 위치에서 출발하도록 잡아 둡니다
-    v.fromX = v.x; v.fromY = v.y; v.stepT = 0; v.stepMs = SPEED.walk; v.gap = 0;
+    v.dist = 0; v.fromX = v.x; v.fromY = v.y; v.stepT = 0; v.stepMs = SPEED.walk; v.gap = 0;
   }
-  const movedX = ch.c - v.pc;
-  const stepped = movedX !== 0 || ch.r !== v.pr;
-  if (movedX) v.dir = movedX > 0 ? 1 : -1;
-  v.still = stepped ? 0 : v.still + dt;
-  v.pc = ch.c;
-  v.pr = ch.r;
 
-  // 칸과 칸 사이는 일정한 속도로 미끄러집니다. 지수 보간(v.x += (목표-v.x)*k)은
-  // 칸 끝에서 속도가 0 에 가까워져 걸음마다 "멈칫" 하므로, 걸음 시간 동안 선형으로 옮깁니다.
-  if (stepped) {
-    v.fromX = v.x;
+  // 가로 위치는 core 가 주는 소수 위치(ch.x)를 그대로 씁니다 — 주인공은 누르는 동안만,
+  // 경비병은 목표 칸까지 같은 속도로 따라옵니다. 세로만 칸 단위라 보간합니다.
+  if (ch.r !== v.pr) {
     v.fromY = v.y;
+    v.pr = ch.r;
     v.stepT = 0;
-    // 직전 걸음 간격을 이번 걸음 길이로 씁니다 (걷기·오르기·낙하·경비병 속도가 다름)
+    // 직전 걸음 간격을 이번 걸음 길이로 씁니다 (오르기·낙하 속도가 다름)
     v.stepMs = v.gap > 20 && v.gap < 600 ? v.gap : SPEED.walk;
     v.gap = 0;
   }
   v.gap += dt;
   v.stepT += dt;
-  const p = Math.min(1, v.stepT / v.stepMs);
-  v.x = v.fromX + (ch.c - v.fromX) * p;
-  v.y = v.fromY + (ch.r - v.fromY) * p;
+  const k = Math.min(1, v.stepT / v.stepMs);
+  const px = ch.x;
+  const py = v.fromY + (ch.r - v.fromY) * k;
 
-  // 보간이 끝나도 다음 걸음까지는 이동 상태를 유지해야 서기 자세가 사이사이 끼지 않습니다
-  const settling = p < 1;
-  v.moving = stepped || settling || v.still < STEP_GAP_MS + 20;
-
-  // 그림은 움직이는 동안 계속 넘어갑니다. 키를 누르고 있는 시간도 포함해야
-  // 손을 뗀 뒤 남은 걸음을 한 자세로 미끄러지지 않습니다.
-  if (v.moving || holding) {
-    v.anim += dt;
-    while (v.anim >= ANIM_MS) {
-      v.anim -= ANIM_MS;
-      v.phase = (v.phase + 1) % 3;
-    }
-  } else {
-    // 실제로 멈추면 원작처럼 서기 자세로 돌아갑니다
-    v.anim = 0;
-    v.phase = 0;
-  }
+  // 자세는 실제로 이동한 거리에 비례해 넘어갑니다 — 짧게 누르면 한 두 번, 계속 누르면 계속.
+  const moved = Math.abs(px - v.x) + Math.abs(py - v.y);
+  if (Math.abs(px - v.x) > 1e-6) v.dir = px > v.x ? 1 : -1;
+  v.x = px;
+  v.y = py;
+  v.dist += moved;
+  const perPose = 1 / POSE_PER_TILE;
+  while (v.dist >= perPose) { v.dist -= perPose; v.phase = (v.phase + 1) % 3; }
+  v.moving = moved > 1e-4;
 }
 
-const RUN_FRAMES = [SPR_RUN1, SPR_RUN2, SPR_RUN3];
+// 원작의 달리기 1번 프레임은 서기 그림과 픽셀이 똑같아서 따로 두지 않고 SPR_STAND 를
+// 그 자리에 씁니다. 3프레임을 87ms 씩 돌리므로 중립 프레임은 스쳐 지나갑니다.
+const RUN_FRAMES = [SPR_STAND, SPR_RUN2, SPR_RUN3];
 const BAR_FRAMES = [SPR_BAR1, SPR_BAR2, SPR_BAR3];
 
 function pickSprite(v, ch) {
@@ -605,8 +579,7 @@ function pickSprite(v, ch) {
   if (tile === TILE.BAR) return { sprite: BAR_FRAMES[v.phase], flip };
   // 사다리 위에서는 서 있어도 오르는 자세를 유지합니다
   if (tile === TILE.LADDER) return { sprite: v.moving && v.phase ? SPR_CLIMB2 : SPR_CLIMB1, flip: false };
-  // 서 있을 때는 다리를 벌린 전용 자세입니다 (달리기 1번 프레임과 다릅니다)
-  if (!v.moving && !v.holding) return { sprite: SPR_STAND, flip };
+  // 멈춘 뒤에도 서기 자세로 되돌리지 않고 멈춘 그 동작을 그대로 유지합니다
   return { sprite: RUN_FRAMES[v.phase], flip };
 }
 
@@ -618,12 +591,6 @@ function drawCharacter(v, ch, color) {
   const y = Math.round(v.y * TH);
   // 구멍에 빠져도 원작처럼 자르지 않고 칸 위쪽에 맞춰 통째로 그립니다
   drawRunner(x, y, color, sprite, flip);
-}
-
-function drawHoleRim(x, y) {
-  px(x, y, TW, 1, "#3a1a08");
-  px(x, y, 1, TH, "#5a2a10");
-  px(x + TW - 1, y, 1, TH, "#5a2a10");
 }
 
 function draw(now) {
@@ -651,11 +618,6 @@ function draw(now) {
   // 원작은 마지막 벽돌 줄 아래에 전체 폭으로 이어진 바닥 띠를 그립니다. 16번째 행 위쪽
   // 4px 을 벽돌색 단색으로 채웁니다 (캡처 실측: 폭 280px, 높이 4px, 줄눈 없음).
   px(0, (H - 1) * TH, W * TW, 4, PAL.brick);
-
-  for (const idx of game.holes.keys()) {
-    const c = idx % W, r = (idx / W) | 0;
-    if (game.guardAt(c, r) || (game.player.c === c && game.player.r === r)) drawHoleRim(c * TW, r * TH);
-  }
 
   // 3) 나머지 캐릭터
   for (let i = 0; i < game.guards.length; i++) {

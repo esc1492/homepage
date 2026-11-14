@@ -209,23 +209,26 @@ test("player falls into an empty hole", () => {
   assert.ok(g.player.r > 4, "player falls into the hole");
 });
 
-test("a short key tap still produces one step", () => {
+test("a short key tap moves only a fraction of a tile and stops there", () => {
   const rows = blank();
   floorRow(rows, 5);
   rows[4][10] = TILE.PLAYER;
   const g = new Game(rows);
   g.update(30, { dir: 1 }); // 아주 짧게 눌렀다가 뗌
-  g.update(SPEED.walk, {}); // 다음 걸음 시점에는 키가 없음
-  assert.equal(g.player.c, 11, "짧게 눌러도 한 칸은 움직여야 합니다");
+  const tapped = g.player.x;
+  assert.ok(tapped > 10 && tapped < 11, `조금만 움직여야 합니다 (x=${tapped})`);
+  g.update(SPEED.walk * 3, {}); // 키를 뗀 뒤
+  assert.equal(g.player.x, tapped, "손을 뗀 뒤에는 미끄러지지 않아야 합니다");
+  assert.equal(g.player.c, 10, "반 칸을 넘지 않았으므로 칸도 그대로");
 });
 
-test("a short key tap steps immediately", () => {
+test("holding a direction keeps moving while the key is down", () => {
   const rows = blank();
   floorRow(rows, 5);
   rows[4][10] = TILE.PLAYER;
   const g = new Game(rows);
-  g.update(30, { dir: 1 });
-  assert.equal(g.player.c, 11, "누르는 즉시 한 칸 나가야 합니다");
-  g.update(SPEED.walk * 3, {}); // 버퍼가 만료된 뒤
-  assert.equal(g.player.c, 11, "오래된 입력으로 더 움직이면 안 됩니다");
+  g.update(SPEED.walk, { dir: 1 });
+  assert.equal(g.player.c, 11, "한 칸 시간만큼 누르면 한 칸 갑니다");
+  g.update(SPEED.walk * 2, { dir: 1 });
+  assert.equal(g.player.c, 13, "계속 누르면 계속 갑니다");
 });
