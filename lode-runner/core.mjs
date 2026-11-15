@@ -18,9 +18,12 @@ export const TILE = {
 
 const HOLE = 10; // internal: temporary hole
 
-// ms per tile. 원작 화면 캡처에서 잰 간격이 걷기 약 260ms/칸이었는데,
-// 동완님 요청으로 25%씩 두 번 늦춘 뒤(260 → 347 → 463) 10% 다시 올렸습니다 (2026-11-15).
-export const SPEED = { walk: 421, climb: 485, fall: 251, guard: 461 };
+// ms per tile. 원작 화면 캡처에서 잰 값이 기준입니다 — 걷기 약 260ms/칸, climb 300 · fall 155.
+// 2026-11-15 이력: 네 값을 1.619배 늦췄다(421) → 달리기 애니메이션을 왕복으로 고친 뒤 원작 속도(260)로
+// 되돌렸다 → 걷기를 240·230 으로 올려 가며 감각을 봤다 → 최종적으로 **걷기는 원작값 260**, **경비병은
+// 원작값(285)의 50% 느린 428** 로 정했습니다. 걷기를 바꿀 때 `POSE_PER_TILE` 은 건드리지 마십시오
+// (거리 비례라 걸음이 칸에 붙어 유지됩니다).
+export const SPEED = { walk: 260, climb: 300, fall: 155, guard: 428 };
 export const DIG_MS = 320;
 export const HOLE_MS = 5200;
 export const TRAP_MS = 2000; // 경비병이 구멍에서 기어 나오기까지 (주인공은 나오지 못함)
