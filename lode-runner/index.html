@@ -52,8 +52,6 @@
     color: var(--bg); background: var(--gold);
     border: 0; border-radius: 3px; padding: 8px 18px; cursor: pointer;
   }
-  /* 방향키와 키 설명을 자기 높이만큼 아래로 내립니다 (보드 아래 여백을 그만큼 확보). */
-  .controls { display: flex; flex-direction: column; gap: 10px; transform: translateY(100%); }
   .touch {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
     width: 50%; margin: 0 auto;
@@ -77,17 +75,15 @@
     <canvas id="screen" width="280" height="184"></canvas>
     <div id="overlay" class="overlay hidden"><div class="big"></div><div class="sub"></div><button hidden></button></div>
   </div>
-  <div class="controls">
-    <div class="touch">
-      <button data-k="digL">U</button>
-      <button data-k="up">▲</button>
-      <button data-k="digR">O</button>
-      <button data-k="left">◀</button>
-      <button data-k="down">▼</button>
-      <button data-k="right">▶</button>
-    </div>
-    <p class="help">← → 이동 · ↑ ↓ 사다리 · U 왼쪽 파기 · O 오른쪽 파기 · I J K L 도 이동</p>
+  <div class="touch">
+    <button data-k="digL">U</button>
+    <button data-k="up">▲</button>
+    <button data-k="digR">O</button>
+    <button data-k="left">◀</button>
+    <button data-k="down">▼</button>
+    <button data-k="right">▶</button>
   </div>
+  <p class="help">← → 이동 · ↑ ↓ 사다리 · U 왼쪽 파기 · O 오른쪽 파기 · I J K L 도 이동</p>
 </div>
 
 <script type="module">
