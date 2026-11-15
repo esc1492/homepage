@@ -27,7 +27,7 @@
     touch-action: manipulation;
   }
   .game { width: min(920px, 100%); display: flex; flex-direction: column; gap: 10px; }
-  .stage { position: relative; margin: 0 auto; }
+  .stage { position: relative; }
   canvas {
     display: block; width: 100%; height: auto;
     image-rendering: pixelated;
@@ -52,6 +52,8 @@
     color: var(--bg); background: var(--gold);
     border: 0; border-radius: 3px; padding: 8px 18px; cursor: pointer;
   }
+  /* 방향키와 키 설명을 자기 높이만큼 아래로 내립니다 (보드 아래 여백을 그만큼 확보). */
+  .controls { display: flex; flex-direction: column; gap: 10px; transform: translateY(100%); }
   .touch {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
     width: 50%; margin: 0 auto;
@@ -75,15 +77,17 @@
     <canvas id="screen" width="280" height="184"></canvas>
     <div id="overlay" class="overlay hidden"><div class="big"></div><div class="sub"></div><button hidden></button></div>
   </div>
-  <div class="touch">
-    <button data-k="digL">U</button>
-    <button data-k="up">▲</button>
-    <button data-k="digR">O</button>
-    <button data-k="left">◀</button>
-    <button data-k="down">▼</button>
-    <button data-k="right">▶</button>
+  <div class="controls">
+    <div class="touch">
+      <button data-k="digL">U</button>
+      <button data-k="up">▲</button>
+      <button data-k="digR">O</button>
+      <button data-k="left">◀</button>
+      <button data-k="down">▼</button>
+      <button data-k="right">▶</button>
+    </div>
+    <p class="help">← → 이동 · ↑ ↓ 사다리 · U 왼쪽 파기 · O 오른쪽 파기 · I J K L 도 이동</p>
   </div>
-  <p class="help">← → 이동 · ↑ ↓ 사다리 · U 왼쪽 파기 · O 오른쪽 파기 · I J K L 도 이동</p>
 </div>
 
 <script type="module">
@@ -99,20 +103,6 @@ import { Game, TILE, W, H, SPEED } from "/lode-runner/core.mjs";
 const cvs = document.getElementById("screen");
 const ctx = cvs.getContext("2d");
 ctx.imageSmoothingEnabled = false;
-
-// 픽셀아트는 화면 배율이 **정수**여야 선 굵기가 고르게 나옵니다. 폭에 그대로 맞추면 3.29배가 되어
-// 1px 선이 어떤 곳은 3px, 어떤 곳은 4px 로 그려져 캐릭터 선이 들쭉날쭉해 보입니다. 무대(.stage)를
-// 들어가는 가장 큰 정수 배율로 맞춰 캔버스와 오버레이 폭을 함께 정합니다 (2026-11-15 동완님 요청).
-function fitCanvas() {
-  const BORDER = 4; // 캔버스 테두리 2px × 2 (width 에 포함됩니다)
-  const avail = document.querySelector(".game").clientWidth;
-  const scale = Math.max(1, Math.floor((avail - BORDER) / cvs.width));
-  const w = cvs.width * scale + BORDER;
-  cvs.style.width = `${w}px`;
-  cvs.parentElement.style.width = `${w}px`;
-}
-addEventListener("resize", fitCanvas);
-fitCanvas();
 
 const $ = (id) => document.getElementById(id);
 const overlay = $("overlay");

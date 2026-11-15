@@ -72,11 +72,11 @@ test("digging creates a hole and refilling kills a guard in it", () => {
 
 test("hole refill kills the player standing in it", () => {
   const rows = blank();
-  floorRow(rows, 5);
-  rows[4][10] = TILE.PLAYER;
+  floorRow(rows, 15); // 아래가 막힌 바닥 구멍
+  rows[14][10] = TILE.PLAYER;
   const g = new Game(rows);
   g.dig(-1);
-  g.player.c = 9; g.player.r = 5;
+  g.player.c = 9; g.player.r = 15;
   g.time = HOLE_MS + 1;
   g.updateHoles();
   assert.equal(g.state, "dead");
@@ -184,29 +184,99 @@ test("guard still in the hole when it refills dies", () => {
   assert.equal(g.score, 150, "가둔 75 + 죽은 75");
 });
 
-test("player trapped in a hole cannot climb out", () => {
+test("player trapped in a bottom hole cannot climb out", () => {
+  const rows = blank();
+  floorRow(rows, 15); // 아래가 막힌 바닥 구멍
+  rows[14][10] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.dig(-1); // hole at (9,15)
+  g.player.c = 9; g.player.r = 15;
+  g.update(SPEED.walk * 3, { up: true });
+  assert.equal(g.player.c, 9);
+  assert.equal(g.player.r, 15, "구멍에 갇혀 나올 수 없습니다");
+});
+
+test("bottom-row hole traps the player instead of dropping him off the board", () => {
+  const rows = blank();
+  floorRow(rows, 14); // 마지막 벽돌 줄 — 아래 15행은 비어 있고 그 밖으로는 보드 끝
+  rows[13][10] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.dig(-1); // hole at (9,14)
+  g.update(DIG_MS + 1, {});
+  g.update(SPEED.walk + 1, { dir: -1 });
+  for (let i = 0; i < 20; i++) g.update(SPEED.fall, { dir: -1 });
+  assert.equal(g.player.r, 14, "보드 밖으로 떨어지지 않고 구멍에 갇혀야 합니다");
+});
+
+test("player falls through a hole dug in a middle floor", () => {
   const rows = blank();
   floorRow(rows, 5);
+  floorRow(rows, 10); // 아래 층
   rows[4][10] = TILE.PLAYER;
   const g = new Game(rows);
   g.dig(-1); // hole at (9,5)
-  g.player.c = 9; g.player.r = 5;
-  g.update(SPEED.walk * 3, { up: true });
-  assert.equal(g.player.c, 9);
-  assert.equal(g.player.r, 5, "구멍에 갇혀 나올 수 없습니다");
-});
-
-test("player falls into an empty hole", () => {
-  const rows = blank();
-  floorRow(rows, 5);
-  rows[4][10] = TILE.PLAYER;
-  const g = new Game(rows);
-  g.dig(-1);
   g.update(DIG_MS + 1, {});
   g.update(SPEED.walk + 1, { dir: -1 }); // step onto (9,4), unsupported
   assert.equal(g.player.c, 9);
-  g.update(SPEED.fall + 10, { dir: -1 });
-  assert.ok(g.player.r > 4, "player falls into the hole");
+  for (let i = 0; i < 20; i++) g.update(SPEED.fall, { dir: -1 });
+  assert.ok(g.player.r > 5, "구멍에 갇히지 않고 통과해야 합니다");
+  assert.equal(g.player.r, 9, "아래 층 위에 내려서야 합니다");
+  assert.equal(g.state, "playing");
+});
+
+test("player falling onto a bar hangs from it instead of standing above", () => {
+  const rows = blank();
+  floorRow(rows, 9);
+  for (let c = 10; c <= 19; c++) rows[11][c] = TILE.BAR;
+  rows[8][12] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.dig(1); // hole at (13,9)
+  for (let i = 0; i < 40; i++) g.update(16, {}); // 파기 모션
+  for (let i = 0; i < 400; i++) {
+    g.update(16, { dir: 1 });
+    if (g.player.r >= 11) break;
+  }
+  assert.equal(g.player.r, 11, "줄이 있는 행까지 내려와야 합니다");
+  assert.equal(g.tileAt(g.player.c, g.player.r), TILE.BAR, "줄을 잡아야 합니다");
+});
+
+test("pressing down drops the player off a bar", () => {
+  const rows = blank();
+  floorRow(rows, 14);
+  for (let c = 10; c <= 19; c++) rows[11][c] = TILE.BAR;
+  rows[11][13] = TILE.BAR;
+  rows[10][13] = TILE.PLAYER; // 줄 칸으로 내려와 매달린 상태
+  const g = new Game(rows);
+  g.player.c = 13; g.player.r = 11; g.player.x = 13;
+  for (let i = 0; i < 60; i++) g.update(16, { down: true });
+  assert.equal(g.player.r, 13, "줄을 놓고 14행 바닥 위까지 떨어져야 합니다");
+});
+
+test("hole directly above a bar lets the player grab the bar", () => {
+  const rows = blank();
+  floorRow(rows, 1);
+  for (let c = 8; c <= 17; c++) rows[2][c] = TILE.BAR;
+  rows[0][12] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.dig(-1); // hole at (11,1) — 바로 아래 (11,2) 가 줄
+  for (let i = 0; i < 40; i++) g.update(16, {});
+  for (let i = 0; i < 200; i++) {
+    g.update(16, { dir: -1 });
+    if (g.player.r >= 2) break;
+  }
+  assert.equal(g.player.r, 2, "줄이 있는 칸으로 내려와야 합니다");
+  assert.equal(g.tileAt(g.player.c, g.player.r), TILE.BAR, "줄을 잡아야 합니다");
+});
+
+test("pressing down on a bar above a brick keeps the player hanging", () => {
+  const rows = blank();
+  for (let c = 10; c <= 19; c++) rows[11][c] = TILE.BAR;
+  rows[12][13] = TILE.BRICK; // 줄 바로 아래가 벽돌
+  rows[10][13] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.player.c = 13; g.player.r = 11; g.player.x = 13;
+  for (let i = 0; i < 60; i++) g.update(16, { down: true });
+  assert.equal(g.player.r, 11, "벽돌 속으로 들어가면 안 됩니다");
 });
 
 test("a short key tap moves only a fraction of a tile and stops there", () => {

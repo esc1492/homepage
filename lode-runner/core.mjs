@@ -106,7 +106,9 @@ export class Game {
     if (t === TILE.LADDER || t === TILE.BAR) return true;
     const b = this.tileAt(c, r + 1);
     if (b === HOLE) return !!this.guardAt(c, r + 1);
-    return b === TILE.BRICK || b === TILE.SOLID || b === TILE.TRAPDOOR || b === TILE.LADDER || b === TILE.BAR;
+    // 줄(BAR)은 밟고 서는 바닥이 아닙니다 — 떨어지는 캐릭터는 줄 칸까지 내려와 매달려야 합니다.
+    // 여기에 BAR 를 넣으면 줄 한 칸 위에 그대로 서서 줄을 잡지 않는 것처럼 보입니다 (2026-11-15).
+    return b === TILE.BRICK || b === TILE.SOLID || b === TILE.TRAPDOOR || b === TILE.LADDER;
   }
 
   guardAt(c, r) {
@@ -165,8 +167,30 @@ export class Game {
     if (this.time < p.digUntil) return;
 
     const idx = p.r * W + p.c;
-    // 원작처럼 구멍에 빠지면 구멍이 메워질 때까지 나올 수 없습니다
-    if (this.holes.has(idx)) return;
+    // 구멍에 빠지면 구멍이 메워질 때까지 나올 수 없습니다. 단 구멍 아래가 뚫려 있으면(중간 층을 판
+    // 경우) 구멍을 통과해 아래 층으로 계속 떨어집니다 — 아래가 막힌 구멍에서만 갇힙니다 (2026-11-15).
+    if (this.holes.has(idx)) {
+      // 줄(BAR)은 밟고 서는 층이 아니라 매달리는 것이므로 "막힌 아래"에 넣지 않습니다 — 구멍
+      // 바로 아래가 줄이면 그 줄을 잡아야 합니다 (2026-11-15).
+      const solid = (t) => t === TILE.BRICK || t === TILE.SOLID || t === TILE.TRAPDOOR || t === TILE.LADDER;
+      const below = this.tileAt(p.c, p.r + 1);
+      if (solid(below)) return; // 아래가 막힌 구멍
+      // 아래에 디딜 곳이 아예 없으면(마지막 벽돌 줄을 판 경우) 보드 밖으로 떨어지지 않도록 갇힙니다.
+      // 바로 아래가 줄이면 거기 매달리므로 그 자체로 디딜 곳입니다.
+      let landing = below === TILE.BAR;
+      for (let rr = p.r + 2; !landing && rr < H; rr++) {
+        const t = this.tileAt(p.c, rr);
+        if (solid(t) || t === TILE.BAR) landing = true;
+      }
+      if (!landing) return;
+      p.x = p.c;
+      p.vt += dt;
+      while (p.vt >= SPEED.fall && this.state === "playing") {
+        p.vt -= SPEED.fall;
+        this.moveChar(p, p.c, p.r + 1);
+      }
+      return;
+    }
 
     // 발밑이 비면 걷기보다 낙하가 먼저입니다 (구멍 위 포함)
     if (!this.supported(p)) {
@@ -201,6 +225,21 @@ export class Game {
       }
       return;
     }
+
+    // 줄에 매달려 있거나 줄을 옮겨 가는 중에 아래를 누르면 손을 놓고 떨어집니다.
+    // 줄 칸은 supportedAt 이 그 자체로 디딤으로 보므로, 여기서 직접 아래로 내려보냅니다 (2026-11-15).
+    // 바로 아래가 벽돌·단단한 블록·트랩도어면 뚫고 들어갈 수 없으므로 그대로 매달려 있습니다.
+    if (input.down && this.tileAt(p.c, p.r) === TILE.BAR && this.walkableAt(p.c, p.r + 1)) {
+      p.climbing = false;
+      p.x = p.c;
+      p.vt += dt;
+      while (p.vt >= SPEED.fall && this.state === "playing") {
+        p.vt -= SPEED.fall;
+        this.moveChar(p, p.c, p.r + 1);
+      }
+      return;
+    }
+
     p.climbing = false;
     p.vt = 0;
 
