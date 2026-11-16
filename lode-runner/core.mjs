@@ -25,11 +25,41 @@ const HOLE = 10; // internal: temporary hole
 // (거리 비례라 걸음이 칸에 붙어 유지됩니다).
 export const SPEED = { walk: 260, climb: 300, fall: 155, guard: 428 };
 export const DIG_MS = 320;
+// 단계별 지속 시간(ms). 앞 세 단계는 기둥이 차례로 서는 단계, 뒤 세 단계는 높이가 낮아지는
+// 단계로, 뒤쪽을 2배 느리게 보여 줍니다 (2026-11-16 동완님 요청). 합계가 애니메이션 길이입니다 —
+// 입력 잠금(DIG_MS 320ms)과는 별개라, 잠금이 풀린 뒤에도 기둥이 낮아지는 모습은 이어집니다.
+// 2026-11-16 두 번째 조정: 전체를 25% 느리게 (53·106 → 66·133).
+export const DIG_STAGE_MS = [66, 66, 66, 133, 133, 133];
+export const DIG_ANIM_MS = DIG_STAGE_MS.reduce((a, b) => a + b, 0); // 애니메이션 전체 길이(597ms)
 export const HOLE_MS = 5200;
+// 구멍이 메워지는 마지막 구간입니다. 이 동안 벽돌이 역삼각형으로 서서히 채워지고,
+// 절반 지점에서 구멍에 갇힌 캐릭터가 죽습니다 (2026-11-16 동완님 요청).
+// 2026-11-16 두 번째 조정: 메워지는 속도를 50% 느리게 (400 → 600ms).
+export const REFILL_MS = 600;
+export const REFILL_STAGES = 5;
 export const TRAP_MS = 2000; // 경비병이 구멍에서 기어 나오기까지 (주인공은 나오지 못함)
 export const SCORE_GOLD = 250;
 export const SCORE_GUARD = 75; // 가둘 때 +75, 구멍이 메워져 죽을 때 +75
 export const SCORE_LEVEL = 1500;
+
+// 파기 애니메이션 단계: 판 직후부터 DIG_STAGE_MS 표를 따라 0→5 로 진행하고, 끝나면 -1(구멍만 남음).
+export function digStage(dugAt, now) {
+  const t = now - dugAt;
+  if (t < 0) return -1;
+  let acc = 0;
+  for (let i = 0; i < DIG_STAGE_MS.length; i++) {
+    acc += DIG_STAGE_MS[i];
+    if (t < acc) return i;
+  }
+  return -1;
+}
+
+// 메워짐 애니메이션 단계: refillAt 의 앞 REFILL_MS 구간에서 0→4 로 진행하고, 그 밖이면 -1.
+export function refillStage(refillAt, now) {
+  const start = refillAt - REFILL_MS;
+  if (now < start || now >= refillAt) return -1;
+  return Math.min(REFILL_STAGES - 1, Math.floor(((now - start) / REFILL_MS) * REFILL_STAGES));
+}
 
 export function parseLevel(map) {
   const tiles = new Uint8Array(W * H);
@@ -387,22 +417,24 @@ export class Game {
     if (this.tileAt(tc, tr - 1) === TILE.LADDER) return;
     const idx = tr * W + tc;
     if (this.holes.has(idx)) return;
-    this.holes.set(idx, { refillAt: this.time + HOLE_MS });
+    this.holes.set(idx, { refillAt: this.time + HOLE_MS, dugAt: this.time });
     p.digUntil = this.time + DIG_MS;
     p.dir = dir;
   }
 
   updateHoles() {
     for (const [idx, h] of [...this.holes]) {
-      if (this.time >= h.refillAt) {
-        const c = idx % W;
-        const r = (idx / W) | 0;
-        this.holes.delete(idx);
-        if (this.player.c === c && this.player.r === r) { this.killPlayer(); continue; }
+      const c = idx % W;
+      const r = (idx / W) | 0;
+      // 메워지기 절반 지점에서 갇힌 캐릭터가 죽습니다 — 그 뒤 남은 절반 동안 벽돌이 채워집니다.
+      if (!h.crushed && this.time >= h.refillAt - REFILL_MS / 2) {
+        h.crushed = true;
+        if (this.player.c === c && this.player.r === r) this.killPlayer();
         for (const g of this.guards) {
           if (g.c === c && g.r === r) { g.dead = true; this.score += SCORE_GUARD; }
         }
       }
+      if (this.time >= h.refillAt) this.holes.delete(idx);
     }
     if (this.guards.some((g) => g.dead)) this.guards = this.guards.filter((g) => !g.dead);
   }

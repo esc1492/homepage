@@ -94,7 +94,7 @@
 <script type="module" src="/shared/sitenav.mjs"></script>
 
 <script type="module">
-import { Game, TILE, W, H, SPEED } from "/lode-runner/core.mjs";
+import { Game, TILE, W, H, SPEED, digStage, DIG_ANIM_MS, refillStage } from "/lode-runner/core.mjs";
 
 const cvs = document.getElementById("screen");
 const ctx = cvs.getContext("2d");
@@ -116,6 +116,8 @@ const PAL = {
   door: "#5a3a1a",
   doorHi: "#7a4a22",
   cyan: "#70a4b2",
+  cyanDark: "#3f6f7d",
+  dirt: "#a1684b",
 };
 
 // 상태줄 글꼴 — 원작 화면에서 딴 10×8 글리프입니다 (스프라이트와 같은 방식).
@@ -278,8 +280,75 @@ function drawGold(x, y) {
 
 // 판 구멍은 검정 한 칸입니다. 예전에는 위·왼쪽·오른쪽에 어두운 테두리를 그렸는데,
 // 원작에는 그 테두리가 없어 파낼 때 사각 테두리가 생긴 것처럼 보였습니다 (2026-11-15 동완님 확인).
-function drawHole(x, y) {
+// 판 직후에는 원작처럼 시안색 물덩어리와 흰 흙 부스러기가 생겼다가 아래로 가라앉습니다 (2026-11-16).
+function drawHole(x, y, hole, now) {
   px(x, y, TW, TH, "#000000");
+  if (!hole) return;
+  const rs = refillStage(hole.refillAt, now);
+  if (rs >= 0) { drawRefill(x, y, rs); return; }
+  const stage = digStage(hole.dugAt, now);
+  if (stage >= 0) drawDigSplash(x, y, stage, now - hole.dugAt);
+}
+
+// 메워질 때는 **아래에서부터** 벽돌이 올라옵니다. 채움 경계는 가운데가 가장 낮은 V 라서,
+// 아직 비어 있는 윗부분이 **역삼각형(▽)으로 줄어듭니다** (2026-11-16 동완님 지적으로
+// 위→아래 채움을 뒤집었습니다). 표 길이는 core 의 REFILL_STAGES(5)와 같아야 합니다.
+const REFILL_HEIGHTS = [3, 5, 7, 9, TH]; // 채워진 높이(px)
+const REFILL_DIPS = [2, 3, 4, 5, 0]; // 가운데가 덜 찬 정도(px)
+
+function drawRefill(x, y, stage) {
+  drawBrick(x, y);
+  const s = Math.min(stage, REFILL_HEIGHTS.length - 1);
+  const base = REFILL_HEIGHTS[s];
+  const dip = REFILL_DIPS[s];
+  for (let c = 0; c < TW; c++) {
+    const t = Math.abs(c - (TW - 1) / 2) / ((TW - 1) / 2); // 0(가운데)~1(가장자리)
+    const h = Math.min(TH, base - Math.round(dip * (1 - t)));
+    if (h < TH) px(x + c, y, 1, TH - h, "#000000");
+  }
+}
+
+// 원작(C64) 화면을 프레임 단위로 떠서 옮긴 단계입니다 (2026-11-16 동완님 설명으로 정정).
+// 물은 칸 **위쪽에서 시작해 아래로 내려오면서** 벽돌을 지웁니다 — 한꺼번에 파이지 않습니다.
+// 물이 지나간 만큼 위가 검게 비고, 물의 앞선(수위) 위로 **막대그래프 모양의 시안 기둥 세 개**가
+// 솟습니다. 기둥 높이는 3·5·2 라 가운데가 가장 높은 **산 모양**입니다 — 물의 앞선에 기둥을
+// 아래로 매달면 역삼각형이 되어 원작과 다릅니다 (2026-11-16 동완님 지적).
+const DIG_LEVELS = [4, 5, 6, 8, 9, TH]; // 단계별로 물이 내려온 깊이(px). 마지막 단계는 칸 전체
+const DIG_BARS = [
+  [3, 0, 0], // 왼쪽 작은 기둥만
+  [3, 5, 0], // 가운데 큰 기둥까지
+  [3, 5, 2], // 오른쪽 작은 기둥까지
+  [2, 3, 1],
+  [1, 2, 1],
+  [0, 1, 0],
+];
+// 흙 조각 7개 — [x 오프셋, 높이 계수, 사라지는 시점(0~1)]. 벽돌 맨 위에서 시작해 작은 블록
+// 두 개 높이(약 11px)까지 불규칙하게 올라가다가, 조각마다 조금씩 다른 시점에 사라집니다
+// (2026-11-16 동완님 요청 — 모양은 랜덤이어도 됩니다).
+const DIRT_DOTS = [
+  [0, 0.6, 0.85], [2, 0.95, 1], [3, 0.35, 0.7], [5, 0.8, 0.95],
+  [7, 0.5, 0.75], [8, 1, 0.9], [9, 0.25, 0.6],
+];
+const DIRT_RISE = 11; // 작은 블록 두 개 높이 (2026-11-16 동완님 지적으로 22 → 11, 절반)
+
+function drawDigSplash(x, y, stage, elapsed) {
+  const idx = Math.max(0, Math.min(DIG_LEVELS.length - 1, stage));
+  const level = DIG_LEVELS[idx];
+  drawBrick(x, y); // 아직 지워지지 않은 아래쪽 벽돌
+  px(x, y, TW, level, "#000000"); // 물이 지나간 윗부분은 검게 빕니다
+  const heights = DIG_BARS[idx];
+  for (let i = 0; i < 3; i++) {
+    const h = heights[i];
+    if (h <= 0) continue;
+    const len = Math.min(h, level); // 물 위(검게 빈 곳)로 솟을 수 있는 만큼만
+    if (len > 0) px(x + 2 + i * 2, y + level - len, 2, len, PAL.cyan); // 기둥끼리 간격 없이 붙입니다
+  }
+  // 흙은 단계가 아니라 경과 시간으로 움직여야 자연스럽게 떠오릅니다 (단계는 66~133ms 로 끊깁니다).
+  const p = Math.min(1, elapsed / DIG_ANIM_MS);
+  for (const [dx, k, life] of DIRT_DOTS) {
+    if (p >= life) continue;
+    px(x + dx, y - 1 - Math.round(p * DIRT_RISE * k), 1, 1, PAL.dirt);
+  }
 }
 
 // 캐릭터는 원작 화면에서 딴 그대로 **9×11**(타일 10×11 안에 들어갑니다)입니다.
@@ -406,7 +475,7 @@ function drawRunner(x, y, color, sprite, flip = false) {
   }
 }
 
-function drawTile(t, x, y) {
+function drawTile(t, x, y, hole = null, now = 0) {
   switch (t) {
     case TILE.BRICK: drawBrick(x, y); break;
     case TILE.SOLID: drawSolid(x, y); break;
@@ -414,7 +483,7 @@ function drawTile(t, x, y) {
     case TILE.BAR: drawBar(x, y); break;
     case TILE.TRAPDOOR: drawTrapdoor(x, y); break;
     case TILE.GOLD: drawGold(x, y); break;
-    case 10: drawHole(x, y); break;
+    case 10: drawHole(x, y, hole, now); break;
     default: break; // empty / hidden
   }
 }
@@ -517,11 +586,13 @@ function frame(now) {
 
     // 화면 위치·동작 갱신 — 동작은 실제로 이동한 거리에 비례해 넘어갑니다
     trackVis(visPlayer, game.player, dt);
+    // 경비병이 구멍에 갇혀 죽으면 core 의 배열에서 빠지므로 인덱스 짝이 어긋납니다. 그대로 두면
+    // 살아 있는 경비병이 죽은 경비병의 위치를 물려받아 **바닥 아래에 그려지는** 것처럼 보였습니다
+    // (2026-11-16 실제 발생). 개수가 달라지면 다시 만듭니다.
+    if (visGuards.length !== game.guards.length) {
+      visGuards = game.guards.map((g) => ({ x: g.c, y: g.r, phase: 0, pr: g.r, moving: false, dir: 1 }));
+    }
     for (let i = 0; i < game.guards.length; i++) {
-      if (!visGuards[i]) {
-        const g = game.guards[i];
-        visGuards[i] = { x: g.c, y: g.r, phase: 0, pr: g.r, moving: false, dir: 1 };
-      }
       trackVis(visGuards[i], game.guards[i], dt);
     }
 
@@ -620,7 +691,8 @@ function draw(now) {
       const idx = r * W + c;
       if (game.holes.has(idx) && game.guardAt(c, r)) continue;
       if (game.holes.has(idx) && game.player.c === c && game.player.r === r) continue;
-      drawTile(game.tileAt(c, r), c * TW, r * TH);
+      const hole = game.holes.get(idx);
+      drawTile(game.tileAt(c, r), c * TW, r * TH, hole, game.time);
     }
   }
   // 원작은 마지막 벽돌 줄 아래에 전체 폭으로 이어진 바닥 띠를 그립니다. 16번째 행 위쪽

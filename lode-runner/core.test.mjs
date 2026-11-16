@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { Game, parseLevel, TILE, HOLE_MS, DIG_MS, TRAP_MS, SPEED } from "./core.mjs";
+import { Game, parseLevel, TILE, HOLE_MS, DIG_MS, TRAP_MS, SPEED, digStage, refillStage, REFILL_MS, REFILL_STAGES } from "./core.mjs";
 
 function blank() {
   return Array.from({ length: 16 }, () => Array(28).fill(0));
@@ -80,6 +80,54 @@ test("brick directly below a ladder cannot be dug", () => {
   assert.equal(g.holes.size, 0, "사다리 밑 벽돌은 구멍이 파지면 안 됩니다");
   g.dig(1); // 반대쪽 (11,6) 은 위가 비어 있음
   assert.ok(g.holes.has(6 * 28 + 11), "사다리가 없는 쪽은 팔려야 합니다");
+});
+
+test("dig records its start time and walks the animation stages", () => {
+  const rows = blank();
+  floorRow(rows, 6);
+  rows[5][10] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.time = 500;
+  g.dig(-1);
+  const hole = g.holes.get(6 * 28 + 9);
+  assert.equal(hole.dugAt, 500, "판 시각을 기억해야 합니다");
+  assert.equal(digStage(hole.dugAt, 500), 0);
+  assert.equal(digStage(hole.dugAt, 565), 0);
+  assert.equal(digStage(hole.dugAt, 566), 1);
+  assert.equal(digStage(hole.dugAt, 632), 2);
+  assert.equal(digStage(hole.dugAt, 698), 3, "여기서부터는 두 배 느립니다");
+  assert.equal(digStage(hole.dugAt, 831), 4);
+  assert.equal(digStage(hole.dugAt, 964), 5);
+  assert.equal(digStage(hole.dugAt, 1097), -1, "애니메이션이 끝나면 구멍만 남습니다");
+});
+
+test("hole refill walks its stages and crushes its occupant at the halfway point", () => {
+  const rows = blank();
+  floorRow(rows, 5);
+  rows[4][10] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.dig(-1); // hole at (9,5)
+  const idx = 5 * 28 + 9;
+  const hole = g.holes.get(idx);
+  assert.equal(hole.refillAt, HOLE_MS);
+  assert.equal(refillStage(hole.refillAt, HOLE_MS - REFILL_MS - 1), -1, "아직 메워지기 전");
+  assert.equal(refillStage(hole.refillAt, HOLE_MS - REFILL_MS), 0);
+  assert.equal(refillStage(hole.refillAt, HOLE_MS - 1), REFILL_STAGES - 1);
+  assert.equal(refillStage(hole.refillAt, HOLE_MS), -1, "다 메워지면 끝");
+  const guard = { c: 9, r: 5, pc: 9, pr: 5, dir: 1, timer: 0, digUntil: 0, trappedAt: 0, moving: false };
+  g.guards.push(guard);
+  g.time = HOLE_MS - REFILL_MS / 2 - 1;
+  g.updateHoles();
+  assert.equal(g.guards.length, 1, "절반 전에는 경비병이 살아 있습니다");
+  assert.ok(g.holes.has(idx), "구멍은 아직 남아 있습니다");
+  g.time = HOLE_MS - REFILL_MS / 2;
+  g.updateHoles();
+  assert.equal(g.guards.length, 0, "절반에서 경비병이 죽습니다");
+  assert.equal(g.score, 75);
+  assert.ok(g.holes.has(idx), "메워질 때까지 구멍은 남아 있습니다");
+  g.time = HOLE_MS;
+  g.updateHoles();
+  assert.equal(g.holes.size, 0, "다 메워지면 구멍이 사라집니다");
 });
 
 test("hole refill kills the player standing in it", () => {
