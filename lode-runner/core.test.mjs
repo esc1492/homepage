@@ -130,6 +130,27 @@ test("hole refill walks its stages and crushes its occupant at the halfway point
   assert.equal(g.holes.size, 0, "다 메워지면 구멍이 사라집니다");
 });
 
+test("a guard that enters the hole after halfway dies when it closes", () => {
+  const rows = blank();
+  floorRow(rows, 5);
+  rows[4][10] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.dig(-1); // hole at (9,5)
+  const idx = 5 * 28 + 9;
+  const hole = g.holes.get(idx);
+  g.time = hole.refillAt - REFILL_MS / 2; // 절반 시점에 아무도 없어 crushed 만 켜집니다
+  g.updateHoles();
+  g.guards.push({ c: 9, r: 5, pc: 9, pr: 5, dir: 1, timer: 0, digUntil: 0, trappedAt: 0, moving: false });
+  g.time = hole.refillAt - 1;
+  g.updateHoles();
+  assert.equal(g.guards.length, 1, "메워지기 직전까지는 살아 있습니다");
+  g.time = hole.refillAt;
+  g.updateHoles();
+  assert.equal(g.guards.length, 0, "벽돌이 닫히는 순간 죽습니다");
+  assert.equal(g.score, 75);
+  assert.equal(g.holes.size, 0);
+});
+
 test("hole refill kills the player standing in it", () => {
   const rows = blank();
   floorRow(rows, 15); // 아래가 막힌 바닥 구멍

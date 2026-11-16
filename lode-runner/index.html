@@ -465,8 +465,9 @@ const SPR_BAR3 = [
   "...##.##.",
 ];
 
-function drawRunner(x, y, color, sprite, flip = false) {
+function drawRunner(x, y, color, sprite, flip = false, clipBottom = Infinity) {
   for (let r = 0; r < sprite.length; r++) {
+    if (y + r >= clipBottom) break; // 메워지는 벽돌에 묻히는 부분은 그리지 않습니다
     const row = sprite[r];
     for (let c = 0; c < row.length; c++) {
       if (row[c] !== "#") continue;
@@ -662,36 +663,45 @@ function pickSprite(v, ch) {
   return { sprite: RUN_FRAMES[RUN_SEQ[v.phase % RUN_SEQ.length]], flip };
 }
 
-function drawCharacter(v, ch, color) {
+function drawCharacter(v, ch, color, clipBottom = Infinity) {
   const { sprite, flip } = pickSprite(v, ch);
   // 스프라이트는 타일 안에서 가로 가운데에 놓습니다 (9px 스프라이트 → +0, 7px → +1)
   const dx = (TW - sprite[0].length) >> 1;
   const x = Math.round(v.x * TW) + dx;
   const y = Math.round(v.y * TH);
   // 구멍에 빠져도 원작처럼 자르지 않고 칸 위쪽에 맞춰 통째로 그립니다
-  drawRunner(x, y, color, sprite, flip);
+  drawRunner(x, y, color, sprite, flip, clipBottom);
 }
 
 function draw(now) {
   px(0, 0, W * TW, CH, "#000");
 
   // 1) 구멍에 빠진 캐릭터를 먼저 그립니다 — 뒤이어 그리는 타일이 구멍 밖으로 나온
-  //    부분(다리 등)을 가려서, 원작처럼 블록 두께 안에 들어가 보입니다
+  //    부분(다리 등)을 가려서, 원작처럼 블록 두께 안에 들어가 보입니다.
+  //    단, **메워지는 중인 구멍**은 예외입니다. 타일을 건너뛰면 벽돌이 차오르는 것이 보이지 않아
+  //    "경비병이 먼저 사라지고 구덩이가 나중에 메워지는" 것처럼 보입니다 (2026-11-16 지적).
+  //    메워지는 구멍 속 캐릭터는 3)에서 타일 위에 그립니다.
   const inHole = (ch) => game.holes.has(ch.r * W + ch.c);
+  const filling = (ch) => {
+    const h = game.holes.get(ch.r * W + ch.c);
+    return !!h && refillStage(h.refillAt, game.time) >= 0;
+  };
   for (let i = 0; i < game.guards.length; i++) {
-    if (inHole(game.guards[i])) drawCharacter(visGuards[i], game.guards[i], PAL.cyan);
+    if (inHole(game.guards[i]) && !filling(game.guards[i])) drawCharacter(visGuards[i], game.guards[i], PAL.cyan);
   }
-  if (inHole(game.player) && !(game.state === "dead" && Math.floor(now / 100) % 2)) {
+  if (inHole(game.player) && !filling(game.player) && !(game.state === "dead" && Math.floor(now / 100) % 2)) {
     drawCharacter(visPlayer, game.player, PAL.white);
   }
 
-  // 2) 타일 — 캐릭터가 들어 있는 구멍은 검게 덮지 않고 테두리만 나중에 그립니다
+  // 2) 타일 — 캐릭터가 들어 있는 구멍은 검게 덮지 않습니다. 메워지는 중이면 벽돌이 차오르는
+  //    모습을 보여야 하므로 그리되, 캐릭터는 위(3)에 그려 묻히는 순서가 됩니다
   for (let r = 0; r < H; r++) {
     for (let c = 0; c < W; c++) {
       const idx = r * W + c;
-      if (game.holes.has(idx) && game.guardAt(c, r)) continue;
-      if (game.holes.has(idx) && game.player.c === c && game.player.r === r) continue;
       const hole = game.holes.get(idx);
+      const occupied = game.guardAt(c, r) || (game.player.c === c && game.player.r === r);
+      const refilling = !!hole && refillStage(hole.refillAt, game.time) >= 0;
+      if (hole && occupied && !refilling) continue;
       drawTile(game.tileAt(c, r), c * TW, r * TH, hole, game.time);
     }
   }
@@ -699,12 +709,22 @@ function draw(now) {
   // 4px 을 벽돌색 단색으로 채웁니다 (캡처 실측: 폭 280px, 높이 4px, 줄눈 없음).
   px(0, (H - 1) * TH, W * TW, 4, PAL.brick);
 
-  // 3) 나머지 캐릭터
+  // 3) 나머지 캐릭터 (메워지는 구멍 속 캐릭터 포함 — 차오르는 벽돌에 묻히는 모습)
+  //    메워지는 구멍 속 캐릭터는 **차오른 벽돌 높이까지만** 그립니다. 다 그리면 벽돌이 가려져
+  //    "경비병이 먼저 사라지고 구덩이가 나중에 메워지는" 것처럼 보입니다 (2026-11-16 지적).
+  const clipFor = (ch) => {
+    const h = game.holes.get(ch.r * W + ch.c);
+    if (!h) return Infinity;
+    const st = refillStage(h.refillAt, game.time);
+    if (st < 0) return Infinity;
+    const base = REFILL_HEIGHTS[Math.min(st, REFILL_HEIGHTS.length - 1)];
+    return ch.r * TH + (TH - base);
+  };
   for (let i = 0; i < game.guards.length; i++) {
-    if (!inHole(game.guards[i])) drawCharacter(visGuards[i], game.guards[i], PAL.cyan);
+    if (!inHole(game.guards[i]) || filling(game.guards[i])) drawCharacter(visGuards[i], game.guards[i], PAL.cyan, clipFor(game.guards[i]));
   }
-  if (!inHole(game.player) && !(game.state === "dead" && Math.floor(now / 100) % 2)) {
-    drawCharacter(visPlayer, game.player, PAL.white);
+  if ((!inHole(game.player) || filling(game.player)) && !(game.state === "dead" && Math.floor(now / 100) % 2)) {
+    drawCharacter(visPlayer, game.player, PAL.white, clipFor(game.player));
   }
 }
 

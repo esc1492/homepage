@@ -431,10 +431,18 @@ export class Game {
         h.crushed = true;
         if (this.player.c === c && this.player.r === r) this.killPlayer();
         for (const g of this.guards) {
-          if (g.c === c && g.r === r) { g.dead = true; this.score += SCORE_GUARD; }
+          if (!g.dead && g.c === c && g.r === r) { g.dead = true; this.score += SCORE_GUARD; }
         }
       }
-      if (this.time >= h.refillAt) this.holes.delete(idx);
+      if (this.time >= h.refillAt) {
+        this.holes.delete(idx);
+        // 절반 이후에 구멍으로 들어온 캐릭터는 **여기서** 죽습니다. 그냥 구멍만 지우면
+        // 벽돌 속에 남아 아래 칸으로 꺼지고, 경비병은 아예 살아 버립니다 (2026-11-16 실제 발생).
+        if (this.player.c === c && this.player.r === r) this.killPlayer();
+        for (const g of this.guards) {
+          if (!g.dead && g.c === c && g.r === r) { g.dead = true; this.score += SCORE_GUARD; }
+        }
+      }
     }
     if (this.guards.some((g) => g.dead)) this.guards = this.guards.filter((g) => !g.dead);
   }
