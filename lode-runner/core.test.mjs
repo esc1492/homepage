@@ -70,6 +70,18 @@ test("digging creates a hole and refilling kills a guard in it", () => {
   assert.equal(g.score, 75);
 });
 
+test("brick directly below a ladder cannot be dug", () => {
+  const rows = blank();
+  floorRow(rows, 6);
+  rows[5][9] = TILE.LADDER; // 벽돌 (9,6) 바로 위가 사다리
+  rows[5][10] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.dig(-1);
+  assert.equal(g.holes.size, 0, "사다리 밑 벽돌은 구멍이 파지면 안 됩니다");
+  g.dig(1); // 반대쪽 (11,6) 은 위가 비어 있음
+  assert.ok(g.holes.has(6 * 28 + 11), "사다리가 없는 쪽은 팔려야 합니다");
+});
+
 test("hole refill kills the player standing in it", () => {
   const rows = blank();
   floorRow(rows, 15); // 아래가 막힌 바닥 구멍

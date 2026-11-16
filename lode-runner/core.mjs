@@ -382,6 +382,9 @@ export class Game {
     const tr = p.r + 1;
     const t = this.rawTileAt(tc, tr);
     if (t !== TILE.BRICK && t !== TILE.TRAPDOOR) return;
+    // 사다리 바로 밑에 있는 벽돌은 원작에서 팔 수 없습니다 — 사다리 끝 아래를 파면
+    // 그 사다리로 내려오는 캐릭터가 구멍에 걸립니다 (2026-11-16 동완님 지적).
+    if (this.tileAt(tc, tr - 1) === TILE.LADDER) return;
     const idx = tr * W + tc;
     if (this.holes.has(idx)) return;
     this.holes.set(idx, { refillAt: this.time + HOLE_MS });
