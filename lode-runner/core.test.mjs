@@ -101,6 +101,25 @@ test("dig records its start time and walks the animation stages", () => {
   assert.equal(digStage(hole.dugAt, 1097), -1, "애니메이션이 끝나면 구멍만 남습니다");
 });
 
+test("dig records the pose window and facing for the drawing layer", () => {
+  const rows = blank();
+  floorRow(rows, 6);
+  rows[5][10] = TILE.PLAYER;
+  const g = new Game(rows);
+  g.time = 500;
+  g.dig(-1);
+  assert.equal(g.player.dir, -1, "판 쪽을 봅니다");
+  assert.equal(g.player.digUntil, 500 + DIG_MS, "파는 자세는 입력 잠금 동안 유지됩니다");
+  // 못 파는 자리에서는 자세도 바뀌지 않아야 합니다 (판 쪽이 비어 있음)
+  const rows2 = blank();
+  floorRow(rows2, 6, 10, 27);
+  rows2[5][10] = TILE.PLAYER;
+  const g2 = new Game(rows2);
+  g2.dig(-1);
+  assert.equal(g2.player.dir, 1, "파지 못하면 방향이 그대로입니다");
+  assert.equal(g2.player.digUntil, 0, "파지 못하면 자세 창도 열리지 않습니다");
+});
+
 test("hole refill walks its stages and crushes its occupant at the halfway point", () => {
   const rows = blank();
   floorRow(rows, 5);
