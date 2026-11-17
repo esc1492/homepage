@@ -12,6 +12,7 @@
     --gold: #ffd23f;
     --bg: #0a0a14;
     --panel: #14142a;
+    --mono: #33ff33;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
@@ -63,13 +64,20 @@
   }
   .touch button:active { background: #26264a; }
   .help { margin: 0; font-size: 11px; color: var(--dim); text-align: center; letter-spacing: .04em; }
+  /* 모노크롬 모드 — 캔버스는 PAL 이 칠하므로, 화면에 붙은 나머지(테두리·오버레이·터치 버튼)만 맞춥니다. */
+  .game.mono canvas { border-color: #115411; }
+  .game.mono .overlay .big { color: var(--mono); }
+  .game.mono .overlay button { color: #041004; background: var(--mono); }
+  .game.mono .touch button { color: var(--mono); background: #041004; border-color: #0d400d; }
+  .game.mono .touch button:active { background: #0d400d; }
+  .game.mono .help { color: #187618; }
   @media (min-width: 700px) {
     .touch { display: none; }
   }
 </style>
 </head>
 <body>
-<div data-site-nav data-logged-in="false" data-sound="1"></div>
+<div data-site-nav data-logged-in="false" data-sound="1" data-palette="1"></div>
 <div class="game">
   <div class="stage">
     <canvas id="screen" width="280" height="184"></canvas>
@@ -106,7 +114,7 @@ const overlayBig = overlay.querySelector(".big");
 const overlaySub = overlay.querySelector(".sub");
 const overlayBtn = overlay.querySelector("button");
 
-const PAL = {
+const PAL_COLOR = {
   brick: "#68372b",
   brickDark: "#1a0a05",
   grey: "#a8a8a8",
@@ -119,6 +127,25 @@ const PAL = {
   cyanDark: "#3f6f7d",
   dirt: "#a1684b",
 };
+
+// 모노크롬 — 원래 색의 밝기(루마)만 남기고 초록 형광체(0x33FF33)로 칠합니다 (C64 초록 모니터).
+// G = 255 × (0.299R + 0.587G + 0.114B) / 255 이고, R·B 는 G 에 0x33/0xFF 비율을 곱한 값입니다.
+const PAL_MONO = {
+  brick: "#0e440e",
+  brickDark: "#030e03",
+  grey: "#22a822",
+  white: "#33ff33",
+  gold: "#29cf29",
+  goldDark: "#1a801a",
+  door: "#0d400d",
+  doorHi: "#115411",
+  cyan: "#1e961e",
+  cyanDark: "#146214",
+  dirt: "#187618",
+};
+
+// 그리는 쪽은 이 객체만 보므로, 모드를 바꿀 때 프로퍼티만 갈아 끼웁니다.
+const PAL = { ...PAL_COLOR };
 
 // 상태줄 글꼴 — 원작 화면에서 딴 10×8 글리프입니다 (스프라이트와 같은 방식).
 // 크랙판이 쓰는 각진 블록체라 C64 기본 글꼴과 다릅니다. 캡처 359프레임에서
@@ -548,6 +575,13 @@ function setSound(on) {
   for (const el of Object.values(SFX)) el.muted = !on;
 }
 window.siteNav?.onSoundChange(setSound);
+
+// 헤더의 팔레트 아이콘 — 누르면 게임의 모든 색이 초록 모노크롬으로 바뀌고, 다시 누르면 컬러로 돌아옵니다.
+function setMono(on) {
+  Object.assign(PAL, on ? PAL_MONO : PAL_COLOR);
+  document.querySelector(".game")?.classList.toggle("mono", on);
+}
+window.siteNav?.onPaletteChange(setMono);
 
 // ---------- game flow ----------
 

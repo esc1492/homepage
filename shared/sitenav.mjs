@@ -16,6 +16,10 @@ const MOUNT_SELECTOR = '[data-site-nav]';
 let soundOn = true;
 const soundListeners = [];
 
+/** 팔레트(모노크롬) 토글도 opt-in 입니다. 초기값은 컬러입니다. */
+let paletteMono = false;
+const paletteListeners = [];
+
 /** 로그인 상태 → 표시 값. 순수 함수라 이 module 의 테스트 표면입니다. */
 export function navViewModel({ loggedIn = false } = {}) {
   return {
@@ -32,6 +36,16 @@ export function navSoundView({ on = true } = {}) {
     iconTitle: on ? '소리 끄기' : '소리 켜기',
     iconAria: on ? '소리 켜짐' : '소리 꺼짐',
     pressed: on ? 'true' : 'false',
+  };
+}
+
+/** 팔레트 토글 상태 → 표시 값. */
+export function navPaletteView({ mono = false } = {}) {
+  return {
+    iconClass: mono ? 'sitenav-palette mono' : 'sitenav-palette',
+    iconTitle: mono ? '컬러로 보기' : '모노크롬으로 보기',
+    iconAria: mono ? '모노크롬 켜짐' : '모노크롬 꺼짐',
+    pressed: mono ? 'true' : 'false',
   };
 }
 
@@ -95,8 +109,24 @@ function renderSoundButton(on) {
     </span>`;
 }
 
+/** 팔레트 아이콘. 사운드와 같이 `data-palette="1"` 로 opt-in 한 페이지에만 그립니다.
+ *  사운드 아이콘과 같은 30×30·stroke-width 1.2 로 선 굵기를 맞춥니다.
+ *  물감 색은 CSS 가 칠합니다 — 모노크롬일 때 `.mono` 가 세 점을 한꺼번에 검정으로 바꿉니다. */
+function renderPaletteButton(mono) {
+  const view = navPaletteView({ mono });
+  return `
+    <span class="${view.iconClass}" data-nav-action="palette" role="button" tabindex="0" title="${view.iconTitle}" aria-label="${view.iconAria}" aria-pressed="${view.pressed}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" width="30" height="30" aria-hidden="true">
+        <path d="M12 3C7 3 3 6.7 3 11.2c0 4.6 4 8.3 8.4 8.3 1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8h2c2.2 0 3.9-1.7 3.9-3.8C19.8 5.7 16.3 3 12 3z"/>
+        <circle class="palette-dot-red" cx="7.6" cy="9.4" r="1.8" stroke="none"/>
+        <circle class="palette-dot-green" cx="12" cy="7" r="1.8" stroke="none"/>
+        <circle class="palette-dot-blue" cx="16.2" cy="9.6" r="1.8" stroke="none"/>
+      </svg>
+    </span>`;
+}
+
 /** SiteNav 마크업. 마크업을 소유하는 곳은 여기 하나입니다. */
-export function renderNav({ loggedIn = false, sound } = {}) {
+export function renderNav({ loggedIn = false, sound, palette } = {}) {
   const view = navViewModel({ loggedIn });
   return `
 <nav class="sitenav" aria-label="사이트 내비게이션">
@@ -104,7 +134,7 @@ export function renderNav({ loggedIn = false, sound } = {}) {
     <span class="triple-line" aria-hidden="true"><span class="line"></span><span class="line"></span><span class="line"></span></span>
     <svg class="triple-x" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M1.5 2 L16.5 17 M16.5 2 L1.5 17" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
   </span>
-  <span class="sitenav-right">${sound === undefined ? '' : renderSoundButton(sound)}
+  <span class="sitenav-right">${palette === undefined ? '' : renderPaletteButton(palette)}${sound === undefined ? '' : renderSoundButton(sound)}
     <span class="sitenav-door" data-nav-action="back" role="button" tabindex="0" title="뒤로 가기" aria-label="뒤로 가기">
       <svg class="door-open" viewBox="0 0 27 36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="27" height="36" aria-hidden="true">
         <rect x="3" y="4.5" width="18" height="27" rx="1.5"/>
@@ -161,6 +191,8 @@ export function bindNav(root) {
       toggleMenu();
     } else if (action === 'sound') {
       toggleSound(root);
+    } else if (action === 'palette') {
+      togglePalette(root);
     } else if (action === 'back') {
       if (window.history.length > 1) window.history.back();
       else window.location.href = '/';
@@ -240,11 +272,33 @@ function toggleSound(root) {
   for (const fn of soundListeners) fn(soundOn);
 }
 
+/** 팔레트(모노크롬) 상태가 바뀔 때 호출될 콜백을 등록합니다. */
+export function onPaletteChange(fn) {
+  if (typeof fn === 'function') paletteListeners.push(fn);
+}
+
+function applyPalette(root, mono) {
+  const el = root.querySelector('.sitenav-palette');
+  if (!el) return;
+  const view = navPaletteView({ mono });
+  el.className = view.iconClass;
+  el.title = view.iconTitle;
+  el.setAttribute('aria-label', view.iconAria);
+  el.setAttribute('aria-pressed', view.pressed);
+}
+
+function togglePalette(root) {
+  paletteMono = !paletteMono;
+  applyPalette(root, paletteMono);
+  for (const fn of paletteListeners) fn(paletteMono);
+}
+
 function applyLoggedIn(root, loggedIn) {
   root.dataset.loggedIn = loggedIn ? '1' : '0';
   // 내비를 다시 그려도 사운드 아이콘의 상태가 유지되어야 하므로 module 상태를 넘깁니다.
   const sound = root.dataset.sound === '1' ? soundOn : undefined;
-  root.innerHTML = renderNav({ loggedIn: Boolean(loggedIn), sound });
+  const palette = root.dataset.palette === '1' ? paletteMono : undefined;
+  root.innerHTML = renderNav({ loggedIn: Boolean(loggedIn), sound, palette });
 }
 
 function mount(root) {
@@ -272,5 +326,5 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   } else {
     autoMount();
   }
-  window.siteNav = { setLoggedIn, onSoundChange };
+  window.siteNav = { setLoggedIn, onSoundChange, onPaletteChange };
 }

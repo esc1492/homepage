@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { SITE_MENU, navSoundView, navViewModel, renderNav } from './sitenav.mjs';
+import { SITE_MENU, navSoundView, navPaletteView, navViewModel, renderNav } from './sitenav.mjs';
 
 test('로그아웃 상태: muted 아이콘과 상태 title', () => {
   const view = navViewModel({ loggedIn: false });
@@ -61,6 +61,37 @@ test('사운드 아이콘은 opt-in 한 페이지에만, 문 아이콘 왼쪽에
     html.indexOf('data-nav-action="sound"') < html.indexOf('data-nav-action="back"'),
     '사운드 아이콘이 문 아이콘보다 뒤에 있습니다',
   );
+});
+
+test('팔레트 아이콘은 opt-in 한 페이지에만, 사운드 아이콘 왼쪽에 그려진다', () => {
+  assert.doesNotMatch(renderNav({ loggedIn: false }), /sitenav-palette/);
+  assert.doesNotMatch(renderNav({ loggedIn: false, sound: true }), /sitenav-palette/);
+  const html = renderNav({ loggedIn: false, sound: true, palette: false });
+  assert.match(html, /data-nav-action="palette"/);
+  assert.match(html, /class="sitenav-palette"/);
+  assert.ok(
+    html.indexOf('sitenav-palette') < html.indexOf('data-nav-action="sound"'),
+    '팔레트 아이콘이 사운드 아이콘보다 뒤에 있습니다',
+  );
+});
+
+test('팔레트 상태에 따라 class·title·aria-pressed 가 바뀐다', () => {
+  assert.deepEqual(navPaletteView({ mono: false }), {
+    iconClass: 'sitenav-palette',
+    iconTitle: '모노크롬으로 보기',
+    iconAria: '모노크롬 꺼짐',
+    pressed: 'false',
+  });
+  assert.deepEqual(navPaletteView({ mono: true }), {
+    iconClass: 'sitenav-palette mono',
+    iconTitle: '컬러로 보기',
+    iconAria: '모노크롬 켜짐',
+    pressed: 'true',
+  });
+
+  const html = renderNav({ loggedIn: false, palette: true });
+  assert.match(html, /class="sitenav-palette mono"/);
+  assert.match(html, /aria-pressed="true"/);
 });
 
 test('사운드 상태에 따라 class·title·aria-pressed 가 바뀐다', () => {

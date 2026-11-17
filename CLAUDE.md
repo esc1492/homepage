@@ -103,6 +103,10 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
   페이지에만 **문 아이콘 왼쪽**에 그려집니다. 지금은 로드 러너뿐입니다. 페이지는
   `window.siteNav.onSoundChange(fn)` 으로 토글을 받고, 아이콘 상태는 module 변수가 들고 있어
   `setLoggedIn` 재렌더에도 유지됩니다
+- **팔레트 아이콘도 opt-in 입니다** (2026-11-17) — `data-palette="1"` 을 둔 페이지에만 **사운드
+  아이콘 왼쪽**에 그려집니다(지금은 로드 러너). 누르면 `.mono` 가 붙어 물감 세 점이 검정이 되고,
+  페이지는 `window.siteNav.onPaletteChange(fn)` 으로 상태를 받습니다. 사운드와 같이 상태는
+  module 변수가 들고 있어 재렌더에도 유지됩니다
 - **홈 `.nav` 와 좌표가 같아야 합니다** (2026-11-09 정렬). 좁은 화면에서 홈은 여백이 14px 인데
   서브 앱이 22px 이라 **아이콘이 8px 오른쪽으로 밀려 보였습니다**. 1px 아래 선은 `border` 가 아니라
   `box-shadow: inset 0 -1px 0` 입니다 — `border` 는 border-box 에서 내용 높이를 1px 줄여

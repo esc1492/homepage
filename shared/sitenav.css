@@ -185,6 +185,22 @@
 .sitenav-sound.muted .sound-on { display: none; }
 .sitenav-sound.muted .sound-off { display: block; }
 
+/* 팔레트 — `data-palette="1"` 로 opt-in 한 페이지에만. 사운드 아이콘 왼쪽, 같은 30×36 입니다.
+   누르면 모노크롬이 켜지고 물감 세 점이 검정이 됩니다. */
+.sitenav-palette {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 36px;
+  cursor: pointer;
+  color: var(--color-inkwell, #262510);
+}
+.sitenav-palette .palette-dot-red { fill: #e03e36; }
+.sitenav-palette .palette-dot-green { fill: #2fa856; }
+.sitenav-palette .palette-dot-blue { fill: #2f6fdd; }
+.sitenav-palette.mono circle { fill: currentColor; }
+
 .sitenav-icon {
   display: flex;
   align-items: center;
