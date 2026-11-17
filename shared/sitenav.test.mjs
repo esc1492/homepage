@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { SITE_MENU, navViewModel, renderNav } from './sitenav.mjs';
+import { SITE_MENU, navSoundView, navViewModel, renderNav } from './sitenav.mjs';
 
 test('로그아웃 상태: muted 아이콘과 상태 title', () => {
   const view = navViewModel({ loggedIn: false });
@@ -51,4 +51,33 @@ test('renderNav 는 로그아웃 상태에서 logged-in class 를 넣지 않는�
   const html = renderNav({ loggedIn: false });
   assert.doesNotMatch(html, /logged-in/);
   assert.match(html, /title="로그인 상태"/);
+});
+
+test('사운드 아이콘은 opt-in 한 페이지에만, 문 아이콘 왼쪽에 그려진다', () => {
+  assert.doesNotMatch(renderNav({ loggedIn: false }), /data-nav-action="sound"/);
+  const html = renderNav({ loggedIn: false, sound: true });
+  assert.match(html, /data-nav-action="sound"/);
+  assert.ok(
+    html.indexOf('data-nav-action="sound"') < html.indexOf('data-nav-action="back"'),
+    '사운드 아이콘이 문 아이콘보다 뒤에 있습니다',
+  );
+});
+
+test('사운드 상태에 따라 class·title·aria-pressed 가 바뀐다', () => {
+  assert.deepEqual(navSoundView({ on: true }), {
+    iconClass: 'sitenav-sound',
+    iconTitle: '소리 끄기',
+    iconAria: '소리 켜짐',
+    pressed: 'true',
+  });
+  assert.deepEqual(navSoundView({ on: false }), {
+    iconClass: 'sitenav-sound muted',
+    iconTitle: '소리 켜기',
+    iconAria: '소리 꺼짐',
+    pressed: 'false',
+  });
+
+  const html = renderNav({ loggedIn: false, sound: false });
+  assert.match(html, /class="sitenav-sound muted"/);
+  assert.match(html, /aria-pressed="false"/);
 });

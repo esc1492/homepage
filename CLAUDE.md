@@ -99,6 +99,10 @@ Korean-language personal start page (시작 페이지) with weather and todo lis
   실행됩니다. JS 의 `setTimeout(…, 200)` 과 CSS 의 `transition: transform 0.2s` 를 맞춰야 합니다.
   `rotate` 로 돌리면 원근으로 그린 문짝이 틀 밖으로 나가 어색하므로 `scaleX` 를 씁니다.
   홈 `.nav` 의 문은 포커스 모드 토글이라 열린 문이 곧바로 닫힌 문으로 바뀌어 애니메이션이 잘리므로 넣지 않았습니다
+- **사운드 아이콘은 opt-in 입니다** (2026-11-17) — `[data-site-nav]` 에 `data-sound="1"` 을 둔
+  페이지에만 **문 아이콘 왼쪽**에 그려집니다. 지금은 로드 러너뿐입니다. 페이지는
+  `window.siteNav.onSoundChange(fn)` 으로 토글을 받고, 아이콘 상태는 module 변수가 들고 있어
+  `setLoggedIn` 재렌더에도 유지됩니다
 - **홈 `.nav` 와 좌표가 같아야 합니다** (2026-11-09 정렬). 좁은 화면에서 홈은 여백이 14px 인데
   서브 앱이 22px 이라 **아이콘이 8px 오른쪽으로 밀려 보였습니다**. 1px 아래 선은 `border` 가 아니라
   `box-shadow: inset 0 -1px 0` 입니다 — `border` 는 border-box 에서 내용 높이를 1px 줄여
@@ -257,6 +261,7 @@ C64 판 Lode Runner 를 재현한 게임. **소스 = 서빙**(`lode-runner/index
 C64 에뮬레이터 RAM(`$6000`)에서 추출한 원판 보드입니다.
 
 - 테스트: `node --test lode-runner/core.test.mjs` (17개). 루트 `npm test` 에도 포함됩니다.
+- 사운드는 **패미컴 판 사운드트랙**(`lode-runner/audio/` 5개)입니다 — C64 판 재현과 계열이 다르지만 동완님 결정(2026-11-17). 상세: `.claude/rules/apps/lode-runner.md`
 - `core.mjs` 는 DOM·브라우저 API 를 import 하지 않습니다 — `sudoku/core.mjs` 와 같은 원칙입니다.
 - ⚠️ 자산 참조는 **절대 경로**(`/lode-runner/...`)입니다 — `/lode-runner`(슬래시 없음)로 열렸을 때 상대 경로가 루트로 풀립니다.
 - 상세(레벨 추출 경로, 구멍 위 통과 규칙, 속도 상수, 키 매핑): `.claude/rules/apps/lode-runner.md`

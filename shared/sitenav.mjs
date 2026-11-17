@@ -12,12 +12,26 @@
 
 const MOUNT_SELECTOR = '[data-site-nav]';
 
+/** 사운드 토글은 opt-in 한 페이지(지금은 로드 러너)만 씁니다. 초기값은 켜짐입니다. */
+let soundOn = true;
+const soundListeners = [];
+
 /** 로그인 상태 → 표시 값. 순수 함수라 이 module 의 테스트 표면입니다. */
 export function navViewModel({ loggedIn = false } = {}) {
   return {
     iconClass: loggedIn ? 'sitenav-icon logged-in' : 'sitenav-icon',
     iconTitle: loggedIn ? '로그인됨' : '로그인 상태',
     iconAria: loggedIn ? '로그인됨' : '로그인하지 않음',
+  };
+}
+
+/** 사운드 토글 상태 → 표시 값. */
+export function navSoundView({ on = true } = {}) {
+  return {
+    iconClass: on ? 'sitenav-sound' : 'sitenav-sound muted',
+    iconTitle: on ? '소리 끄기' : '소리 켜기',
+    iconAria: on ? '소리 켜짐' : '소리 꺼짐',
+    pressed: on ? 'true' : 'false',
   };
 }
 
@@ -62,8 +76,27 @@ function renderMenu() {
   return `<div class="sitenav-menu"><div class="sitenav-menu-inner">${sections}</div></div>`;
 }
 
+/** 사운드 아이콘. 페이지가 `data-sound="1"` 로 opt-in 할 때만 그립니다.
+ *  문(27×36)·사람(28×42)은 세로로 긴 아이콘이라, 24 격자를 그대로 쓰면 스피커만 작아 보입니다.
+ *  그래서 30px 로 키우고 stroke-width 를 1.2 로 낮춰 선 굵기를 1.5px 로 맞춥니다. */
+function renderSoundButton(on) {
+  const view = navSoundView({ on });
+  return `
+    <span class="${view.iconClass}" data-nav-action="sound" role="button" tabindex="0" title="${view.iconTitle}" aria-label="${view.iconAria}" aria-pressed="${view.pressed}">
+      <svg class="sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" width="30" height="30" aria-hidden="true">
+        <path d="M3.5 9.5 H7 L11.5 5.5 V18.5 L7 14.5 H3.5 Z"/>
+        <path d="M15 9.2 a4 4 0 0 1 0 5.6"/>
+        <path d="M17.8 6.4 a7.8 7.8 0 0 1 0 11.2"/>
+      </svg>
+      <svg class="sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" width="30" height="30" aria-hidden="true">
+        <path d="M3.5 9.5 H7 L11.5 5.5 V18.5 L7 14.5 H3.5 Z"/>
+        <path d="M15.5 9.5 L20.5 14.5 M20.5 9.5 L15.5 14.5"/>
+      </svg>
+    </span>`;
+}
+
 /** SiteNav 마크업. 마크업을 소유하는 곳은 여기 하나입니다. */
-export function renderNav({ loggedIn = false } = {}) {
+export function renderNav({ loggedIn = false, sound } = {}) {
   const view = navViewModel({ loggedIn });
   return `
 <nav class="sitenav" aria-label="사이트 내비게이션">
@@ -71,7 +104,7 @@ export function renderNav({ loggedIn = false } = {}) {
     <span class="triple-line" aria-hidden="true"><span class="line"></span><span class="line"></span><span class="line"></span></span>
     <svg class="triple-x" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M1.5 2 L16.5 17 M16.5 2 L1.5 17" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
   </span>
-  <span class="sitenav-right">
+  <span class="sitenav-right">${sound === undefined ? '' : renderSoundButton(sound)}
     <span class="sitenav-door" data-nav-action="back" role="button" tabindex="0" title="뒤로 가기" aria-label="뒤로 가기">
       <svg class="door-open" viewBox="0 0 27 36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="27" height="36" aria-hidden="true">
         <rect x="3" y="4.5" width="18" height="27" rx="1.5"/>
@@ -126,6 +159,8 @@ export function bindNav(root) {
     const action = el.getAttribute('data-nav-action');
     if (action === 'menu') {
       toggleMenu();
+    } else if (action === 'sound') {
+      toggleSound(root);
     } else if (action === 'back') {
       if (window.history.length > 1) window.history.back();
       else window.location.href = '/';
@@ -181,9 +216,35 @@ export function bindNav(root) {
   };
 }
 
+/**
+ * 사운드 상태가 바뀔 때 호출될 콜백을 등록합니다. 아이콘을 그리지 않은 페이지는
+ * 등록할 일이 없고, 등록하지 않아도 아이콘 자체는 정상 동작합니다.
+ */
+export function onSoundChange(fn) {
+  if (typeof fn === 'function') soundListeners.push(fn);
+}
+
+function applySound(root, on) {
+  const el = root.querySelector('.sitenav-sound');
+  if (!el) return;
+  const view = navSoundView({ on });
+  el.className = view.iconClass;
+  el.title = view.iconTitle;
+  el.setAttribute('aria-label', view.iconAria);
+  el.setAttribute('aria-pressed', view.pressed);
+}
+
+function toggleSound(root) {
+  soundOn = !soundOn;
+  applySound(root, soundOn);
+  for (const fn of soundListeners) fn(soundOn);
+}
+
 function applyLoggedIn(root, loggedIn) {
   root.dataset.loggedIn = loggedIn ? '1' : '0';
-  root.innerHTML = renderNav({ loggedIn: Boolean(loggedIn) });
+  // 내비를 다시 그려도 사운드 아이콘의 상태가 유지되어야 하므로 module 상태를 넘깁니다.
+  const sound = root.dataset.sound === '1' ? soundOn : undefined;
+  root.innerHTML = renderNav({ loggedIn: Boolean(loggedIn), sound });
 }
 
 function mount(root) {
@@ -211,5 +272,5 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   } else {
     autoMount();
   }
-  window.siteNav = { setLoggedIn };
+  window.siteNav = { setLoggedIn, onSoundChange };
 }

@@ -169,6 +169,22 @@
 }
 .sitenav-door .door-open { opacity: 1; }
 
+/* 사운드 토글 — `data-sound="1"` 로 opt-in 한 페이지(지금은 로드 러너)에만 그려집니다.
+   문 아이콘 왼쪽, 같은 높이(36px)로 맞춥니다. */
+.sitenav-sound {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 36px;
+  cursor: pointer;
+  color: var(--color-inkwell, #262510);
+}
+.sitenav-sound .sound-off { display: none; }
+.sitenav-sound.muted { color: var(--color-muted-stone, #7a7974); }
+.sitenav-sound.muted .sound-on { display: none; }
+.sitenav-sound.muted .sound-off { display: block; }
+
 .sitenav-icon {
   display: flex;
   align-items: center;

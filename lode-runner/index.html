@@ -69,7 +69,7 @@
 </style>
 </head>
 <body>
-<div data-site-nav data-logged-in="false"></div>
+<div data-site-nav data-logged-in="false" data-sound="1"></div>
 <div class="game">
   <div class="stage">
     <canvas id="screen" width="280" height="184"></canvas>
@@ -152,6 +152,7 @@ let game = null;
 let started = false;
 let last = 0;
 let advancing = false;
+let goldCelebrated = false;
 let highScore = Number(localStorage.getItem("lodeRunnerHigh") || 0);
 
 // visual interpolation state
@@ -508,6 +509,46 @@ function drawTile(t, x, y, hole = null, now = 0) {
   }
 }
 
+// ---------- 사운드 ----------
+// 패미컴 판 Lode Runner(1984, Isamu Hirano) 사운드트랙을 원본 그대로 씁니다. 받은 MP3 는
+// 스테레오였지만 패미컴 출력이 모노라 좌우가 완전히 같아 모노로 다시 인코딩했고, 뒤에 붙어
+// 있던 1~3초의 무음을 잘라 BGM 은 28.56초 한 루프로 만들었습니다. 원본은 효과음만 BGM 보다
+// 8dB 가까이 커서 BGM -20 LUFS·효과음 -18.4 LUFS 로 음량을 맞췄습니다.
+const AUDIO_BASE = "/lode-runner/audio/";
+const bgm = new Audio(AUDIO_BASE + "bgm.mp3");
+bgm.loop = true;
+const SFX = {
+  allGold: new Audio(AUDIO_BASE + "all-gold.mp3"),
+  stageClear: new Audio(AUDIO_BASE + "stage-clear.mp3"),
+  miss: new Audio(AUDIO_BASE + "miss.mp3"),
+  gameOver: new Audio(AUDIO_BASE + "game-over.mp3"),
+};
+
+function playSfx(name) {
+  const el = SFX[name];
+  el.currentTime = 0;
+  el.play().catch(() => {}); // 자동재생 차단은 조용히 무시합니다
+}
+
+function bgmStart() {
+  // 사망음(2.59초)이 부활 대기(1.2초)보다 길어서, 부활하면 BGM 이 사망음 위로 **겹쳐서**
+  // 시작합니다 — 사망음은 끊지 않고 제 끝까지 재생됩니다 (2026-11-17 동완님 요청).
+  bgm.currentTime = 0;
+  bgm.play().catch(() => {});
+}
+
+function bgmStop() {
+  bgm.pause();
+}
+
+// 헤더의 사운드 아이콘(지금은 로드 러너만 씁니다) — 끄면 BGM·효과음이 모두 음소거됩니다.
+// muted 를 쓰므로 음량 값은 그대로이고, 다시 켜면 그 음량으로 돌아옵니다.
+function setSound(on) {
+  bgm.muted = !on;
+  for (const el of Object.values(SFX)) el.muted = !on;
+}
+window.siteNav?.onSoundChange(setSound);
+
 // ---------- game flow ----------
 
 function loadLevel(index, { lives = 5, score = 0 } = {}) {
@@ -516,6 +557,7 @@ function loadLevel(index, { lives = 5, score = 0 } = {}) {
   visPlayer = { x: game.player.c, y: game.player.r, phase: 0, pr: game.player.r, moving: false, dir: 1 };
   visGuards = game.guards.map((g) => ({ x: g.c, y: g.r, phase: 0, pr: g.r, moving: false, dir: 1 }));
   advancing = false;
+  goldCelebrated = false;
   elideOverlay();
 }
 
@@ -523,6 +565,7 @@ function startGame() {
   started = true;
   last = 0;
   elideOverlay();
+  bgmStart();
 }
 
 function elideOverlay() {
@@ -549,10 +592,12 @@ function nextLevel() {
     saveHigh(finalScore);
     showOverlay("ALL LEVELS CLEAR", `SCORE ${finalScore}`, "RESTART", () => {
       loadLevel(0);
+      bgmStart();
     });
     return;
   }
   loadLevel(levelIndex + 1, { lives: game.lives, score: game.score });
+  bgmStart();
 }
 
 function saveHigh(score) {
@@ -594,13 +639,31 @@ function frame(now) {
       game.update(dt, input);
       if (before === "playing" && game.state === "gameover") {
         saveHigh(game.score);
-        showOverlay("GAME OVER", `SCORE ${game.score}`, "RETRY", () => loadLevel(levelIndex));
+        bgmStop();
+        playSfx("gameOver");
+        showOverlay("GAME OVER", `SCORE ${game.score}`, "RETRY", () => { loadLevel(levelIndex); bgmStart(); });
+      }
+      if (before === "playing" && game.state === "dead") {
+        bgmStop();
+        playSfx("miss");
+      }
+      if (before === "dead" && game.state === "playing") bgmStart();
+      if (game.revealed && !goldCelebrated) {
+        goldCelebrated = true;
+        playSfx("allGold");
       }
       if (game.state === "complete" && !advancing) {
         advancing = true;
         saveHigh(game.score);
+        bgmStop();
+        playSfx("stageClear");
         showOverlay("LEVEL CLEAR", `SCORE ${game.score}`, null, null);
-        setTimeout(nextLevel, 1600);
+        // 클리어 음악(13.04초)을 끝까지 들려준 뒤 다음 레벨로 넘어갑니다. 재생이 막힌
+        // 환경(자동재생 차단 등)에서는 'ended' 가 오지 않으므로 같은 길이의 타이머를 함께 겁니다.
+        let advanced = false;
+        const advance = () => { if (!advanced) { advanced = true; nextLevel(); } };
+        SFX.stageClear.addEventListener("ended", advance, { once: true });
+        setTimeout(advance, (SFX.stageClear.duration || 1.6) * 1000 + 200);
       }
     }
 
